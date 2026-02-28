@@ -6,6 +6,8 @@
 <title>GéoTer' — Annotateur de plans terrain</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,400;0,6..12,600;0,6..12,700;0,6..12,800;0,6..12,900;1,6..12,400&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.167.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.167.0/examples/jsm/"}}</script>
 <style>
   :root {
@@ -188,6 +190,82 @@
 
   #photo-section{width:270px;min-width:200px;max-width:50vw;display:none;flex-direction:column;flex-shrink:0;background:var(--white);border-left:2px solid var(--yellow);overflow-y:auto;position:relative}
   #photo-section.open{display:flex}
+  #ia-panel{position:fixed;top:0;right:0;bottom:0;width:420px;max-width:95vw;background:var(--white);box-shadow:-4px 0 24px rgba(0,0,0,0.2);z-index:800;display:none;flex-direction:column;transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1)}
+  #ia-panel.open{display:flex;transform:translateX(0)}
+  .ia-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--black);border-bottom:2px solid var(--yellow);flex-shrink:0}
+  .ia-header span{font-weight:800;font-size:14px;color:var(--yellow)}
+  .ia-header-btns{display:flex;gap:6px;align-items:center}
+  .ia-header-btns button{background:none;border:none;color:rgba(255,255,255,0.6);font-size:14px;cursor:pointer;padding:4px}
+  .ia-header-btns button:hover{color:#fff}
+  #ia-messages{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+  .ia-msg{padding:10px 12px;border-radius:12px;font-size:13px;line-height:1.55;word-break:break-word;max-width:92%}
+  .ia-msg.user{background:var(--yellow-pale);border:1px solid var(--yellow);align-self:flex-end;border-radius:12px 12px 2px 12px}
+  .ia-msg.assistant{background:var(--gray-50);border:1px solid var(--gray-100);align-self:flex-start;border-radius:12px 12px 12px 2px}
+  .ia-msg.assistant p{margin:0 0 8px}.ia-msg.assistant p:last-child{margin:0}
+  .ia-msg.assistant strong{font-weight:800}
+  .ia-msg.assistant ul,.ia-msg.assistant ol{margin:4px 0;padding-left:18px}
+  .ia-msg.assistant li{margin:2px 0}
+  .ia-msg.assistant code{background:var(--gray-100);padding:1px 4px;border-radius:3px;font-size:12px}
+  .ia-msg.system{background:#FFF3CD;border:1px solid #F2B705;align-self:center;text-align:center;font-size:12px;color:#856404;border-radius:8px}
+  .ia-msg.loading{color:var(--gray-400);font-style:italic}
+  #ia-input-area{display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--gray-200);background:var(--white);flex-shrink:0;align-items:flex-end}
+  #ia-input{flex:1;border:2px solid var(--gray-200);border-radius:10px;padding:8px 12px;font-size:13px;font-family:inherit;resize:none;outline:none;min-height:20px;max-height:120px;line-height:1.4}
+  #ia-input:focus{border-color:var(--yellow)}
+  #ia-send{background:var(--yellow);color:var(--black);border:none;border-radius:10px;padding:8px 14px;font-weight:800;font-size:13px;cursor:pointer;white-space:nowrap;font-family:inherit}
+  #ia-send:hover{filter:brightness(1.05)}
+  #ia-send:disabled{opacity:0.5;cursor:not-allowed}
+  .ia-ctx-toggle{display:flex;align-items:center;gap:6px;padding:4px 14px 6px;border-top:1px solid var(--gray-100);font-size:11px;color:var(--gray-500);flex-shrink:0}
+  .ia-ctx-toggle label{cursor:pointer;user-select:none}
+  .ia-ctx-toggle input{accent-color:var(--yellow)}
+  .ia-geo-section{padding:8px 14px;border-top:1px solid var(--gray-100);flex-shrink:0}
+  .ia-geo-section summary{font-size:11px;font-weight:700;color:var(--gray-500);cursor:pointer;user-select:none}
+  .ia-geo-section summary:hover{color:var(--black)}
+  .ia-geo-inputs{display:flex;flex-direction:column;gap:4px;margin-top:6px}
+  .ia-geo-inputs input{padding:4px 8px;border:1px solid var(--gray-200);border-radius:6px;font-size:11px;font-family:inherit}
+  .ia-geo-inputs input:focus{border-color:var(--yellow);outline:none}
+  .ia-geo-row{display:flex;gap:4px}
+  .ia-geo-row input{flex:1;min-width:0}
+  #ia-geo-btn{padding:5px 10px;border:none;border-radius:6px;background:var(--yellow);color:var(--black);font-size:11px;font-weight:700;cursor:pointer;transition:all .2s;width:100%}
+  #ia-geo-btn:hover{background:#e6b800}
+  #ia-geo-btn:disabled{opacity:0.5;cursor:wait}
+  #ia-geo-status{font-size:10px;color:var(--gray-500);margin-top:4px;line-height:1.3}
+  #ia-geo-status.ok{color:#388e3c}
+  #ia-geo-status.err{color:#d32f2f}
+  .ia-addr-wrap{position:relative}
+  #ia-addr-suggest{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--gray-200);border-radius:6px;max-height:120px;overflow-y:auto;z-index:200;box-shadow:0 4px 12px rgba(0,0,0,0.15);display:none}
+  #ia-addr-suggest div{padding:5px 8px;font-size:11px;cursor:pointer}
+  #ia-addr-suggest div:hover{background:var(--yellow-pale)}
+  #geocarto-panel{position:fixed;top:0;left:0;bottom:0;width:380px;max-width:92vw;background:var(--white);box-shadow:4px 0 24px rgba(0,0,0,0.2);z-index:790;display:none;flex-direction:column;transform:translateX(-100%);transition:transform .3s cubic-bezier(.4,0,.2,1)}
+  #geocarto-panel.open{display:flex;transform:translateX(0)}
+  .gc-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--black);border-bottom:2px solid var(--yellow);flex-shrink:0}
+  .gc-header span{font-weight:800;font-size:14px;color:var(--yellow)}
+  .gc-header button{background:none;border:none;color:#fff;font-size:18px;cursor:pointer;padding:2px 6px;border-radius:4px}
+  .gc-body{flex:1;overflow-y:auto;padding:12px 14px}
+  .gc-summary{background:var(--gray-50);border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:11px;line-height:1.6;color:var(--black)}
+  .gc-summary strong{font-weight:800;font-size:12px}
+  .gc-summary .gc-addr{font-weight:700;color:var(--black);font-size:12px;margin-bottom:4px}
+  .gc-summary .gc-meta{color:var(--gray-500);font-size:10px}
+  .gc-section{border:1px solid var(--gray-100);border-radius:8px;margin-bottom:6px;overflow:hidden}
+  .gc-section summary{padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer;background:var(--gray-50);user-select:none;list-style:none;display:flex;align-items:center;gap:6px}
+  .gc-section summary::-webkit-details-marker{display:none}
+  .gc-section summary:hover{background:var(--yellow-pale)}
+  .gc-section[open] summary{border-bottom:1px solid var(--gray-100)}
+  .gc-section .gc-arrow{font-size:9px;color:var(--gray-400);transition:transform .2s;flex-shrink:0}
+  .gc-section[open] .gc-arrow{transform:rotate(90deg)}
+  .gc-section .gc-title{flex:1}
+  .gc-content{padding:8px 12px;font-size:11px;color:var(--gray-700);line-height:1.5}
+  .gc-content ul{margin:0;padding:0 0 0 14px}
+  .gc-content li{margin-bottom:3px}
+  .gc-map-img{width:100%;border-radius:6px;margin-top:8px;border:1px solid var(--gray-100);display:block;min-height:60px;background:var(--gray-50)}
+  .gc-badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;border-radius:10px;font-size:10px;font-weight:800;padding:0 6px;white-space:nowrap}
+  .gc-badge-green{background:#e8f5e9;color:#2e7d32}
+  .gc-badge-orange{background:#fff3e0;color:#e65100}
+  .gc-badge-red{background:#ffebee;color:#c62828}
+  .gc-badge-gray{background:var(--gray-100);color:var(--gray-500)}
+  .gc-badge-blue{background:#e3f2fd;color:#1565c0}
+  .gc-empty{text-align:center;padding:30px 20px;color:var(--gray-400);font-size:12px}
+  .gc-reload-btn{margin-top:10px;padding:6px 14px;border:none;border-radius:6px;background:var(--yellow);color:var(--black);font-size:11px;font-weight:700;cursor:pointer}
+  .gc-reload-btn:hover{background:#e6b800}
   .photo-resize-handle{position:absolute;top:0;left:-5px;width:10px;height:100%;cursor:col-resize;z-index:20}
   .photo-resize-handle:hover,.photo-resize-handle.active{background:var(--yellow);opacity:0.3;border-radius:3px}
   .photo-panel-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--black);border-bottom:2px solid var(--yellow);flex-shrink:0}
@@ -372,7 +450,7 @@
   /* ═══ MODAL NOUVEAU PROJET ═══ */
   #new-study-modal{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;z-index:950;backdrop-filter:blur(4px)}
   #new-study-modal.open{display:flex}
-  #new-study-inner{background:var(--white);border-radius:var(--radius-lg);padding:28px;width:380px;max-width:92vw;box-shadow:var(--shadow-lg);border-top:4px solid var(--yellow)}
+  #new-study-inner{background:var(--white);border-radius:var(--radius-lg);padding:28px;width:560px;max-width:92vw;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);border-top:4px solid var(--yellow)}
   #new-study-inner h2{font-size:18px;font-weight:900;color:var(--black);margin:0 0 6px}
   #new-study-inner p{font-size:12px;color:var(--gray-500);margin:0 0 18px}
   #new-study-inner label{font-size:11px;font-weight:800;color:var(--black);display:block;margin-bottom:5px}
@@ -387,6 +465,13 @@
   .btn-create-study:hover{background:var(--yellow-light);transform:translateY(-1px)}
   .btn-cancel-study{background:var(--gray-100);color:var(--gray-500)}
   .btn-cancel-study:hover{background:var(--gray-200);color:var(--black)}
+  /* ═══ MAP PICKER MODAL ═══ */
+  #new-study-map-section button{padding:5px 10px;border:none;border-radius:var(--radius);background:var(--gray-100);font-size:10px;font-weight:700;cursor:pointer;transition:all .2s;font-family:inherit}
+  #new-study-map-section button:hover{background:var(--gray-200)}
+  #btn-study-locate{font-size:14px;padding:6px 10px}
+  #btn-study-locate:disabled{opacity:0.4;cursor:wait}
+  #new-study-map .leaflet-control-zoom a{background:var(--white);color:var(--black);border-color:var(--gray-200);font-weight:700}
+  #new-study-map .leaflet-control-attribution{font-size:8px;background:rgba(255,255,255,0.7)}
   /* ═══ PHOTO NAME + CROP MODAL ═══ */
   #photo-name-modal{position:fixed;inset:0;background:rgba(0,0,0,0.85);display:none;align-items:center;justify-content:center;z-index:960;backdrop-filter:blur(4px);flex-direction:column;gap:14px;padding:16px}
   #photo-name-modal.open{display:flex}
@@ -539,6 +624,8 @@
     #arrow-options{flex-wrap:wrap;gap:4px}
     .arr-opt-group{gap:2px}
     .arr-opt-group label{font-size:8px}
+    #new-study-map{height:200px!important}
+    #new-study-map-section button{font-size:9px!important;padding:4px 8px!important}
   }
 </style>
 </head>
@@ -585,6 +672,8 @@
     <button class="tool-btn" onclick="togglePhotoSection()"><span class="icon">📸</span><span class="label">Photos</span></button>
     <button class="tool-btn" onclick="openSondageTypeModal()"><span class="icon" style="display:inline-flex"><svg viewBox="0 0 32 32" width="17" height="17" fill="none"><rect x="14" y="2" width="4" height="20" rx="1" fill="#D94040"/><polygon points="16,28 12,22 20,22" fill="#D94040"/><line x1="10" y1="6" x2="22" y2="6" stroke="#D94040" stroke-width="2"/><circle cx="16" cy="4" r="2" fill="#F2B705"/></svg></span><span class="label">Sondages</span></button>
     <button class="tool-btn" onclick="openScan3D()"><span class="icon" style="display:inline-flex"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#1A1A1A" stroke-width="1.8" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z" fill="#E8D44D"/><path d="M2 7v10l10 5V12L2 7z" fill="#D4C23A" stroke="#1A1A1A"/><path d="M22 7v10l-10 5V12l10-5z" fill="#F2E55A" stroke="#1A1A1A"/><path d="M2 7l10 5 10-5" fill="none"/></svg></span><span class="label">3D</span></button>
+    <button class="tool-btn" onclick="toggleGeocartoPanel()"><span class="icon">📍</span><span class="label">Site</span></button>
+    <button class="tool-btn" onclick="toggleIAPanel()"><span class="icon">🤖</span><span class="label">GéoTrouveTout</span></button>
   </div>
   <div id="toolbar-options">
     <div id="color-options" class="sub-options" style="display:none"></div>
@@ -717,10 +806,68 @@
       <p>Créez un nouveau projet en saisissant le Numéro de Dossier.</p>
       <label for="new-study-ref">Numéro de Dossier *</label>
       <input type="text" id="new-study-ref" placeholder="Ex : 2607011" spellcheck="false" autocomplete="off" onkeydown="if(event.key==='Enter')createNewStudy()">
+      <label for="new-study-addr" style="margin-top:14px;font-size:11px;font-weight:800;color:var(--black);display:block;margin-bottom:5px">📍 Adresse du site</label>
+      <div style="position:relative">
+        <input type="text" id="new-study-addr" placeholder="Tapez l'adresse du chantier..." oninput="newStudyAutocomplete(this.value)" autocomplete="off" style="width:100%;padding:10px 12px;border:2px solid var(--gray-200);border-radius:var(--radius);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;transition:border-color .2s" onfocus="this.style.borderColor='var(--yellow)'" onblur="this.style.borderColor=''">
+        <div id="new-study-suggest" style="position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--gray-200);border-radius:6px;max-height:140px;overflow-y:auto;z-index:999;display:none;box-shadow:0 4px 12px rgba(0,0,0,0.15)"></div>
+      </div>
+      <div id="new-study-map-section" style="margin-top:12px">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+          <button type="button" id="btn-study-locate" onclick="newStudyLocateMe()" title="Me localiser (GPS)">🎯</button>
+          <button type="button" id="btn-study-layer" onclick="newStudyToggleLayer()">🛰 Satellite</button>
+          <button type="button" id="btn-study-cadastre" onclick="newStudyToggleCadastre()">📐 Cadastre</button>
+        </div>
+        <div id="new-study-map" style="width:100%;height:260px;border-radius:var(--radius);border:2px solid var(--gray-200);overflow:hidden;cursor:crosshair"></div>
+        <div id="new-study-coords" style="font-size:10px;color:var(--gray-500);margin-top:4px;font-weight:600"></div>
+      </div>
+      <input type="hidden" id="new-study-lat">
+      <input type="hidden" id="new-study-lng">
+      <input type="hidden" id="new-study-insee">
       <div class="new-study-error" id="new-study-error"></div>
       <div class="new-study-actions">
         <button class="btn-cancel-study" onclick="closeNewStudyModal()">Annuler</button>
         <button class="btn-create-study" onclick="createNewStudy()">Valider</button>
+      </div>
+    </div>
+  </div>
+  <div id="ia-panel">
+    <div class="ia-header">
+      <span>🤖 GéoTrouveTout</span>
+      <div class="ia-header-btns">
+        <button onclick="clearIAChat()" title="Nouvelle conversation">🗑️</button>
+        <button onclick="closeIAPanel()" title="Fermer">✕</button>
+      </div>
+    </div>
+    <div id="ia-messages">
+      <div class="ia-msg system">GéoTrouveTout — votre assistant IA géotechnique. Posez vos questions, demandez de l'aide pour rédiger un rapport ou analyser vos sondages.</div>
+    </div>
+    <input type="hidden" id="ia-geo-addr"><input type="hidden" id="ia-geo-lat"><input type="hidden" id="ia-geo-lng">
+    <div id="ia-geo-btn" style="display:none"></div><div id="ia-geo-status" style="display:none"></div>
+    <div class="ia-ctx-toggle">
+      <input type="checkbox" id="ia-ctx-sondages" checked>
+      <label for="ia-ctx-sondages">Inclure les sondages</label>
+    </div>
+    <div class="ia-ctx-toggle">
+      <input type="checkbox" id="ia-ctx-geocarto" checked disabled>
+      <label for="ia-ctx-geocarto">Inclure les données GéoCarto</label>
+    </div>
+    <div id="ia-ctx-status" style="font-size:10px;padding:4px 16px;color:var(--gray-500);background:var(--gray-50);border-top:1px solid var(--gray-100);cursor:pointer" onclick="updateIACtxStatus()" title="Cliquez pour rafraîchir">📊 Cliquez pour vérifier les données disponibles</div>
+    <div id="ia-input-area">
+      <textarea id="ia-input" rows="1" placeholder="Posez votre question..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendIAMessage();}"></textarea>
+      <button id="ia-send" onclick="sendIAMessage()">Envoyer</button>
+    </div>
+  </div>
+  <div id="geocarto-panel">
+    <div class="gc-header">
+      <span>📍 Données du site</span>
+      <div style="display:flex;gap:6px;align-items:center">
+        <button onclick="reloadGeocartoData()" title="Relancer l'enquête">🔄</button>
+        <button onclick="closeGeocartoPanel()" title="Fermer">✕</button>
+      </div>
+    </div>
+    <div class="gc-body" id="gc-body">
+      <div id="gc-content">
+        <div class="gc-empty">Aucune donnée de site.<br>Créez un nouveau projet avec une adresse<br>ou utilisez le bouton 🔄 pour relancer.</div>
       </div>
     </div>
   </div>
@@ -1906,6 +2053,704 @@ function duplicateSelected(){
   renderElements();
 }
 
+// ═══ IA GÉOTECHNIQUE ═══
+const IA_PROXY_URL='http://localhost:3456';
+let iaMessages=[];
+let iaStreaming=false;
+let geocartoData=null;
+let geocartoInsee=null;
+let projectAddr='',projectLat=null,projectLng=null,projectInsee=null;
+
+// ═══ PANNEAU GÉOCARTO ═══
+function toggleGeocartoPanel(){document.getElementById('geocarto-panel').classList.toggle('open');}
+function openGeocartoPanel(){document.getElementById('geocarto-panel').classList.add('open');}
+function closeGeocartoPanel(){document.getElementById('geocarto-panel').classList.remove('open');}
+
+function reloadGeocartoData(){
+  if(projectLat!=null&&projectLng!=null){
+    document.getElementById('ia-geo-lat').value=projectLat;
+    document.getElementById('ia-geo-lng').value=projectLng;
+    geocartoInsee=projectInsee;
+    iaGeoInvestigate();
+  }else{alert("Aucune adresse de site d\u00e9finie. Cr\u00e9ez un nouveau projet avec une adresse.");}
+}
+
+// ═══ CARTE LEAFLET DANS MODAL NOUVEAU PROJET ═══
+let studyMap=null,studyMarker=null,studyOsmLayer=null,studySatLayer=null;
+let studyCadastreLayer=null,studyCadastreVisible=false,studyCurrentLayer='osm';
+
+function initStudyMap(){
+  if(studyMap){studyMap.invalidateSize();return;}
+  studyMap=L.map('new-study-map',{center:[46.6,2.5],zoom:5,zoomControl:false});
+  L.control.zoom({position:'bottomleft'}).addTo(studyMap);
+  studyOsmLayer=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OSM',maxZoom:19});
+  studySatLayer=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'&copy; Esri',maxZoom:19});
+  studyCadastreLayer=L.tileLayer('https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=CADASTRALPARCELS.PARCELLAIRE_EXPRESS&STYLE=normal&FORMAT=image/png&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}',{attribution:'&copy; IGN Cadastre',maxZoom:20,maxNativeZoom:19,opacity:0.7});
+  studyOsmLayer.addTo(studyMap);
+  studyCurrentLayer='osm';studyCadastreVisible=false;
+  studyMap.on('click',function(e){
+    updateStudyMarker(e.latlng.lat,e.latlng.lng,false);
+    reverseGeocodeStudy(e.latlng.lat,e.latlng.lng);
+  });
+}
+
+function updateStudyMarker(lat,lng,flyTo){
+  if(!studyMap)return;
+  document.getElementById('new-study-lat').value=lat.toFixed(6);
+  document.getElementById('new-study-lng').value=lng.toFixed(6);
+  if(studyMarker){studyMarker.setLatLng([lat,lng]);}
+  else{
+    const icon=L.divIcon({html:'<div style="width:20px;height:20px;background:var(--red,#D94040);border:3px solid #fff;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.5)"></div>',className:'',iconSize:[20,20],iconAnchor:[10,10]});
+    studyMarker=L.marker([lat,lng],{icon:icon,draggable:true}).addTo(studyMap);
+    studyMarker.on('dragend',function(e){
+      const pos=e.target.getLatLng();
+      document.getElementById('new-study-lat').value=pos.lat.toFixed(6);
+      document.getElementById('new-study-lng').value=pos.lng.toFixed(6);
+      reverseGeocodeStudy(pos.lat,pos.lng);
+      updateStudyCoords(pos.lat,pos.lng);
+    });
+  }
+  if(flyTo)studyMap.flyTo([lat,lng],Math.max(studyMap.getZoom(),16),{duration:0.8});
+  updateStudyCoords(lat,lng);
+}
+
+function updateStudyCoords(lat,lng){
+  document.getElementById('new-study-coords').textContent='GPS : '+lat.toFixed(6)+', '+lng.toFixed(6);
+}
+
+function newStudyLocateMe(){
+  const btn=document.getElementById('btn-study-locate');
+  if(!navigator.geolocation){alert("La géolocalisation n'est pas supportée par votre navigateur.");return;}
+  btn.disabled=true;
+  navigator.geolocation.getCurrentPosition(
+    function(pos){
+      const lat=pos.coords.latitude,lng=pos.coords.longitude;
+      updateStudyMarker(lat,lng,true);
+      reverseGeocodeStudy(lat,lng);
+      btn.disabled=false;
+    },
+    function(err){
+      btn.disabled=false;
+      let msg='Impossible de récupérer votre position.';
+      if(err.code===1)msg='Accès à la géolocalisation refusé. Autorisez la localisation dans les paramètres du navigateur.';
+      else if(err.code===2)msg='Position indisponible. Vérifiez que le GPS est activé.';
+      else if(err.code===3)msg='Délai dépassé. Réessayez.';
+      alert(msg);
+    },
+    {enableHighAccuracy:true,timeout:10000,maximumAge:0}
+  );
+}
+
+async function reverseGeocodeStudy(lat,lng){
+  try{
+    const data=await iaFetchJSON('https://api-adresse.data.gouv.fr/reverse/?lon='+lng+'&lat='+lat+'&limit=1');
+    if(data.features&&data.features.length>0){
+      const p=data.features[0].properties;
+      document.getElementById('new-study-addr').value=p.label||'';
+      document.getElementById('new-study-insee').value=p.citycode||'';
+    }
+  }catch(e){console.warn('Reverse geocode failed:',e);}
+}
+
+function newStudyToggleLayer(){
+  if(!studyMap)return;
+  const btn=document.getElementById('btn-study-layer');
+  if(studyCurrentLayer==='osm'){studyMap.removeLayer(studyOsmLayer);studySatLayer.addTo(studyMap);studyCurrentLayer='sat';btn.innerHTML='🗺 Plan';}
+  else{studyMap.removeLayer(studySatLayer);studyOsmLayer.addTo(studyMap);studyCurrentLayer='osm';btn.innerHTML='🛰 Satellite';}
+  if(studyCadastreVisible&&studyCadastreLayer)studyCadastreLayer.bringToFront();
+}
+
+function newStudyToggleCadastre(){
+  if(!studyMap||!studyCadastreLayer)return;
+  const btn=document.getElementById('btn-study-cadastre');
+  if(studyCadastreVisible){studyMap.removeLayer(studyCadastreLayer);studyCadastreVisible=false;btn.innerHTML='📐 Cadastre';btn.style.background='';}
+  else{studyCadastreLayer.addTo(studyMap);studyCadastreVisible=true;btn.innerHTML='📐 Cadastre ✓';btn.style.background='rgba(26,26,26,0.12)';}
+}
+
+// --- Auto-complétion Nouveau Projet ---
+let newStudyTimer=null;
+function newStudyAutocomplete(val){
+  clearTimeout(newStudyTimer);
+  const $s=document.getElementById('new-study-suggest');
+  if(val.length<3){$s.style.display='none';return;}
+  newStudyTimer=setTimeout(async()=>{
+    try{
+      const data=await iaFetchJSON('https://api-adresse.data.gouv.fr/search/?q='+encodeURIComponent(val)+'&limit=5');
+      if(!data.features||data.features.length===0){$s.style.display='none';return;}
+      $s.innerHTML='';
+      data.features.forEach(f=>{
+        const d=document.createElement('div');
+        d.style.cssText='padding:8px 12px;font-size:12px;cursor:pointer;border-bottom:1px solid #f0f0f0';
+        d.textContent=f.properties.label;
+        d.onmouseover=function(){this.style.background='#FFF9E6';};
+        d.onmouseout=function(){this.style.background='';};
+        d.onclick=()=>{
+          document.getElementById('new-study-addr').value=f.properties.label;
+          document.getElementById('new-study-lat').value=f.geometry.coordinates[1];
+          document.getElementById('new-study-lng').value=f.geometry.coordinates[0];
+          document.getElementById('new-study-insee').value=f.properties.citycode||'';
+          $s.style.display='none';
+          updateStudyMarker(f.geometry.coordinates[1],f.geometry.coordinates[0],true);
+        };
+        $s.appendChild(d);
+      });
+      $s.style.display='block';
+    }catch(e){$s.style.display='none';}
+  },300);
+}
+
+async function iaFetchJSON(url,timeout=10000){
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),timeout);
+  try{const res=await fetch(url,{signal:controller.signal});clearTimeout(timer);if(!res.ok)throw new Error('HTTP '+res.status);return await res.json();}
+  catch(e){clearTimeout(timer);throw e;}
+}
+
+// --- Auto-complétion adresse ---
+let iaGeoTimer=null;
+function iaGeoAutocomplete(val){
+  clearTimeout(iaGeoTimer);
+  const $s=document.getElementById('ia-addr-suggest');
+  if(val.length<3){$s.style.display='none';return;}
+  iaGeoTimer=setTimeout(async()=>{
+    try{
+      const data=await iaFetchJSON('https://api-adresse.data.gouv.fr/search/?q='+encodeURIComponent(val)+'&limit=5');
+      if(!data.features||data.features.length===0){$s.style.display='none';return;}
+      $s.innerHTML='';
+      data.features.forEach(f=>{
+        const d=document.createElement('div');
+        d.textContent=f.properties.label;
+        d.onclick=()=>{
+          document.getElementById('ia-geo-addr').value=f.properties.label;
+          document.getElementById('ia-geo-lat').value=f.geometry.coordinates[1].toFixed(6);
+          document.getElementById('ia-geo-lng').value=f.geometry.coordinates[0].toFixed(6);
+          geocartoInsee=f.properties.citycode||null;
+          $s.style.display='none';
+        };
+        $s.appendChild(d);
+      });
+      $s.style.display='block';
+    }catch(e){$s.style.display='none';}
+  },300);
+}
+
+// --- Fonctions API spécialisées ---
+async function iaFetchBSS(lat,lng){
+  const dLat=0.018,dLng=0.025;
+  const url='https://geoservices.brgm.fr/geologie?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=ms:BSS_EAU_POINT&COUNT=100&BBOX='+(lat-dLat)+','+(lng-dLng)+','+(lat+dLat)+','+(lng+dLng)+',urn:ogc:def:crs:EPSG::4326';
+  const resp=await fetch(url,{signal:AbortSignal.timeout(15000)});
+  const text=await resp.text();
+  const parser=new DOMParser();
+  const doc=parser.parseFromString(text,'text/xml');
+  const members=doc.querySelectorAll('featureMember, member');
+  const results=[];
+  members.forEach(m=>{
+    const get=(...names)=>{for(const n of names){const el=m.querySelector(n);if(el&&el.textContent.trim())return el.textContent.trim();}return '';};
+    results.push({
+      code_bss:get('code_bss','bss_id'),
+      nature:get('nature_pe'),
+      profondeur:get('prof_invest'),
+      altitude:get('altitude'),
+      commune:get('commune_actuelle'),
+      nb_piezo:get('nb_mesures_piezo'),
+      lien:get('lien_infoterre')
+    });
+  });
+  return results;
+}
+
+async function iaFetchNappes(lat,lng){
+  const d=0.002;
+  const url='https://mapsref.brgm.fr/wxs/georisques/risques?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=REMNAPPE_FIAB&SRS=EPSG:4326&BBOX='+(lng-d)+','+(lat-d)+','+(lng+d)+','+(lat+d)+'&WIDTH=5&HEIGHT=5&FORMAT=image/png&TRANSPARENT=TRUE&STYLES=';
+  const resp=await fetch(url,{signal:AbortSignal.timeout(10000)});
+  const blob=await resp.blob();
+  const blobUrl=URL.createObjectURL(blob);
+  const img=new Image();
+  await new Promise((res,rej)=>{img.onload=res;img.onerror=rej;img.src=blobUrl;});
+  const cv=document.createElement('canvas');cv.width=5;cv.height=5;
+  const cx=cv.getContext('2d');cx.drawImage(img,0,0);
+  URL.revokeObjectURL(blobUrl);
+  const [r,g,b,a]=cx.getImageData(2,2,1,1).data;
+  if(a<50)return null;
+  const sld=[
+    {label:"D\u00e9bordement de nappe \u2014 fiabilit\u00e9 forte",r:189,g:0,b:38},
+    {label:"D\u00e9bordement de nappe \u2014 fiabilit\u00e9 moyenne",r:227,g:45,b:48},
+    {label:"D\u00e9bordement de nappe \u2014 fiabilit\u00e9 faible",r:227,g:91,b:93},
+    {label:"D\u00e9bordement de nappe \u2014 fiabilit\u00e9 inconnue",r:254,g:224,b:210},
+    {label:"Inondation de cave \u2014 fiabilit\u00e9 forte",r:244,g:102,b:27},
+    {label:"Inondation de cave \u2014 fiabilit\u00e9 moyenne",r:255,g:150,b:50},
+    {label:"Inondation de cave \u2014 fiabilit\u00e9 faible",r:255,g:176,b:102},
+    {label:"Inondation de cave \u2014 fiabilit\u00e9 inconnue",r:255,g:203,b:153},
+    {label:"Pas de risque \u2014 fiabilit\u00e9 forte",r:85,g:85,b:85},
+    {label:"Pas de risque \u2014 fiabilit\u00e9 moyenne",r:136,g:136,b:136},
+    {label:"Pas de risque \u2014 fiabilit\u00e9 faible",r:170,g:170,b:170},
+    {label:"Pas de risque \u2014 fiabilit\u00e9 inconnue",r:204,g:204,b:204}
+  ];
+  let best=null,bestDist=Infinity;
+  for(const c of sld){const dist=Math.sqrt((r-c.r)**2+(g-c.g)**2+(b-c.b)**2);if(dist<bestDist){bestDist=dist;best=c;}}
+  return best?best.label:null;
+}
+
+async function iaFetchArgiles(lat,lng){
+  const d=0.001;
+  const bbox=(lng-d)+','+(lat-d)+','+(lng+d)+','+(lat+d);
+  const urls=[
+    'https://geoservices.brgm.fr/risques?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetFeatureInfo&LAYERS=ALEARG&QUERY_LAYERS=ALEARG&SRS=EPSG:4326&BBOX='+bbox+'&WIDTH=3&HEIGHT=3&X=1&Y=1&INFO_FORMAT=application/json',
+    'https://mapsref.brgm.fr/wxs/georisques/risques?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetFeatureInfo&LAYERS=ALEARG&QUERY_LAYERS=ALEARG&SRS=EPSG:4326&BBOX='+bbox+'&WIDTH=3&HEIGHT=3&X=1&Y=1&INFO_FORMAT=application/json',
+    'https://geoservices.brgm.fr/risques?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetFeatureInfo&LAYERS=ALEARG&QUERY_LAYERS=ALEARG&SRS=EPSG:4326&BBOX='+bbox+'&WIDTH=3&HEIGHT=3&X=1&Y=1&INFO_FORMAT=text/plain'
+  ];
+  for(const url of urls){
+    try{
+      const resp=await fetch(url,{signal:AbortSignal.timeout(8000)});
+      const ct=resp.headers.get('content-type')||'';
+      if(ct.includes('json')){
+        const json=await resp.json();
+        const features=json.features||json.data||[];
+        if(features.length>0){
+          const p=features[0].properties||features[0];
+          const found=p.NIVEAU||p.niveau||p.EXPOSITION||p.exposition||p.ALEA||p.alea||p.lib_alea||p.LIB_ALEA||p.DESCR||p.descr;
+          if(found)return String(found);
+        }
+      }else{
+        const text=await resp.text();
+        const m=text.match(/niveau\s*=\s*'(\d)'/i);
+        if(m){const n=m[1];return n==='3'?'Exposition forte':n==='2'?'Exposition moyenne':'Exposition faible';}
+      }
+    }catch(e){}
+  }
+  return null;
+}
+
+async function iaFetchGeologie(lat,lng){
+  const d1=0.005,d2=0.05;
+  const urlCat='https://geoservices.brgm.fr/geologie?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=ms:SCAN_F_GEOL50_CATALOG&COUNT=1&BBOX='+(lat-d1)+','+(lng-d1)+','+(lat+d1)+','+(lng+d1)+',urn:ogc:def:crs:EPSG::4326';
+  const urlLitho='https://geoservices.brgm.fr/geologie?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=ms:LITHO_1M_SIMPLIFIEE&COUNT=1&BBOX='+(lat-d2)+','+(lng-d2)+','+(lat+d2)+','+(lng+d2)+',urn:ogc:def:crs:EPSG::4326';
+  const [catResp,lithoResp]=await Promise.all([
+    fetch(urlCat,{signal:AbortSignal.timeout(12000)}),
+    fetch(urlLitho,{signal:AbortSignal.timeout(12000)})
+  ]);
+  const [catXml,lithoXml]=await Promise.all([
+    catResp.ok?catResp.text():Promise.resolve(''),
+    lithoResp.ok?lithoResp.text():Promise.resolve('')
+  ]);
+  const extractField=(xml,...names)=>{
+    for(const name of names){
+      const re=new RegExp('<(?:[A-Za-z0-9_]+:)?'+name+'>([^<]*)</(?:[A-Za-z0-9_]+:)?'+name+'>','i');
+      const m=xml.match(re);if(m&&m[1].trim())return m[1].trim();
+    }
+    return '';
+  };
+  const numero=extractField(catXml,'numero');
+  const nom=extractField(catXml,'nom');
+  const descr=extractField(lithoXml,'DESCR','descr');
+  const type=extractField(lithoXml,'TYPE','type');
+  const feuille=(numero&&nom)?numero+' — '+nom:(numero||nom||'');
+  const litho=[descr,type].filter(Boolean).join(' — ');
+  return {feuille,litho};
+}
+
+async function iaFetchAltitude(lat,lng){
+  try{
+    const resp=await fetch('https://data.geopf.fr/altimetrie/1.0/calcul/alti/rest/elevation.json?lon='+lng+'&lat='+lat+'&resource=ign_rge_alti_wld&delimiter=|&indent=false&measures=false&zonly=true',{signal:AbortSignal.timeout(6000)});
+    const data=await resp.json();
+    if(data.elevations&&data.elevations.length>0){
+      const val=typeof data.elevations[0]==='object'?data.elevations[0].z:data.elevations[0];
+      if(val!=null&&val!==-99999)return parseFloat(val).toFixed(1);
+    }
+  }catch(e){}
+  try{
+    const resp=await fetch('https://wxs.ign.fr/calcul/alti/rest/elevation.json?lon='+lng+'&lat='+lat+'&zonly=true',{signal:AbortSignal.timeout(6000)});
+    const data=await resp.json();
+    if(data.elevations&&data.elevations.length>0&&data.elevations[0]!==-99999)return parseFloat(data.elevations[0]).toFixed(1);
+  }catch(e){}
+  return null;
+}
+
+// --- Enquête GéoCarto principale ---
+async function iaGeoInvestigate(){
+  const lat=parseFloat(document.getElementById('ia-geo-lat').value);
+  const lng=parseFloat(document.getElementById('ia-geo-lng').value);
+  if(isNaN(lat)||isNaN(lng)){alert("S\u00e9lectionnez une adresse valide.");return;}
+  const $btn=document.getElementById('ia-geo-btn');
+  const $st=document.getElementById('ia-geo-status');
+  $btn.disabled=true;
+  $st.className='';$st.textContent='Interrogation des APIs en cours...';
+  const gd={lat,lng,addr:document.getElementById('ia-geo-addr').value,insee:geocartoInsee};
+  // Reverse geocode si pas d'INSEE
+  if(!gd.insee){
+    try{
+      const rg=await iaFetchJSON('https://api-adresse.data.gouv.fr/reverse/?lon='+lng+'&lat='+lat+'&limit=1');
+      if(rg.features&&rg.features.length>0){
+        const p=rg.features[0].properties;
+        gd.insee=p.citycode;gd.commune=p.city;gd.codePostal=p.postcode;
+        gd.departement=p.context;if(!gd.addr)gd.addr=p.label;
+      }
+    }catch(e){}
+  }
+  const results=await Promise.allSettled([
+    iaFetchJSON('https://georisques.gouv.fr/api/v1/gaspar/risques?'+(gd.insee?'code_insee='+gd.insee:'latlon='+lng+','+lat)+'&page=1&page_size=50').then(d=>{gd.risques=d.data||[];}),
+    iaFetchJSON('https://georisques.gouv.fr/api/v1/gaspar/catnat?'+(gd.insee?'code_insee='+gd.insee:'latlon='+lng+','+lat+'&rayon=1000')+'&page=1&page_size=100').then(d=>{gd.catnat=d.data||[];}),
+    iaFetchJSON('https://georisques.gouv.fr/api/v1/zonage_sismique?latlon='+lng+','+lat+'&rayon=100').then(d=>{gd.sismique=(d.data&&d.data[0])?d.data[0].code_zone:null;}),
+    iaFetchJSON('https://georisques.gouv.fr/api/v1/cavites?latlon='+lng+','+lat+'&rayon=2000&page=1&page_size=50').then(d=>{gd.cavites=d.data||[];}),
+    iaFetchJSON('https://georisques.gouv.fr/api/v1/installations?latlon='+lng+','+lat+'&rayon=2000&page=1&page_size=50').then(d=>{gd.icpe=d.data||[];}),
+    iaFetchJSON('https://georisques.gouv.fr/api/v1/mvt?latlon='+lng+','+lat+'&rayon=2000&page=1&page_size=50').then(d=>{gd.mvt=d.data||[];}),
+    iaFetchBSS(lat,lng).then(bss=>{gd.bss=bss;}),
+    iaFetchNappes(lat,lng).then(label=>{gd.nappes=label;}),
+    iaFetchArgiles(lat,lng).then(label=>{gd.argiles=label;}),
+    iaFetchGeologie(lat,lng).then(geo=>{gd.geologie=geo;}),
+    iaFetchAltitude(lat,lng).then(alt=>{gd.altitude=alt;})
+  ]);
+  geocartoData=gd;
+  document.getElementById('ia-ctx-geocarto').disabled=false;
+  const ok=results.filter(r=>r.status==='fulfilled').length;
+  const tot=results.length;
+  $st.className=ok>5?'ok':'err';
+  $st.textContent=ok+'/'+tot+' APIs \u2014 '+(gd.risques?gd.risques.length:0)+' risques, zone sismique '+(gd.sismique||'?')+', '+(gd.cavites?gd.cavites.length:0)+' cavit\u00e9s, '+(gd.bss?gd.bss.length:0)+' sondages BSS';
+  $btn.disabled=false;
+  renderGeocartoPanel();
+}
+
+// ═══ RENDU PANNEAU GÉOCARTO ═══
+function gcWmsMap(layers,wmsUrl,lat,lng,span,w,h){
+  if(!lat||!lng)return '';
+  const s=span||0.015;
+  const bbox=(lng-s)+','+(lat-s)+','+(lng+s)+','+(lat+s);
+  const url=(wmsUrl||'https://mapsref.brgm.fr/wxs/georisques/risques')+'?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS='+encodeURIComponent(layers)+'&SRS=EPSG:4326&BBOX='+bbox+'&WIDTH='+(w||340)+'&HEIGHT='+(h||180)+'&FORMAT=image/png&STYLES=&TRANSPARENT=false';
+  return '<img class="gc-map-img" src="'+url+'" alt="Carte '+layers+'" loading="lazy" onerror="this.style.display=\'none\'">';
+}
+
+function renderGeocartoPanel(){
+  const $c=document.getElementById('gc-content');
+  if(!$c)return;
+  if(!geocartoData){$c.innerHTML='<div class="gc-empty">Aucune donn\u00e9e de site.<br>Cr\u00e9ez un nouveau projet avec une adresse.</div>';return;}
+  const g=geocartoData;
+  const sismLabels={1:'Très faible',2:'Faible',3:'Modérée',4:'Moyenne',5:'Forte'};
+  const sismColors={1:'green',2:'green',3:'orange',4:'red',5:'red'};
+  let html='';
+  // En-tête résumé
+  html+='<div class="gc-summary">';
+  html+='<div class="gc-addr">'+(g.addr||'\u2014')+'</div>';
+  html+='<div class="gc-meta">';
+  if(g.commune)html+=g.commune+(g.codePostal?' ('+g.codePostal+')':'');
+  if(g.departement)html+=' \u2014 '+g.departement;
+  html+='</div>';
+  html+='<div class="gc-meta" style="margin-top:4px">';
+  if(g.altitude)html+='Altitude : <strong>'+g.altitude+' m NGF</strong> \u00a0\u00a0';
+  html+='GPS : '+g.lat.toFixed(6)+', '+g.lng.toFixed(6);
+  html+='</div>';
+  html+='</div>';
+  // Zone sismique
+  const sc=g.sismique?String(g.sismique):'?';
+  const scColor=sismColors[g.sismique]||'gray';
+  const scLabel=sismLabels[g.sismique]||'';
+  const scBadge=g.sismique?'Zone '+sc+' — '+scLabel:'?';
+  html+=gcSection('Zone sismique','gc-badge-'+scColor,scBadge,
+    (g.sismique?'Sismicité <strong>'+scLabel.toLowerCase()+'</strong> (Eurocode 8)':'Donnée non disponible')
+    +gcWmsMap('risq_zonage_sismique','https://mapsref.brgm.fr/wxs/georisques/risques',g.lat,g.lng,0.4));
+  // Argiles RGA
+  const argLabel=g.argiles||'Non disponible';
+  const argShort=argLabel.match(/fort/i)?'Forte':argLabel.match(/moyen/i)?'Moyenne':argLabel.match(/faible/i)?'Faible':argLabel.replace(/^exposition\s*/i,'');
+  const argColor=argLabel.match(/fort/i)?'red':argLabel.match(/moyen/i)?'orange':'green';
+  html+=gcSection('Aléa argiles (RGA)','gc-badge-'+argColor,argShort,
+    argLabel
+    +gcWmsMap('ALEARG','https://geoservices.brgm.fr/risques',g.lat,g.lng,0.015));
+  // Nappes
+  const napLabel=g.nappes||'Non disponible';
+  const napShort=napLabel.match(/débordement/i)?'Débordement':napLabel.match(/cave/i)?'Inond. cave':napLabel.match(/pas.*sensible/i)?'Non sensible':napLabel.length>25?napLabel.substring(0,22)+'…':napLabel;
+  const napColor=napLabel.match(/débordement/i)?'red':napLabel.match(/cave/i)?'orange':'green';
+  html+=gcSection('Remontée de nappes','gc-badge-'+napColor,napShort,
+    napLabel
+    +gcWmsMap('REMNAPPE_FIAB','https://geoservices.brgm.fr/risques',g.lat,g.lng,0.015));
+  // Géologie
+  let geoHtml='';let geoBadge='';
+  if(g.geologie){
+    if(g.geologie.feuille)geoHtml+='<strong>Feuille :</strong> '+g.geologie.feuille+'<br>';
+    if(g.geologie.litho){geoHtml+='<strong>Lithologie :</strong> '+g.geologie.litho;geoBadge=g.geologie.litho.length>20?g.geologie.litho.substring(0,18)+'…':g.geologie.litho;}
+  }
+  html+=gcSection('Géologie / Lithologie','gc-badge-blue',geoBadge||'',geoHtml||'Donnée non disponible');
+  // Risques
+  html+=gcListSection('Risques identifiés',g.risques,r=>r.libelle_risque_long||r.libelle_risque_jo||'?','red');
+  // CatNat
+  html+=gcListSection('Catastrophes naturelles',g.catnat,c=>(c.dat_deb||'')+' \u2014 '+(c.lib_risque_jo||''),'orange');
+  // Cavités
+  html+=gcListSection('Cavités souterraines',g.cavites,c=>(c.nom||'?')+' ('+(c.type_cavite||'')+')','orange');
+  // ICPE
+  html+=gcListSection('Sites ICPE',g.icpe,i=>(i.raisonSociale||i.nom||'?')+' \u2014 '+(i.regime||'')+(i.seveso?' <strong>SEVESO</strong>':''),'red');
+  // Mouvements terrain
+  html+=gcListSection('Mouvements de terrain',g.mvt,m=>(m.type||'?')+' ('+(m.date_debut||'')+')', 'orange');
+  // BSS
+  html+=gcListSection('Sondages BSS proches',g.bss,b=>{
+    let t='<strong>'+(b.code_bss||'?')+'</strong> ('+(b.nature||'')+')';
+    if(b.profondeur)t+=' \u2014 prof='+b.profondeur+'m';
+    if(b.altitude)t+=' alt='+b.altitude+'m';
+    return t;
+  },'blue');
+  $c.innerHTML=html;
+  // Activer checkbox IA
+  const gcCheck=document.getElementById('ia-ctx-geocarto');
+  if(gcCheck)gcCheck.disabled=false;
+}
+
+function gcSection(title,badgeClass,badgeText,content){
+  let badge=badgeText?'<span class="gc-badge '+badgeClass+'">'+badgeText+'</span>':'<span class="gc-badge '+badgeClass+'">&bull;</span>';
+  return '<details class="gc-section"><summary><span class="gc-arrow">&#9654;</span><span class="gc-title">'+title+'</span>'+badge+'</summary><div class="gc-content">'+content+'</div></details>';
+}
+
+function gcListSection(title,arr,fmtFn,color){
+  const list=arr||[];
+  const n=list.length;
+  const badgeClass=n>0?'gc-badge-'+color:'gc-badge-gray';
+  let content='';
+  if(n===0)content='Aucun';
+  else{content='<ul>';list.forEach(item=>{content+='<li>'+fmtFn(item)+'</li>';});content+='</ul>';}
+  return '<details class="gc-section"><summary><span class="gc-arrow">&#9654;</span><span class="gc-title">'+title+'</span><span class="gc-badge '+badgeClass+'">'+n+'</span></summary><div class="gc-content">'+content+'</div></details>';
+}
+
+function toggleIAPanel(){
+  const p=document.getElementById('ia-panel');
+  p.classList.toggle('open');
+  if(p.classList.contains('open'))updateIACtxStatus();
+}
+function openIAPanel(){document.getElementById('ia-panel').classList.add('open');updateIACtxStatus();}
+function closeIAPanel(){document.getElementById('ia-panel').classList.remove('open');}
+function clearIAChat(){
+  iaMessages=[];
+  const $m=document.getElementById('ia-messages');
+  $m.innerHTML='<div class="ia-msg system">Conversation effacée. Posez une nouvelle question.</div>';
+}
+
+function buildSondageContext(){
+  if(!document.getElementById('ia-ctx-sondages').checked)return '';
+  if(sondages.length===0)return '';
+  const typeNames={penetro_dyn:'Pénétromètre dynamique',penetro_stat:'Pénétromètre statique',tariere:'Sondage à la tarière',pelle_meca:'Sondage pelle mécanique',fondation:'Reconnaissance de fondation'};
+  const soilNames={terre_vegetale:'Terre végétale',remblai:'Remblais',argile:'Argile',limon:'Limon',sable:'Sable',gravier:'Gravier',marne:'Marne',calcaire:'Calcaire',roche:'Roche',tourbe:'Tourbe',craie:'Craie',gres:'Grès',schiste:'Schiste'};
+  const fondTypeNames={semelle_filante:'Semelle filante',semelle_isolee:'Semelle isolée',radier:'Radier',puits:'Puits',pieux:'Pieux',micropieux:'Micropieux',autre:'Autre'};
+  const fondStateNames={bon:'Bon état',moyen:'État moyen',degrade:'Dégradé',tres_degrade:'Très dégradé'};
+  let ctx="\n\n--- DONNÉES DE SONDAGES DU PROJET ---\n";
+  const refVal=document.getElementById('project-ref').value.trim();
+  if(refVal) ctx+="Projet : "+refVal+"\n";
+  ctx+="Nombre de sondages : "+sondages.length+"\n";
+  sondages.forEach(s=>{
+    ctx+="\n========================================\n";
+    ctx+="\u2022 "+s.name+" ("+(typeNames[s.type]||s.type)+")\n";
+    if(s.date) ctx+="  Date : "+s.date+"\n";
+    if(s.tnAltitude!=null) ctx+="  Altitude TN : "+s.tnAltitude.toFixed(2)+" m NGF\n";
+    if(s.sondageDepth!=null) ctx+="  Profondeur atteinte : "+s.sondageDepth.toFixed(2)+" m\n";
+    if(s.waterLevel!=null) ctx+="  Niveau d'eau : "+s.waterLevel.toFixed(2)+" m\n";
+    if(s.refusal) ctx+="  REFUS de l'outil en fond de sondage\n";
+    // --- Pénétromètre dynamique ---
+    if(s.type==='penetro_dyn'&&s.data&&s.data.length>0){
+      const filled=s.data.filter(d=>d.blows!=null);
+      if(filled.length>0){
+        ctx+="  Résultats pénétromètre dynamique (profondeur \u2192 nb coups/20cm) :\n";
+        filled.forEach(d=>{ctx+="    "+d.depth.toFixed(2)+" m : "+d.blows+" coups\n";});
+        const maxB=Math.max(...filled.map(d=>d.blows));
+        const minB=Math.min(...filled.map(d=>d.blows));
+        const avgB=(filled.reduce((a,d)=>a+d.blows,0)/filled.length).toFixed(1);
+        ctx+="  Statistiques : min="+minB+" / max="+maxB+" / moy="+avgB+" coups\n";
+      }
+    }
+    // --- Pénétromètre statique ---
+    if(s.type==='penetro_stat'&&s.data&&s.data.length>0){
+      const filled=s.data.filter(d=>d.qc!=null||d.fs!=null);
+      if(filled.length>0){
+        ctx+="  Résultats pénétromètre statique (profondeur \u2192 qc en MPa, fs en kPa) :\n";
+        filled.forEach(d=>{
+          let line="    "+d.depth.toFixed(2)+" m :";
+          if(d.qc!=null) line+=" qc="+d.qc+" MPa";
+          if(d.fs!=null) line+=" fs="+d.fs+" kPa";
+          if(d.qc!=null&&d.fs!=null&&d.fs>0) line+=" Rf="+(d.fs/(d.qc*1000)*100).toFixed(2)+"%";
+          ctx+=line+"\n";
+        });
+        const qcVals=filled.filter(d=>d.qc!=null).map(d=>d.qc);
+        if(qcVals.length>0){
+          ctx+="  Statistiques qc : min="+Math.min(...qcVals).toFixed(2)+" / max="+Math.max(...qcVals).toFixed(2)+" / moy="+(qcVals.reduce((a,v)=>a+v,0)/qcVals.length).toFixed(2)+" MPa\n";
+        }
+      }
+    }
+    // --- Tarière / Pelle mécanique (stratigraphie) ---
+    if((s.type==='tariere'||s.type==='pelle_meca')&&s.data&&s.data.length>0){
+      ctx+="  Coupe stratigraphique :\n";
+      s.data.forEach(d=>{
+        const natureName=soilNames[d.nature]||d.nature||'';
+        ctx+="    "+d.from.toFixed(2)+" \u2192 "+d.to.toFixed(2)+" m : "+natureName;
+        if(d.description) ctx+=" — "+d.description;
+        ctx+="\n";
+      });
+    }
+    // --- Fondation ---
+    if(s.type==='fondation'&&s.data){
+      const d=s.data;
+      ctx+="  Reconnaissance de fondation :\n";
+      if(d.fondationType) ctx+="    Type : "+(fondTypeNames[d.fondationType]||d.fondationType)+"\n";
+      if(d.depth) ctx+="    Profondeur : "+d.depth+" m\n";
+      if(d.dimensions) ctx+="    Dimensions : "+d.dimensions+"\n";
+      if(d.state) ctx+="    État : "+(fondStateNames[d.state]||d.state)+"\n";
+      if(d.description) ctx+="    Description : "+d.description+"\n";
+    }
+    // --- Notes / observations ---
+    if(s.notes&&s.notes.trim()) ctx+="  Observations : "+s.notes.trim()+"\n";
+  });
+  // --- Niveaux de référence ---
+  if(niveauRefs&&niveauRefs.length>0){
+    ctx+="\n========================================\n";
+    ctx+="NIVEAUX DE RÉFÉRENCE :\n";
+    niveauRefs.forEach(n=>{
+      ctx+="  "+n.label+" : "+n.value.toFixed(2)+" m NGF\n";
+    });
+  }
+  ctx+="\n--- FIN DES DONNÉES ---\n";
+  return ctx;
+}
+
+function buildGeocartoContext(){
+  const gcCheck=document.getElementById('ia-ctx-geocarto');
+  if(!gcCheck||!gcCheck.checked)return '';
+  if(!geocartoData)return '';
+  const g=geocartoData;
+  let ctx="\n\n--- DONN\u00c9ES G\u00c9OCARTO DU SITE ---\n";
+  ctx+="Adresse : "+(g.addr||"\u2014")+"\n";
+  ctx+="Coordonn\u00e9es : "+g.lat.toFixed(6)+", "+g.lng.toFixed(6)+"\n";
+  if(g.commune)ctx+="Commune : "+g.commune+" ("+(g.codePostal||"")+")";
+  if(g.departement)ctx+=" \u2014 "+g.departement;
+  if(g.commune)ctx+="\n";
+  if(g.altitude)ctx+="Altitude : "+g.altitude+" m NGF\n";
+  const sismLabels={1:"tr\u00e8s faible",2:"faible",3:"mod\u00e9r\u00e9e",4:"moyenne",5:"forte"};
+  if(g.sismique)ctx+="Zone sismique : "+g.sismique+" ("+(sismLabels[g.sismique]||"")+") \u2014 r\u00e9f\u00e9rence Eurocode 8\n";
+  if(g.argiles)ctx+="Al\u00e9a retrait-gonflement argiles : "+g.argiles+"\n";
+  if(g.nappes)ctx+="Remont\u00e9e de nappes : "+g.nappes+"\n";
+  if(g.geologie){
+    if(g.geologie.feuille)ctx+="Carte g\u00e9ologique : feuille "+g.geologie.feuille+"\n";
+    if(g.geologie.litho)ctx+="Lithologie : "+g.geologie.litho+"\n";
+  }
+  if(g.risques&&g.risques.length>0){
+    ctx+="\nRISQUES IDENTIFI\u00c9S ("+g.risques.length+") :\n";
+    g.risques.forEach(r=>{ctx+="  - "+(r.libelle_risque_long||r.libelle_risque_jo||"?")+"\n";});
+  }
+  if(g.catnat&&g.catnat.length>0){
+    ctx+="\nARR\u00caT\u00c9S CATASTROPHES NATURELLES ("+g.catnat.length+") :\n";
+    g.catnat.forEach(c=>{ctx+="  - "+(c.dat_deb||"")+" : "+(c.lib_risque_jo||"")+"\n";});
+  }
+  if(g.cavites&&g.cavites.length>0){
+    ctx+="\nCAVIT\u00c9S SOUTERRAINES ("+g.cavites.length+" dans 2km) :\n";
+    g.cavites.forEach(c=>{ctx+="  - "+(c.nom||"?")+" ("+(c.type_cavite||"")+", "+(c.origine||"")+")\n";});
+  }
+  if(g.icpe&&g.icpe.length>0){
+    ctx+="\nSITES ICPE ("+g.icpe.length+" dans 2km) :\n";
+    g.icpe.forEach(i=>{ctx+="  - "+(i.raisonSociale||i.nom||"?")+" \u2014 "+(i.regime||"")+(i.seveso?" SEVESO":"")+"\n";});
+  }
+  if(g.mvt&&g.mvt.length>0){
+    ctx+="\nMOUVEMENTS DE TERRAIN ("+g.mvt.length+" dans 2km) :\n";
+    g.mvt.forEach(m=>{ctx+="  - "+(m.type||"")+" ("+(m.date_debut||"")+")\n";});
+  }
+  if(g.bss&&g.bss.length>0){
+    ctx+="\nSONDAGES BSS PROCHES ("+g.bss.length+" dans 2km) :\n";
+    g.bss.forEach(b=>{
+      ctx+="  - "+(b.code_bss||"?")+" ("+(b.nature||"")+")";
+      if(b.profondeur)ctx+=" prof="+b.profondeur+"m";
+      if(b.altitude)ctx+=" alt="+b.altitude+"m";
+      if(b.nb_piezo&&b.nb_piezo!=="0")ctx+=" "+b.nb_piezo+" mesures pi\u00e9zo";
+      ctx+="\n";
+    });
+  }
+  ctx+="--- FIN DONN\u00c9ES G\u00c9OCARTO ---\n";
+  return ctx;
+}
+
+function formatIAResponse(text){
+  let html=text;
+  html=html.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+  html=html.replace(/\*(.+?)\*/g,'<em>$1</em>');
+  html=html.replace(/`([^`]+)`/g,'<code>$1</code>');
+  html=html.replace(/^### (.+)$/gm,'<strong style="font-size:14px">$1</strong>');
+  html=html.replace(/^## (.+)$/gm,'<strong style="font-size:15px">$1</strong>');
+  html=html.replace(/^# (.+)$/gm,'<strong style="font-size:16px">$1</strong>');
+  html=html.replace(/^[-•] (.+)$/gm,'<li>$1</li>');
+  html=html.replace(/(<li>.*<\/li>\n?)+/g,m=>'<ul>'+m+'</ul>');
+  html=html.replace(/\n{2,}/g,'</p><p>');
+  html=html.replace(/\n/g,'<br>');
+  html='<p>'+html+'</p>';
+  html=html.replace(/<p><\/p>/g,'');
+  return html;
+}
+
+function updateIACtxStatus(){
+  const $s=document.getElementById('ia-ctx-status');
+  if(!$s)return;
+  const nSond=sondages.length;
+  const sondChecked=document.getElementById('ia-ctx-sondages').checked;
+  const gcChecked=document.getElementById('ia-ctx-geocarto').checked&&!document.getElementById('ia-ctx-geocarto').disabled;
+  let parts=[];
+  if(sondChecked&&nSond>0)parts.push('✅ '+nSond+' sondage'+(nSond>1?'s':''));
+  else if(!sondChecked)parts.push('⬜ Sondages désactivés');
+  else parts.push('⚠️ 0 sondage');
+  if(gcChecked&&geocartoData)parts.push('✅ GéoCarto');
+  else if(!geocartoData)parts.push('⚠️ Pas de GéoCarto');
+  else parts.push('⬜ GéoCarto désactivé');
+  $s.textContent='📊 '+parts.join(' | ');
+}
+
+async function sendIAMessage(){
+  if(iaStreaming)return;
+  const $input=document.getElementById('ia-input');
+  const text=$input.value.trim();
+  if(!text)return;
+
+  let ctxSondages='';try{ctxSondages=buildSondageContext();}catch(e){console.warn('[GéoTrouveTout] buildSondageContext ERREUR:',e);}
+  let ctxGeocarto='';try{ctxGeocarto=buildGeocartoContext();}catch(e){console.warn('[GéoTrouveTout] buildGeocartoContext ERREUR:',e);}
+  const iaContext=ctxSondages+ctxGeocarto;
+  console.log('[GéoTrouveTout] Envoi — sondages en mémoire:',sondages.length,'| checkbox sondages:',document.getElementById('ia-ctx-sondages').checked,'| ctxSondages:',ctxSondages.length,'car | ctxGeocarto:',ctxGeocarto.length,'car | total contexte:',iaContext.length,'car');
+  updateIACtxStatus();
+
+  iaMessages.push({role:'user',content:text});
+
+  const $m=document.getElementById('ia-messages');
+  const userDiv=document.createElement('div');
+  userDiv.className='ia-msg user';
+  userDiv.textContent=text;
+  $m.appendChild(userDiv);
+
+  const loadDiv=document.createElement('div');
+  loadDiv.className='ia-msg assistant loading';
+  loadDiv.textContent='Réflexion en cours...';
+  $m.appendChild(loadDiv);
+  $m.scrollTop=$m.scrollHeight;
+
+  $input.value='';$input.style.height='auto';
+  document.getElementById('ia-send').disabled=true;
+  iaStreaming=true;
+
+  try{
+    const resp=await fetch(IA_PROXY_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({messages:iaMessages,context:iaContext||''})
+    });
+    const data=await resp.json();
+    if(data.error){
+      loadDiv.className='ia-msg system';
+      loadDiv.textContent='Erreur : '+(data.error.message||data.error);
+    }else{
+      const reply=data.content&&data.content[0]?data.content[0].text:'(pas de réponse)';
+      iaMessages.push({role:'assistant',content:reply});
+      loadDiv.className='ia-msg assistant';
+      loadDiv.innerHTML=formatIAResponse(reply);
+    }
+  }catch(e){
+    loadDiv.className='ia-msg system';
+    loadDiv.textContent='Connexion impossible au proxy GéoTrouveTout. Lancez : python proxy-ia.py';
+  }
+
+  iaStreaming=false;
+  document.getElementById('ia-send').disabled=false;
+  $m.scrollTop=$m.scrollHeight;
+}
+
+// Auto-resize textarea
+document.addEventListener('input',function(e){
+  if(e.target.id==='ia-input'){e.target.style.height='auto';e.target.style.height=Math.min(e.target.scrollHeight,120)+'px';}
+});
+
 // ═══ LÉGENDE ═══
 
 function openLegend(){
@@ -1996,11 +2841,24 @@ function openNewStudyModal(){
   document.getElementById('new-study-ref').value='';
   document.getElementById('new-study-error').textContent='';
   document.getElementById('new-study-ref').classList.remove('error');
+  document.getElementById('new-study-addr').value='';
+  document.getElementById('new-study-lat').value='';
+  document.getElementById('new-study-lng').value='';
+  document.getElementById('new-study-insee').value='';
+  document.getElementById('new-study-suggest').style.display='none';
+  document.getElementById('new-study-coords').textContent='';
+  // Reset marqueur carte
+  if(studyMarker&&studyMap){studyMap.removeLayer(studyMarker);studyMarker=null;}
   document.getElementById('new-study-modal').classList.add('open');
-  setTimeout(()=>document.getElementById('new-study-ref').focus(),100);
+  setTimeout(()=>{
+    document.getElementById('new-study-ref').focus();
+    initStudyMap();
+  },150);
 }
 function closeNewStudyModal(){
   document.getElementById('new-study-modal').classList.remove('open');
+  // Détruire la carte (Leaflet ne supporte pas bien display:none)
+  if(studyMap){studyMap.remove();studyMap=null;studyMarker=null;studyOsmLayer=null;studySatLayer=null;studyCadastreLayer=null;studyCadastreVisible=false;studyCurrentLayer='osm';}
 }
 
 async function createNewStudy(){
@@ -2016,6 +2874,11 @@ async function createNewStudy(){
   }
   // Remplir la référence projet
   document.getElementById('project-ref').value=ref;autoSizeRef();
+  // Stocker l'adresse du site
+  projectAddr=document.getElementById('new-study-addr').value.trim();
+  projectLat=parseFloat(document.getElementById('new-study-lat').value)||null;
+  projectLng=parseFloat(document.getElementById('new-study-lng').value)||null;
+  projectInsee=document.getElementById('new-study-insee').value||null;
   const fileName='VISIO_'+ref+'.geoter';
   if(window.showSaveFilePicker){
     try{
@@ -2037,6 +2900,15 @@ async function createNewStudy(){
   }
   closeNewStudyModal();
   activateApp();
+  // Lancer l'enquête GéoCarto si une adresse est saisie
+  if(projectLat!=null&&projectLng!=null){
+    document.getElementById('ia-geo-lat').value=projectLat;
+    document.getElementById('ia-geo-lng').value=projectLng;
+    document.getElementById('ia-geo-addr').value=projectAddr;
+    geocartoInsee=projectInsee;
+    iaGeoInvestigate();
+    openGeocartoPanel();
+  }
 }
 
 function activateApp(){
@@ -2068,6 +2940,12 @@ function buildProjectJSON(){
     sondages:sondages.map(s=>({...s})),
     niveauRefs:niveauRefs.map(n=>({...n}))
   };
+  // Persister données GéoCarto
+  if(projectAddr)project.projectAddr=projectAddr;
+  if(projectLat!=null)project.projectLat=projectLat;
+  if(projectLng!=null)project.projectLng=projectLng;
+  if(projectInsee)project.projectInsee=projectInsee;
+  if(geocartoData)project.geocartoData=geocartoData;
   if(window.getScan3DExportData){
     const s3d=window.getScan3DExportData();
     if(s3d) project.scan3d=s3d;
@@ -2180,6 +3058,12 @@ function importProject(e){
     savedFileHandle=null; // Pas de handle en lecture, le 1er "Enregistrer" demandera l'emplacement
     // Restore project ref
     document.getElementById('project-ref').value=project.projectRef||'';autoSizeRef();
+    // Restore données GéoCarto (avant le return pour projet sans plan)
+    if(project.projectAddr){projectAddr=project.projectAddr;projectLat=project.projectLat||null;projectLng=project.projectLng||null;projectInsee=project.projectInsee||null;}
+    if(project.geocartoData){geocartoData=project.geocartoData;try{renderGeocartoPanel();}catch(e){console.warn('renderGeocartoPanel error:',e);}}
+    const hAddr0=document.getElementById('ia-geo-addr');if(hAddr0&&projectAddr)hAddr0.value=projectAddr;
+    const hLat0=document.getElementById('ia-geo-lat');if(hLat0&&projectLat)hLat0.value=projectLat;
+    const hLng0=document.getElementById('ia-geo-lng');if(hLng0&&projectLng)hLng0.value=projectLng;
     // Projet sans plan (nouveau projet vide)
     if(!project.planImgSrc){
       if(window.importScan3DFromProject) window.importScan3DFromProject(project.scan3d||null);

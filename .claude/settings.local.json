@@ -21,7 +21,13 @@
       "Bash(python3 -c \":*)",
       "Bash(node -e \":*)",
       "Bash(where node)",
-      "Bash(\"/c/Program Files/nodejs/node.exe\" -e \":*)"
+      "Bash(\"/c/Program Files/nodejs/node.exe\" -e \":*)",
+      "Bash(cmd.exe /c \"where python\")",
+      "Bash(cmd.exe /c \"where python3\")",
+      "Bash(cmd.exe /c \"python --version\")",
+      "Bash(cmd.exe /c \"python3 --version\")",
+      "Bash(cmd.exe /c \"py --version\")",
+      "Bash(tr ';' '\\\\n')"
     ]
   }
 }
