@@ -4,11 +4,25 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>GéoTer' — Annotateur de plans terrain</title>
-<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,400;0,6..12,600;0,6..12,700;0,6..12,800;0,6..12,900;1,6..12,400&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.167.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.167.0/examples/jsm/"}}</script>
+<!-- PWA Meta -->
+<meta name="theme-color" content="#F2B705">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GéoTer'">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<!-- Polices auto-hébergées -->
+<style>
+@font-face{font-family:'Nunito Sans';font-weight:100 900;font-style:normal;font-display:swap;src:url('lib/fonts/nunito-sans-normal.woff2') format('woff2')}
+@font-face{font-family:'Nunito Sans';font-weight:400;font-style:italic;font-display:swap;src:url('lib/fonts/nunito-sans-italic.woff2') format('woff2')}
+@font-face{font-family:'Playfair Display';font-weight:700;font-style:normal;font-display:swap;src:url('lib/fonts/playfair-display-700.woff2') format('woff2')}
+</style>
+<!-- Librairies locales -->
+<script src="lib/pdf.min.js"></script>
+<link rel="stylesheet" href="lib/leaflet.min.css"/>
+<script src="lib/leaflet.min.js"></script>
+<script type="importmap">{"imports":{"three":"./lib/three/three.module.js","three/addons/":"./lib/three/examples/jsm/"}}</script>
 <style>
   :root {
     --yellow: #F2B705; --yellow-light: #F5C842; --yellow-dark: #D9A004;
@@ -344,14 +358,26 @@
   .se-btn-close{background:none;color:#fff;font-size:20px;padding:2px 8px}
   .se-btn-close:hover{background:rgba(255,255,255,0.15)}
   #sondage-edit-body{display:flex;flex:1;overflow:hidden}
-  #sondage-table-wrap{width:340px;min-width:260px;overflow-y:auto;padding:12px;border-right:2px solid var(--gray-100);flex-shrink:0}
+  #sondage-table-wrap{width:420px;min-width:320px;overflow-y:auto;padding:12px;border-right:2px solid var(--gray-100);flex-shrink:0}
   #sondage-graph-wrap{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;background:var(--gray-50)}
   .sondage-table{width:100%;border-collapse:collapse;font-size:11px}
   .sondage-table th{background:var(--black);color:var(--yellow);padding:6px 4px;font-weight:800;font-size:10px;text-transform:uppercase;letter-spacing:.03em;position:sticky;top:0;z-index:2}
   .sondage-table td{padding:2px 3px;border-bottom:1px solid var(--gray-100);text-align:center}
   .sondage-table tr:hover{background:var(--yellow-pale)}
-  .sondage-table input[type="number"]{width:100%;padding:4px 2px;border:1px solid var(--gray-200);border-radius:4px;font-size:12px;font-weight:700;font-family:inherit;text-align:center;outline:none;box-sizing:border-box}
-  .sondage-table input[type="number"]:focus{border-color:var(--yellow);background:var(--yellow-pale)}
+  .sondage-table input[type="number"]{width:100%;padding:6px 2px;border:1.5px solid var(--gray-200);border-radius:6px;font-size:16px;font-weight:800;font-family:inherit;text-align:center;outline:none;box-sizing:border-box;height:44px}
+  .sondage-table input[type="number"]:focus{border-color:var(--yellow);background:var(--yellow-pale);box-shadow:0 0 0 2px var(--yellow-glow)}
+  /* Boutons +/- terrain */
+  .sonde-input-group{display:flex;align-items:stretch;gap:3px}
+  .sonde-input-group input[type="number"]{flex:1;min-width:0}
+  .sonde-btn-minus,.sonde-btn-plus,.sonde-btn-next{border:none;border-radius:6px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit;transition:background .15s,transform .1s;-webkit-tap-highlight-color:transparent;user-select:none}
+  .sonde-btn-minus{width:34px;height:44px;background:var(--gray-100);color:var(--red);font-size:20px}
+  .sonde-btn-minus:active{background:var(--gray-200);transform:scale(.92)}
+  .sonde-btn-plus{width:44px;height:44px;background:var(--yellow);color:var(--black);font-size:24px;box-shadow:0 1px 4px var(--yellow-glow)}
+  .sonde-btn-plus:active{background:var(--yellow-dark);transform:scale(.94)}
+  .sonde-btn-next{width:38px;height:44px;background:var(--black);color:var(--yellow);font-size:15px}
+  .sonde-btn-next:active{background:var(--black-soft);transform:scale(.92)}
+  #sonde-depth-input::-webkit-inner-spin-button,#sonde-depth-input::-webkit-outer-spin-button{-webkit-appearance:none;appearance:none;margin:0}
+  #sonde-depth-input{-moz-appearance:textfield;appearance:textfield}
   .sondage-table input[type="text"]{width:100%;padding:4px 4px;border:1px solid var(--gray-200);border-radius:4px;font-size:11px;font-weight:600;font-family:inherit;outline:none;box-sizing:border-box}
   .sondage-table input[type="text"]:focus{border-color:var(--yellow);background:var(--yellow-pale)}
   .sondage-table select{width:100%;padding:3px 2px;border:1px solid var(--gray-200);border-radius:4px;font-size:11px;font-weight:600;font-family:inherit;outline:none;background:var(--white)}
@@ -642,13 +668,52 @@
     #new-study-map{height:200px!important}
     #new-study-map-section button{font-size:9px!important;padding:4px 8px!important}
   }
+  /* ═══ PWA : Statut réseau ═══ */
+  #network-status{position:fixed;top:0;left:0;right:0;z-index:9999;text-align:center;font-size:11px;font-weight:800;padding:4px 0;transition:transform .3s ease,opacity .3s ease;transform:translateY(-100%);opacity:0;pointer-events:none;font-family:'Nunito Sans',sans-serif;letter-spacing:.03em}
+  #network-status.offline{background:var(--red);color:#fff;transform:translateY(0);opacity:1;pointer-events:auto}
+  #network-status.back-online{background:var(--green);color:#fff;transform:translateY(0);opacity:1}
+  #net-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-left:8px;vertical-align:middle;transition:background .3s}
+  #net-dot.online{background:var(--green);box-shadow:0 0 4px rgba(76,175,80,.6)}
+  #net-dot.offline{background:var(--red);box-shadow:0 0 4px rgba(217,64,64,.6);animation:pulse-red 1.5s infinite}
+  @keyframes pulse-red{0%,100%{opacity:1}50%{opacity:.5}}
+  #pwa-toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--black);color:#fff;padding:10px 20px;border-radius:8px;font-size:12px;font-weight:700;z-index:10000;transition:transform .3s ease;box-shadow:0 4px 16px rgba(0,0,0,.4);pointer-events:none}
+  #pwa-toast.show{transform:translateX(-50%) translateY(0)}
+  #pwa-install-banner{position:fixed;bottom:0;left:0;right:0;background:var(--black);padding:12px 16px;z-index:10000;align-items:center;justify-content:center;gap:12px;border-top:3px solid var(--yellow);box-shadow:0 -4px 16px rgba(0,0,0,.3)}
+  /* ═══ PWA : Sauvegardes locales ═══ */
+  #idb-recovery-modal{display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.6);align-items:center;justify-content:center}
+  #idb-recovery-modal.open{display:flex}
+  #idb-recovery-content{background:#fff;border-radius:var(--radius-lg);padding:24px;max-width:500px;width:90%;max-height:70vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+  .idb-project-item{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border:1px solid var(--gray-200);border-radius:var(--radius);margin-bottom:8px;cursor:pointer;transition:all .15s}
+  .idb-project-item:hover{background:var(--yellow-pale);border-color:var(--yellow)}
+  .idb-project-info{flex:1}
+  .idb-project-ref{font-weight:800;font-size:14px;color:var(--black)}
+  .idb-project-date{font-size:11px;color:var(--gray-500);margin-top:2px}
+  .idb-project-del{background:none;border:none;color:var(--gray-300);font-size:16px;padding:4px 8px;cursor:pointer;border-radius:4px}
+  .idb-project-del:hover{background:var(--red);color:#fff}
 </style>
 </head>
 <body>
+<div id="network-status"></div>
+<div id="pwa-toast"></div>
+<div id="pwa-install-banner" style="display:none">
+  <span style="color:#fff;font-size:13px;font-weight:700;flex:1">Installer G\u00e9oTer' pour un acc\u00e8s rapide hors ligne</span>
+  <button onclick="triggerInstall()" style="background:var(--yellow);color:var(--black);border:none;border-radius:8px;padding:8px 18px;font-size:12px;font-weight:800;cursor:pointer">Installer</button>
+  <button onclick="dismissInstallBanner()" style="background:none;border:none;color:var(--gray-500);font-size:18px;cursor:pointer;padding:4px">&times;</button>
+</div>
+<div id="idb-recovery-modal">
+  <div id="idb-recovery-content">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-weight:800;font-size:16px">Sauvegardes locales</div>
+      <button onclick="document.getElementById('idb-recovery-modal').classList.remove('open')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--gray-500)">&times;</button>
+    </div>
+    <div id="idb-recovery-list"><div style="color:var(--gray-500);font-size:13px;text-align:center;padding:20px">Chargement...</div></div>
+  </div>
+</div>
 <div id="app">
   <div id="header">
     <div class="logo">
       <div class="logo-text">Géo<span class="highlight">Ter'</span><span style="font-size:0.35em;font-weight:400;color:rgba(255,255,255,0.65);font-family:'Space Grotesk',sans-serif;letter-spacing:0.05em;margin-left:0.6em;vertical-align:baseline">by GPH</span></div>
+      <span id="net-dot" class="online"></span>
     </div>
     <div class="actions">
       <label for="project-ref" style="color:rgba(255,255,255,0.6);font-size:11px;font-weight:700;white-space:nowrap;margin-right:4px">Ref. Dossier :</label><input type="text" id="project-ref" placeholder="N° réf. projet" spellcheck="false" readonly>
@@ -776,7 +841,7 @@
     <div id="eraser-cursor"></div>
     <div id="mrpropre-cursor"></div>
     <div id="empty-state">
-      <div id="welcome-screen"><div class="big-icon">📐</div><div class="welcome-title">Géo<span class="highlight">Ter'</span></div><p>Application de relevé terrain</p><div class="welcome-btns"><button class="btn-load-center" onclick="openNewStudyModal()">📝 Nouveau Projet</button><button class="btn-load-center btn-open-project" onclick="document.getElementById('projectInput').click()">📂 Ouvrir un projet</button></div></div>
+      <div id="welcome-screen"><div class="big-icon">📐</div><div class="welcome-title">Géo<span class="highlight">Ter'</span></div><p>Application de relevé terrain</p><div class="welcome-btns"><button class="btn-load-center" onclick="openNewStudyModal()">📝 Nouveau Projet</button><button class="btn-load-center btn-open-project" onclick="document.getElementById('projectInput').click()">📂 Ouvrir un projet</button></div><button onclick="openIDBRecovery()" style="background:none;border:none;color:var(--gray-500);font-size:11px;font-weight:700;cursor:pointer;margin-top:10px;text-decoration:underline">Sauvegardes locales</button></div>
       <div id="load-plan-screen" style="display:none"><div class="big-icon">📐</div><p>Chargez un plan PDF ou une image<br>pour commencer à annoter</p><button class="btn-load-center" onclick="openPlanPicker()">📄 Charger un plan</button><div class="hint">PDF, JPG, PNG</div></div>
     </div>
     <button id="btn-recadrer" onclick="resetView()" title="Recadrer">🎯</button>
@@ -1101,7 +1166,7 @@
   </div>
 </div>
 <script>
-pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+pdfjsLib.GlobalWorkerOptions.workerSrc='lib/pdf.worker.min.js';
 
 // ═══ SVG ICONS ═══
 const SVG = {
@@ -1165,6 +1230,186 @@ function generateShapeSVG(type,w,h,color,filled,opts){
     case 'cross':{const t=w*0.28,mx=w/2,my=h/2;return `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg"><polygon points="${mx-t/2},${sw} ${mx+t/2},${sw} ${mx+t/2},${my-t/2} ${w-sw},${my-t/2} ${w-sw},${my+t/2} ${mx+t/2},${my+t/2} ${mx+t/2},${h-sw} ${mx-t/2},${h-sw} ${mx-t/2},${my+t/2} ${sw},${my+t/2} ${sw},${my-t/2} ${mx-t/2},${my-t/2}"${opAttr} fill="${fc}" stroke="${s}" stroke-width="${sw}" stroke-linejoin="miter"/></svg>`;}
     default:return `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg"></svg>`;
   }
+}
+
+// ═══ INDEXEDDB — SAUVEGARDE LOCALE & FILE D'ATTENTE HORS-LIGNE ═══
+const GEOTER_DB_NAME='geoter-db';
+const GEOTER_DB_VERSION=1;
+let geoterDB=null;
+
+function openGeoterDB(){
+  return new Promise((resolve,reject)=>{
+    if(geoterDB){resolve(geoterDB);return;}
+    const req=indexedDB.open(GEOTER_DB_NAME,GEOTER_DB_VERSION);
+    req.onupgradeneeded=(e)=>{
+      const db=e.target.result;
+      if(!db.objectStoreNames.contains('projects')){
+        const store=db.createObjectStore('projects',{keyPath:'id'});
+        store.createIndex('projectRef','projectRef',{unique:false});
+        store.createIndex('updatedAt','updatedAt',{unique:false});
+      }
+      if(!db.objectStoreNames.contains('offlineQueue')){
+        const qStore=db.createObjectStore('offlineQueue',{keyPath:'id',autoIncrement:true});
+        qStore.createIndex('timestamp','timestamp',{unique:false});
+        qStore.createIndex('type','type',{unique:false});
+      }
+    };
+    req.onsuccess=(e)=>{geoterDB=e.target.result;resolve(geoterDB);};
+    req.onerror=(e)=>{console.warn('IndexedDB open failed:',e);reject(e);};
+  });
+}
+
+async function idbSaveProject(projectJSON){
+  const db=await openGeoterDB();
+  const refVal=projectJSON.projectRef||'sans-ref';
+  const record={
+    id:'project_'+refVal,
+    projectRef:refVal,
+    data:projectJSON,
+    updatedAt:Date.now()
+  };
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction('projects','readwrite');
+    tx.objectStore('projects').put(record);
+    tx.oncomplete=resolve;
+    tx.onerror=reject;
+  });
+}
+
+async function idbListProjects(){
+  const db=await openGeoterDB();
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction('projects','readonly');
+    const req=tx.objectStore('projects').index('updatedAt').getAll();
+    req.onsuccess=()=>resolve(req.result.reverse());
+    req.onerror=reject;
+  });
+}
+
+async function idbLoadProject(id){
+  const db=await openGeoterDB();
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction('projects','readonly');
+    const req=tx.objectStore('projects').get(id);
+    req.onsuccess=()=>resolve(req.result?req.result.data:null);
+    req.onerror=reject;
+  });
+}
+
+async function idbDeleteProject(id){
+  const db=await openGeoterDB();
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction('projects','readwrite');
+    tx.objectStore('projects').delete(id);
+    tx.oncomplete=resolve;
+    tx.onerror=reject;
+  });
+}
+
+async function openIDBRecovery(){
+  document.getElementById('idb-recovery-modal').classList.add('open');
+  const $list=document.getElementById('idb-recovery-list');
+  $list.innerHTML='<div style="color:var(--gray-500);font-size:13px;text-align:center;padding:20px">Chargement...</div>';
+  try{
+    const projects=await idbListProjects();
+    if(projects.length===0){
+      $list.innerHTML='<div style="color:var(--gray-500);font-size:13px;text-align:center;padding:20px">Aucune sauvegarde locale trouv\u00e9e.</div>';
+      return;
+    }
+    $list.innerHTML='';
+    projects.forEach(p=>{
+      const d=document.createElement('div');
+      d.className='idb-project-item';
+      const date=new Date(p.updatedAt);
+      const dateStr=date.toLocaleDateString('fr-FR')+' '+date.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+      d.innerHTML='<div class="idb-project-info" onclick="restoreFromIDB(\''+p.id+'\')"><div class="idb-project-ref">'+p.projectRef+'</div><div class="idb-project-date">'+dateStr+'</div></div><button class="idb-project-del" onclick="event.stopPropagation();deleteFromIDB(\''+p.id+'\')" title="Supprimer">&times;</button>';
+      $list.appendChild(d);
+    });
+  }catch(e){
+    $list.innerHTML='<div style="color:var(--red);font-size:13px;text-align:center;padding:20px">Erreur : '+e.message+'</div>';
+  }
+}
+
+async function restoreFromIDB(id){
+  const project=await idbLoadProject(id);
+  if(!project){alert('Projet introuvable.');return;}
+  document.getElementById('idb-recovery-modal').classList.remove('open');
+  // Simuler un import de projet
+  activateApp();
+  savedFileHandle=null;
+  document.getElementById('project-ref').value=project.projectRef||'';autoSizeRef();
+  if(project.projectAddr){projectAddr=project.projectAddr;projectLat=project.projectLat||null;projectLng=project.projectLng||null;projectInsee=project.projectInsee||null;}
+  if(project.geocartoData){geocartoData=project.geocartoData;try{renderGeocartoPanel();}catch(e){}}
+  const hAddr0=document.getElementById('ia-geo-addr');if(hAddr0&&projectAddr)hAddr0.value=projectAddr;
+  const hLat0=document.getElementById('ia-geo-lat');if(hLat0&&projectLat)hLat0.value=projectLat;
+  const hLng0=document.getElementById('ia-geo-lng');if(hLng0&&projectLng)hLng0.value=projectLng;
+  if(!project.planImgSrc){
+    if(window.importScan3DFromProject)window.importScan3DFromProject(project.scan3d||null);
+    if(typeof showToast==='function')showToast('Projet restaur\u00e9 depuis la sauvegarde locale');
+    return;
+  }
+  planImgSrc=project.planImgSrc;planW=project.planW||1200;planH=project.planH||800;
+  const $img=document.getElementById('plan-img');
+  $img.style.display='block';$img.src=planImgSrc;
+  $img.onload=function(){
+    document.getElementById('empty-state').style.display='none';
+    resizeDrawCanvas();
+    elements=(project.elements||[]).map(el=>{el.id=el.id||Date.now()+Math.random();return el;});
+    drawPaths=project.drawPaths||[];cleanPaths=project.cleanPaths||[];
+    if(project.photos)photos=project.photos.map(p=>({dataUrl:p.dataUrl||p.src||'',timestamp:p.timestamp||'',name:p.name||'',checked:p.checked!==false}));
+    renderPhotos();
+    if(project.sondages)sondages=project.sondages;
+    if(project.niveauRefs)niveauRefs=project.niveauRefs;
+    if(window.importScan3DFromProject)window.importScan3DFromProject(project.scan3d||null);
+    selectedId=null;redrawCanvas();redrawCleanCanvas();renderElements();resetView();
+    setTimeout(()=>{resizeDrawCanvas();resetView();},100);
+    if(typeof showToast==='function')showToast('Projet restaur\u00e9 depuis la sauvegarde locale');
+  };
+}
+
+async function deleteFromIDB(id){
+  if(!confirm('Supprimer cette sauvegarde locale ?'))return;
+  await idbDeleteProject(id);
+  openIDBRecovery();
+}
+
+// ═══ FILE D'ATTENTE HORS-LIGNE ═══
+async function queueOfflineAction(action){
+  const db=await openGeoterDB();
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction('offlineQueue','readwrite');
+    tx.objectStore('offlineQueue').add(action);
+    tx.oncomplete=resolve;
+    tx.onerror=reject;
+  });
+}
+
+async function processOfflineQueue(){
+  try{
+    const db=await openGeoterDB();
+    const tx=db.transaction('offlineQueue','readonly');
+    const items=await new Promise((resolve,reject)=>{
+      const req=tx.objectStore('offlineQueue').getAll();
+      req.onsuccess=()=>resolve(req.result);
+      req.onerror=reject;
+    });
+    if(items.length===0)return;
+    if(typeof showToast==='function')showToast('Traitement de '+items.length+' requ\u00eate(s) en attente...');
+    for(const item of items){
+      try{
+        if(item.type==='geocarto'){
+          document.getElementById('ia-geo-lat').value=item.lat;
+          document.getElementById('ia-geo-lng').value=item.lng;
+          document.getElementById('ia-geo-addr').value=item.addr||'';
+          geocartoInsee=item.insee;
+          await iaGeoInvestigate();
+        }
+        // Supprimer l'action traitée
+        const delTx=db.transaction('offlineQueue','readwrite');
+        delTx.objectStore('offlineQueue').delete(item.id);
+      }catch(e){console.warn('Erreur traitement file hors-ligne:',e);}
+    }
+  }catch(e){console.warn('processOfflineQueue error:',e);}
 }
 
 const STICKER_SECTIONS = [
@@ -2429,6 +2674,18 @@ async function iaGeoInvestigate(){
   const lat=parseFloat(document.getElementById('ia-geo-lat').value);
   const lng=parseFloat(document.getElementById('ia-geo-lng').value);
   if(isNaN(lat)||isNaN(lng)){alert("S\u00e9lectionnez une adresse valide.");return;}
+  // Hors-ligne : mettre en file d'attente
+  if(!navigator.onLine){
+    await queueOfflineAction({
+      type:'geocarto',
+      lat:lat,lng:lng,
+      addr:document.getElementById('ia-geo-addr').value,
+      insee:geocartoInsee,
+      timestamp:Date.now()
+    });
+    if(typeof showToast==='function')showToast("Hors ligne \u2014 Enqu\u00eate G\u00e9oCarto mise en file d'attente");
+    return;
+  }
   const $btn=document.getElementById('ia-geo-btn');
   const $st=document.getElementById('ia-geo-status');
   $btn.disabled=true;
@@ -3012,9 +3269,11 @@ function buildProjectJSON(){
 }
 
 async function silentSave(){
+  const project=buildProjectJSON();
+  // Sauvegarde IndexedDB (toujours, même sans handle fichier)
+  idbSaveProject(project).catch(e=>console.warn('IDB backup failed:',e));
   if(!savedFileHandle)return;
   try{
-    const project=buildProjectJSON();
     const writable=await savedFileHandle.createWritable();
     await writable.write(new Blob([JSON.stringify(project)],{type:'application/json'}));
     await writable.close();
@@ -4199,16 +4458,6 @@ function calcQd(blows,depth){
   return qd/1e6; // Pa → MPa
 }
 
-const penetroSections={};
-function togglePenetroSection(secId,headerRow){
-  const body=document.getElementById(secId);
-  if(!body)return;
-  const isOpen=body.style.display!=='none';
-  body.style.display=isOpen?'none':'table-row-group';
-  penetroSections[secId]=!isOpen;
-  const arrow=headerRow.querySelector('.penetro-acc-arrow');
-  if(arrow)arrow.style.transform=isOpen?'rotate(0deg)':'rotate(90deg)';
-}
 
 function renderPenetroDynTable(s,$wrap){
   const tnVal=s.tnAltitude!=null?s.tnAltitude:'';
@@ -4222,48 +4471,43 @@ function renderPenetroDynTable(s,$wrap){
     </div>
     <div style="display:flex;align-items:center;gap:6px">
       <label style="font-weight:600;font-size:12px;white-space:nowrap;color:#A0724A;min-width:110px">Profondeur (m) :</label>
-      <input type="number" step="0.01" min="0" value="${dpVal}" placeholder="Ex: 4.60" style="width:130px;padding:4px 6px;border:1px solid #ccc;border-radius:4px;font-size:12px;color:#A0724A" oninput="sondageDepthInput(this.value)">
+      <div style="display:flex;align-items:center;gap:0">
+        <input type="number" step="0.10" min="0" id="sonde-depth-input" value="${dpVal}" placeholder="Ex: 4.60" style="width:100px;padding:4px 6px;border:1px solid #ccc;border-radius:6px 0 0 6px;font-size:14px;font-weight:700;color:#A0724A;-moz-appearance:textfield;outline:none" oninput="sondageDepthInput(this.value)">
+        <div style="display:flex;flex-direction:column;gap:0">
+          <button onclick="sondageDepthStep(-0.10)" tabindex="-1" style="width:30px;height:20px;border:1px solid #ccc;border-left:none;border-radius:0 6px 0 0;background:#f5f0e4;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;color:#A0724A;padding:0" title="-0.10 m">&#x25B2;</button>
+          <button onclick="sondageDepthStep(0.10)" tabindex="-1" style="width:30px;height:20px;border:1px solid #ccc;border-left:none;border-top:none;border-radius:0 0 6px 0;background:#f5f0e4;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;color:#A0724A;padding:0" title="+0.10 m">&#x25BC;</button>
+        </div>
+      </div>
     </div>
     <label style="font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px;color:#A0724A;margin-left:116px">
       <input type="checkbox" ${showDepthLine?'checked':''} onchange="toggleQdGraphVisibility(this.checked)" style="cursor:pointer"> Afficher la profondeur
     </label>
   </div>`;
+  // Dévoilement progressif : afficher les lignes remplies + la 1ère ligne vide
+  let lastFilledIdx=-1;
+  for(let i=s.data.length-1;i>=0;i--){if(s.data[i].blows!=null){lastFilledIdx=i;break;}}
+  const visibleCount=lastFilledIdx+2; // lignes remplies + 1 ligne vide suivante
+
   html+=`<table class="sondage-table"><thead><tr><th>Prof. (m)</th>${hasTn?'<th>Niv. (m)</th>':''}<th>N (coups)</th><th>qd (MPa)</th></tr></thead><tbody>`;
-  // Regrouper par sections : 0-3m ouvert, puis 1m par accordéon replié
-  let currentSection=-1;let sectionOpen=false;
   s.data.forEach((d,i)=>{
-    const depth=d.depth;
-    const section=depth<=3?0:Math.floor(depth);
-    if(section!==currentSection){
-      // Fermer la section précédente si c'était un accordéon
-      if(currentSection>0&&sectionOpen){html+=`</tbody>`;}
-      if(section>0&&section!==currentSection){
-        const secFrom=section;const secTo=section+1;
-        const secId='penetro-sec-'+section;
-        const isExpanded=penetroSections[secId]||false;
-        html+=`<tr class="penetro-accordion-header" onclick="togglePenetroSection('${secId}',this)" style="cursor:pointer;background:#F0F0F0;user-select:none">
-          <td colspan="${hasTn?4:3}" style="font-weight:700;font-size:11px;padding:4px 8px;color:#555">
-            <span class="penetro-acc-arrow" style="display:inline-block;transition:transform .2s;transform:rotate(${isExpanded?'90':'0'}deg);margin-right:4px">▶</span>
-            ${secFrom.toFixed(1)} — ${secTo.toFixed(1)} m
-          </td></tr>`;
-        html+=`<tbody class="penetro-acc-body" id="${secId}" style="display:${isExpanded?'table-row-group':'none'}">`;
-        sectionOpen=true;
-      }
-      currentSection=section;
-    }
+    if(i>=visibleCount)return; // masquer les lignes au-delà
     const isRefus=s.refusal&&i===s.data.findIndex(x=>x.blows!=null&&x.blows>=100);
     const qd=calcQd(d.blows,d.depth);
-    const qdStr=qd!=null?qd.toFixed(2):'—';
+    const qdStr=qd!=null?qd.toFixed(2):'\u2014';
     const nivStr=hasTn?(s.tnAltitude-d.depth).toFixed(2):'';
-    html+=`<tr class="${isRefus?'refus-row':''}"><td class="depth-cell">${d.depth.toFixed(2)}</td>
+    html+=`<tr class="${isRefus?'refus-row':''}" id="sonde-row-${i}"><td class="depth-cell">${d.depth.toFixed(2)}</td>
     ${hasTn?'<td style="text-align:center;font-size:11px;color:#666;font-weight:600">'+nivStr+'</td>':''}
-    <td><input type="number" min="0" max="999" value="${d.blows!=null?d.blows:''}" placeholder="—"
-      oninput="sondageDynInput(${i},this.value)"></td>
+    <td><div class="sonde-input-group">
+      <button class="sonde-btn-minus" onclick="sondageDynIncr(${i},-1)" tabindex="-1">&minus;</button>
+      <input type="number" min="0" max="999" value="${d.blows!=null?d.blows:''}" placeholder="\u2014"
+        id="sonde-n-${i}" oninput="sondageDynInput(${i},this.value)" inputmode="numeric">
+      <button class="sonde-btn-plus" onclick="sondageDynIncr(${i},1)" tabindex="-1">+</button>
+      <button class="sonde-btn-next" onclick="sondageFocusNext(${i})" tabindex="-1">&#x25BC;</button>
+    </div></td>
     <td style="text-align:center;font-size:11px;color:#555;font-weight:600">${qdStr}</td></tr>`;
   });
-  if(sectionOpen)html+=`</tbody>`;
   html+=`</tbody></table>`;
-  html+=`<div class="sondage-add-row"><button onclick="toggleRefusal()">🛑 ${s.refusal?'Annuler le refus':'Marquer Refus'}</button></div>`;
+  html+=`<div class="sondage-add-row"><button onclick="toggleRefusal()">🛑 ${s.refusal?'Masquer Refus':'Marquer Refus'}</button></div>`;
   html+=`<textarea class="sondage-notes" placeholder="Observations...">${s.notes||''}</textarea>`;
   $wrap.innerHTML=html;
 }
@@ -4291,11 +4535,83 @@ function sondageDepthInput(val){
   renderElements();
 }
 
+function sondageDepthStep(delta){
+  const s=getCurrentSondage();if(!s)return;
+  const cur=s.sondageDepth!=null?s.sondageDepth:0;
+  s.sondageDepth=Math.max(0,+(cur+delta).toFixed(2));
+  const inp=document.getElementById('sonde-depth-input');
+  if(inp)inp.value=s.sondageDepth;
+  if(s.type==='penetro_dyn'){renderPenetroDynGraph(s);renderQdGraph(s);}
+  renderElements();
+}
+
 function sondageDynInput(idx,val){
   const s=getCurrentSondage();if(!s)return;
   s.data[idx].blows=val===''?null:Math.max(0,parseInt(val)||0);
   renderPenetroDynGraph(s);
   renderQdGraph(s);
+  // Mettre à jour qd dans la cellule
+  const qd=calcQd(s.data[idx].blows,s.data[idx].depth);
+  const inp=document.getElementById('sonde-n-'+idx);
+  const qdCell=inp?inp.closest('tr').querySelector('td:last-child'):null;
+  if(qdCell)qdCell.textContent=qd!=null?qd.toFixed(2):'\u2014';
+  // Révéler la ligne suivante si cette ligne vient d'être remplie
+  if(s.data[idx].blows!=null){
+    sondageRevealNext(idx,s);
+  }
+}
+
+function sondageDynIncr(idx,delta){
+  const s=getCurrentSondage();if(!s)return;
+  const cur=s.data[idx].blows!=null?s.data[idx].blows:0;
+  s.data[idx].blows=Math.max(0,cur+delta);
+  const inp=document.getElementById('sonde-n-'+idx);
+  if(inp)inp.value=s.data[idx].blows;
+  renderPenetroDynGraph(s);
+  renderQdGraph(s);
+  const qd=calcQd(s.data[idx].blows,s.data[idx].depth);
+  const qdCell=inp?inp.closest('tr').querySelector('td:last-child'):null;
+  if(qdCell)qdCell.textContent=qd!=null?qd.toFixed(2):'\u2014';
+  // Révéler la ligne suivante
+  sondageRevealNext(idx,s);
+}
+
+function sondageRevealNext(idx,s){
+  const nextIdx=idx+1;
+  if(nextIdx>=s.data.length)return;
+  // Si la ligne suivante n'existe pas encore dans le DOM, la créer
+  if(!document.getElementById('sonde-row-'+nextIdx)){
+    const d=s.data[nextIdx];
+    const hasTn=s.tnAltitude!=null;
+    const nivStr=hasTn?(s.tnAltitude-d.depth).toFixed(2):'';
+    const tr=document.createElement('tr');
+    tr.id='sonde-row-'+nextIdx;
+    tr.innerHTML=`<td class="depth-cell">${d.depth.toFixed(2)}</td>
+      ${hasTn?'<td style="text-align:center;font-size:11px;color:#666;font-weight:600">'+nivStr+'</td>':''}
+      <td><div class="sonde-input-group">
+        <button class="sonde-btn-minus" onclick="sondageDynIncr(${nextIdx},-1)" tabindex="-1">&minus;</button>
+        <input type="number" min="0" max="999" value="" placeholder="\u2014"
+          id="sonde-n-${nextIdx}" oninput="sondageDynInput(${nextIdx},this.value)" inputmode="numeric">
+        <button class="sonde-btn-plus" onclick="sondageDynIncr(${nextIdx},1)" tabindex="-1">+</button>
+        <button class="sonde-btn-next" onclick="sondageFocusNext(${nextIdx})" tabindex="-1">&#x25BC;</button>
+      </div></td>
+      <td style="text-align:center;font-size:11px;color:#555;font-weight:600">\u2014</td>`;
+    // Insérer dans le tbody
+    const tbody=document.getElementById('sonde-row-'+idx).closest('tbody');
+    if(tbody)tbody.appendChild(tr);
+  }
+}
+
+function sondageFocusNext(idx){
+  const s=getCurrentSondage();if(!s)return;
+  const nextIdx=idx+1;
+  if(nextIdx>=s.data.length)return;
+  // Révéler d'abord la ligne suivante si nécessaire
+  sondageRevealNext(idx,s);
+  setTimeout(()=>{
+    const next=document.getElementById('sonde-n-'+nextIdx);
+    if(next){next.focus();next.select();next.scrollIntoView({behavior:'smooth',block:'center'});}
+  },30);
 }
 
 function toggleRefusal(){
@@ -5274,8 +5590,20 @@ function renderPenetroStatTable(s,$wrap){
   let html=`<table class="sondage-table"><thead><tr><th>Prof. (m)</th><th>qc (MPa)</th><th>fs (kPa)</th></tr></thead><tbody>`;
   s.data.forEach((d,i)=>{
     html+=`<tr><td class="depth-cell">${d.depth.toFixed(2)}</td>
-    <td><input type="number" min="0" max="100" step="0.1" value="${d.qc!=null?d.qc:''}" placeholder="—" oninput="sondageStatInput(${i},'qc',this.value)"></td>
-    <td><input type="number" min="0" max="1000" step="1" value="${d.fs!=null?d.fs:''}" placeholder="—" oninput="sondageStatInput(${i},'fs',this.value)"></td></tr>`;
+    <td><div class="sonde-input-group">
+      <button class="sonde-btn-minus" onclick="sondageStatIncr(${i},'qc',-0.1)" tabindex="-1">&minus;</button>
+      <input type="number" min="0" max="100" step="0.1" value="${d.qc!=null?d.qc:''}" placeholder="—"
+        id="sonde-qc-${i}" oninput="sondageStatInput(${i},'qc',this.value)" inputmode="decimal">
+      <button class="sonde-btn-plus" onclick="sondageStatIncr(${i},'qc',0.1)" tabindex="-1">+</button>
+      <button class="sonde-btn-next" onclick="sondageStatFocusNext(${i},'qc')" tabindex="-1">&#x25BC;</button>
+    </div></td>
+    <td><div class="sonde-input-group">
+      <button class="sonde-btn-minus" onclick="sondageStatIncr(${i},'fs',-1)" tabindex="-1">&minus;</button>
+      <input type="number" min="0" max="1000" step="1" value="${d.fs!=null?d.fs:''}" placeholder="—"
+        id="sonde-fs-${i}" oninput="sondageStatInput(${i},'fs',this.value)" inputmode="numeric">
+      <button class="sonde-btn-plus" onclick="sondageStatIncr(${i},'fs',1)" tabindex="-1">+</button>
+      <button class="sonde-btn-next" onclick="sondageStatFocusNext(${i},'fs')" tabindex="-1">&#x25BC;</button>
+    </div></td></tr>`;
   });
   html+=`</tbody></table>`;
   html+=`<div class="sondage-add-row"><button onclick="addStatRow()">+ Ajouter une ligne</button></div>`;
@@ -5287,6 +5615,30 @@ function sondageStatInput(idx,field,val){
   const s=getCurrentSondage();if(!s)return;
   s.data[idx][field]=val===''?null:parseFloat(val)||0;
   renderPenetroStatGraph(s);
+}
+
+function sondageStatIncr(idx,field,delta){
+  const s=getCurrentSondage();if(!s)return;
+  const cur=s.data[idx][field]!=null?s.data[idx][field]:0;
+  const newVal=Math.max(0,+(cur+delta).toFixed(2));
+  s.data[idx][field]=newVal;
+  const inp=document.getElementById('sonde-'+field+'-'+idx);
+  if(inp)inp.value=newVal;
+  renderPenetroStatGraph(s);
+}
+
+function sondageStatFocusNext(idx,field){
+  const s=getCurrentSondage();if(!s)return;
+  // D'abord passer au champ suivant de la même ligne (qc→fs)
+  if(field==='qc'){
+    const fsInp=document.getElementById('sonde-fs-'+idx);
+    if(fsInp){fsInp.focus();fsInp.select();return;}
+  }
+  // Sinon passer à qc de la ligne suivante
+  for(let i=idx+1;i<s.data.length;i++){
+    const next=document.getElementById('sonde-qc-'+i);
+    if(next){next.focus();next.select();next.scrollIntoView({behavior:'smooth',block:'center'});return;}
+  }
 }
 
 function addStatRow(){
@@ -6710,5 +7062,6 @@ window.importScan3DProject=function(e){
   e.target.value='';
 };
 </script>
+<script src="pwa-register.js"></script>
 </body>
 </html>

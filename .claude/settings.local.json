@@ -27,7 +27,8 @@
       "Bash(cmd.exe /c \"python --version\")",
       "Bash(cmd.exe /c \"python3 --version\")",
       "Bash(cmd.exe /c \"py --version\")",
-      "Bash(tr ';' '\\\\n')"
+      "Bash(tr ';' '\\\\n')",
+      "Bash(curl -sL -H \"Accept: text/css\" -A \"Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/120.0.0.0 Safari/537.36\" \"https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,400;0,6..12,600;0,6..12,700;0,6..12,800;0,6..12,900;1,6..12,400&family=Playfair+Display:wght@700&display=swap\")"
     ]
   }
 }
