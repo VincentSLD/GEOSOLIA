@@ -60,15 +60,15 @@
   #toolbar-options{background:var(--white);border-bottom:1px solid var(--gray-200);padding:0 8px;display:flex;align-items:center;gap:3px;flex-shrink:0;z-index:100;box-shadow:var(--shadow-sm);min-height:0}
   #toolbar-options{display:none}
   #toolbar.toolbar-active~#toolbar-options{display:flex}
-  .tool-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:6px 10px;border:none;border-radius:var(--radius);background:transparent;color:var(--gray-500);font-size:11px;font-weight:700;min-width:50px;transition:all .2s}
-  .tool-btn .icon{font-size:17px;height:20px;display:flex;align-items:center;justify-content:center}.tool-btn .label{font-size:8px;letter-spacing:.02em;white-space:nowrap}
+  .tool-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0px;padding:4px 7px;border:none;border-radius:var(--radius);background:transparent;color:var(--gray-500);font-size:10px;font-weight:700;min-width:40px;transition:all .2s}
+  .tool-btn .icon{font-size:15px;height:17px;display:flex;align-items:center;justify-content:center}.tool-btn .label{font-size:7px;letter-spacing:.02em;white-space:nowrap}
   .tool-btn:hover{background:var(--gray-100);color:var(--black)}
   .tool-btn.active{background:var(--black);color:var(--yellow)}
   .tool-btn.active-yellow{background:var(--yellow);color:var(--black)}
   .tool-btn.active-dark{background:var(--black-soft);color:var(--yellow)}
   .tool-btn.active-red{background:var(--red);color:#fff}
   .tool-btn.active-orange{background:#E88D00;color:#fff}
-  .tool-sep{width:1px;height:30px;background:var(--gray-200);margin:0 4px;flex-shrink:0}
+  .tool-sep{width:1px;height:24px;background:var(--gray-200);margin:0 3px;flex-shrink:0}
   .color-dot{width:22px;height:22px;border-radius:50%;border:2px solid var(--gray-200);cursor:pointer;flex-shrink:0;transition:all .15s}
   .color-dot:hover{transform:scale(1.15)}.color-dot.active{border:3px solid var(--black);box-shadow:0 0 0 2px var(--yellow-glow)}
   .sub-options{display:flex;gap:6px;align-items:center;margin-left:6px}
@@ -357,24 +357,26 @@
   .sondage-list-item:hover{border-color:var(--yellow);background:var(--yellow-pale)}
   .sondage-list-item .sondage-list-del{background:none;border:none;font-size:14px;cursor:pointer;padding:2px 6px;border-radius:4px;opacity:.5}
   .sondage-list-item .sondage-list-del:hover{opacity:1;background:var(--red);color:#fff}
-  #sondage-edit-modal{position:fixed;inset:0;background:var(--white);z-index:970;display:none;flex-direction:column}
+  #sondage-edit-modal{width:500px;min-width:380px;max-width:65vw;display:none;flex-direction:column;flex-shrink:0;background:var(--white);border-right:2px solid var(--yellow);overflow:hidden;position:relative}
   #sondage-edit-modal.open{display:flex}
-  #sondage-edit-header{display:flex;align-items:center;justify-content:space-between;padding:10px 18px;background:var(--black);border-bottom:3px solid var(--yellow);flex-shrink:0;gap:10px}
-  #sondage-edit-header>span{font-weight:800;font-size:14px;color:var(--yellow);white-space:nowrap}
-  #sondage-edit-header .se-actions{display:flex;align-items:center;gap:8px}
-  #sondage-name{padding:6px 10px;border:2px solid var(--gray-700);border-radius:var(--radius);font-size:13px;font-weight:700;font-family:inherit;color:var(--yellow);background:var(--black-soft);outline:none;width:120px}
+  .sondage-resize-handle{position:absolute;top:0;right:-5px;width:10px;height:100%;cursor:col-resize;z-index:20}
+  .sondage-resize-handle:hover,.sondage-resize-handle.active{background:var(--yellow);opacity:0.3;border-radius:3px}
+  #sondage-edit-header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--black);border-bottom:2px solid var(--yellow);flex-shrink:0;gap:6px}
+  #sondage-edit-header>span{font-weight:800;font-size:13px;color:var(--yellow);white-space:nowrap}
+  #sondage-edit-header .se-actions{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+  #sondage-name{padding:5px 8px;border:2px solid var(--gray-700);border-radius:var(--radius);font-size:12px;font-weight:700;font-family:inherit;color:var(--yellow);background:var(--black-soft);outline:none;width:90px}
   #sondage-name:focus{border-color:var(--yellow)}
   #sondage-name::placeholder{color:var(--gray-500)}
-  .se-btn{padding:6px 14px;border:none;border-radius:var(--radius);font-size:12px;font-weight:800;font-family:inherit;cursor:pointer;transition:all .2s}
+  .se-btn{padding:5px 10px;border:none;border-radius:var(--radius);font-size:11px;font-weight:800;font-family:inherit;cursor:pointer;transition:all .2s}
   .se-btn-save{background:var(--yellow);color:var(--black)}
   .se-btn-save:hover{background:var(--yellow-light)}
   .se-btn-export{background:var(--blue);color:#fff}
   .se-btn-export:hover{filter:brightness(1.15)}
   .se-btn-close{background:none;color:#fff;font-size:20px;padding:2px 8px}
   .se-btn-close:hover{background:rgba(255,255,255,0.15)}
-  #sondage-edit-body{display:flex;flex:1;overflow:hidden}
-  #sondage-table-wrap{width:420px;min-width:320px;overflow-y:auto;padding:12px;border-right:2px solid var(--gray-100);flex-shrink:0}
-  #sondage-graph-wrap{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;background:var(--gray-50)}
+  #sondage-edit-body{display:flex;flex-direction:column;flex:1;overflow-y:auto}
+  #sondage-table-wrap{width:100%;overflow-y:auto;padding:10px;border-bottom:2px solid var(--gray-100);flex-shrink:0;box-sizing:border-box}
+  #sondage-graph-wrap{flex:1;overflow:auto;padding:10px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;background:var(--gray-50)}
   .sondage-table{width:100%;border-collapse:collapse;font-size:11px}
   .sondage-table th{background:var(--black);color:var(--yellow);padding:6px 4px;font-weight:800;font-size:10px;text-transform:uppercase;letter-spacing:.03em;position:sticky;top:0;z-index:2}
   .sondage-table td{padding:2px 3px;border-bottom:1px solid var(--gray-100);text-align:center}
@@ -558,6 +560,11 @@
   .mep-panel-header>span{font-weight:800;font-size:13px;color:var(--yellow);display:flex;align-items:center;gap:6px}
   .mep-panel-close{background:none;border:none;color:#fff;font-size:18px;cursor:pointer;padding:2px 6px;border-radius:4px}
   .mep-panel-close:hover{background:rgba(255,255,255,0.15)}
+  .panel-pin{background:none;border:none;color:rgba(255,255,255,0.4);font-size:15px;cursor:pointer;padding:2px 6px;border-radius:4px;transition:all .15s;line-height:1}
+  .panel-pin:hover{color:#fff;background:rgba(255,255,255,0.15)}
+  .panel-pin.pinned{color:var(--yellow);transform:rotate(0deg)}
+  .panel-pin:not(.pinned){transform:rotate(30deg)}
+  .mep-panel-header .hdr-btns,.photo-panel-header .hdr-btns,#sondage-edit-header .se-actions{display:flex;align-items:center;gap:2px}
   .mep-panel-body{padding:14px;display:flex;flex-direction:column;gap:2px;flex:1;overflow-y:auto}
   .mep-dim-row{display:flex;gap:6px;align-items:center;margin-bottom:6px}
   .mep-dim-input{width:1px;flex:1;border:1px solid var(--gray-200);border-radius:6px;padding:6px 4px;font-size:12px;font-weight:700;font-family:inherit;color:var(--black);text-align:center;outline:none;transition:border-color .2s}
@@ -665,6 +672,7 @@
     .tool-btn .label{font-size:7px}
     .tool-sep{margin:0 2px;height:26px}
     #mep-panel{width:240px;min-width:200px}
+    #sondage-edit-modal{width:420px;min-width:340px}
     #photo-section{width:240px;min-width:180px}
     .photo-card .photo-zoom{display:none}
   }
@@ -674,6 +682,7 @@
     .tool-btn .label{display:none}
     .tool-sep{margin:0 1px;height:22px}
     #mep-panel{width:220px;min-width:180px;max-width:70vw}
+    #sondage-edit-modal{width:360px;min-width:300px;max-width:70vw}
     #photo-section{width:220px;min-width:160px;max-width:70vw}
     .welcome-btns{flex-direction:column;gap:10px}
     .welcome-title{font-size:24px}
@@ -755,9 +764,7 @@
     <button class="tool-btn" onclick="openCropTool()"><span class="icon" style="display:inline-flex"><svg viewBox="0 0 20 20" width="17" height="17" fill="none" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round"><path d="M5 1v14h14"/><path d="M1 5h14v14"/></svg></span><span class="label">Rogner</span></button>
     <button class="tool-btn" onclick="toggleInsertMenu()"><span class="icon" style="font-size:15px;line-height:1;display:inline-flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></span><span class="label">Insérer</span></button>
     <div class="tool-sep"></div>
-    <button class="tool-btn" onclick="openLegend()"><span class="icon">📋</span><span class="label">Légende</span></button>
     <button class="tool-btn" onclick="openMiseEnPage()"><span class="icon">📐</span><span class="label">Mise en Page</span></button>
-    <button class="tool-btn" onclick="captureSnapshot()"><span class="icon" style="font-size:15px;line-height:1;display:inline-flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span><span class="label">Aperçu</span></button>
     <div class="tool-sep"></div>
     <button class="tool-btn" onclick="exportProject()"><span class="icon">💾</span><span class="label">Enregistrer</span></button>
     <button class="tool-btn" onclick="exportProjectAs()"><span class="icon">📥</span><span class="label">Enreg. sous...</span></button>
@@ -766,7 +773,7 @@
     <button class="tool-btn" onclick="closeProject()"><span class="icon" style="font-style:normal;font-size:18px">✕</span><span class="label">Fermer</span></button>
     <div style="flex:1"></div>
     <div class="tool-sep"></div>
-    <button class="tool-btn" onclick="toggleGeocartoPanel()"><span class="icon">📍</span><span class="label">Site</span></button>
+    <button class="tool-btn" onclick="toggleGeocartoPanel()" style="background:#4CAF50;color:#fff;border-radius:6px"><span class="icon" style="display:inline-flex"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg></span><span class="label" style="color:#fff">Enquête</span></button>
     <button class="tool-btn" onclick="openSondageTypeModal()"><span class="icon" style="display:inline-flex"><svg viewBox="0 0 32 32" width="17" height="17" fill="none"><rect x="14" y="2" width="4" height="20" rx="1" fill="#D94040"/><polygon points="16,28 12,22 20,22" fill="#D94040"/><line x1="10" y1="6" x2="22" y2="6" stroke="#D94040" stroke-width="2"/><circle cx="16" cy="4" r="2" fill="#F2B705"/></svg></span><span class="label">Sondages</span></button>
     <button class="tool-btn" onclick="togglePhotoSection()"><span class="icon">📸</span><span class="label">Photos</span></button>
     <button class="tool-btn" onclick="openScan3D()"><span class="icon" style="display:inline-flex"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#1A1A1A" stroke-width="1.8" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z" fill="#E8D44D"/><path d="M2 7v10l10 5V12L2 7z" fill="#D4C23A" stroke="#1A1A1A"/><path d="M22 7v10l-10 5V12l10-5z" fill="#F2E55A" stroke="#1A1A1A"/><path d="M2 7l10 5 10-5" fill="none"/></svg></span><span class="label">3D</span></button>
@@ -814,6 +821,7 @@
     <div id="insert-options">
       <button class="insert-btn" onclick="insertImageMenu();toggleInsertMenu()">🖼️ Image</button>
       <button class="insert-btn" onclick="openPlanPicker();toggleInsertMenu()">🏢 Fond de plan</button>
+      <button class="insert-btn" onclick="openLegend();toggleInsertMenu()">📋 Légende</button>
     </div>
     <div id="measure-options" class="sub-options" style="display:none">
       <div class="arr-opt-group"><label>Mode</label>
@@ -849,7 +857,7 @@
     <div class="mep-resize-handle" id="mep-resize-handle"></div>
     <div class="mep-panel-header">
       <span>📐 Mise en Page</span>
-      <button class="mep-panel-close" onclick="closeMep()">✕</button>
+      <div class="hdr-btns"><button class="panel-pin" id="mep-pin" onclick="togglePin('mep')" title="Épingler">📌</button><button class="mep-panel-close" onclick="closeMep()">✕</button></div>
     </div>
     <div class="mep-panel-body">
       <div class="mep-sidebar-title">Format</div>
@@ -880,7 +888,41 @@
       </div>
       <div id="mep-legend-items"></div>
       <div id="mep-preview-wrap"><canvas id="mep-canvas"></canvas></div>
+      <button class="mep-download-btn" onclick="captureSnapshot()" style="background:var(--black);color:var(--yellow)">👁 Aperçu du plan seul</button>
       <button class="mep-download-btn" onclick="mepDownload()">💾 Enregistrer</button>
+    </div>
+  </div>
+  <div id="sondage-edit-modal">
+    <div class="sondage-resize-handle" id="sondage-resize-handle"></div>
+    <div id="sondage-edit-header">
+      <span id="sondage-edit-title">🔬 Sondage</span>
+      <div class="se-actions">
+        <input type="text" id="sondage-name" placeholder="Nom (ex: PD1)">
+        <button class="se-btn se-btn-save" onclick="saveSondage()">💾</button>
+        <button class="se-btn" onclick="linkSondagePhoto()" style="background:#4CAF50;color:#fff">📸</button>
+        <button class="panel-pin" id="sondage-pin" onclick="togglePin('sondage')" title="Épingler">📌</button>
+        <button class="se-btn se-btn-close" onclick="closeSondageEdit()">✕</button>
+      </div>
+    </div>
+    <div id="sondage-edit-body">
+      <div id="sondage-table-wrap"></div>
+      <div id="sondage-graph-wrap">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:12px;width:100%">
+          <canvas id="sondage-canvas" style="max-width:100%"></canvas>
+          <div id="qd-graph-wrap" style="display:none;position:relative">
+            <canvas id="qd-canvas" style="max-width:100%"></canvas>
+            <button onclick="downloadQdGraph()" style="position:absolute;top:4px;right:4px;background:#F2B705;color:#1A1A1A;border:none;border-radius:4px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.15)">⬇ Télécharger</button>
+          </div>
+          <div id="qd-photo-panel" style="max-width:200px;display:none;text-align:center">
+            <div style="font-size:11px;font-weight:700;margin-bottom:6px;color:#555">📸 Photo</div>
+            <img id="qd-photo-img" src="" alt="Photo sondage" style="max-width:100%;border-radius:6px;box-shadow:0 1px 6px rgba(0,0,0,.15);cursor:pointer" onclick="if(this.src)openLightboxSrc(this.src)">
+          </div>
+          <div id="sondage-photo-panel" style="max-width:200px;display:none;text-align:center">
+            <div style="font-size:11px;font-weight:700;margin-bottom:6px;color:#555">📸 Photo associée</div>
+            <img id="sondage-photo-img" src="" alt="Photo sondage" style="max-width:100%;border-radius:6px;box-shadow:0 1px 6px rgba(0,0,0,.15);cursor:pointer" onclick="if(this.src)openLightboxSrc(this.src)">
+          </div>
+        </div>
+      </div>
     </div>
   </div>
   <div id="canvas-area">
@@ -899,7 +941,7 @@
     <div class="photo-resize-handle" id="photo-resize-handle"></div>
     <div class="photo-panel-header">
       <span>📸 Photos du terrain</span>
-      <button class="photo-panel-close" onclick="togglePhotoSection()">✕</button>
+      <div class="hdr-btns"><button class="panel-pin" id="photo-pin" onclick="togglePin('photo')" title="Épingler">📌</button><button class="photo-panel-close" onclick="togglePhotoSection()">✕</button></div>
     </div>
     <div class="photo-panel-body">
       <div class="photo-panel-actions">
@@ -932,13 +974,25 @@
   <div id="new-study-modal">
     <div id="new-study-inner">
       <h2>Nouveau Projet</h2>
-      <p>Créez un nouveau projet en saisissant le Numéro de Dossier.</p>
-      <label for="new-study-ref">Numéro de Dossier *</label>
+      <p>Créez un nouveau projet.</p>
+      <label for="new-study-ref">Numéro de Dossier</label>
       <input type="text" id="new-study-ref" placeholder="Ex : 2607011" spellcheck="false" autocomplete="off" onkeydown="if(event.key==='Enter')createNewStudy()">
+      <label for="new-study-name" style="margin-top:10px;font-size:11px;font-weight:800;color:var(--black);display:block;margin-bottom:5px">Nom du Projet</label>
+      <input type="text" id="new-study-name" placeholder="Ex : MAISON DUPONT" spellcheck="false" autocomplete="off" style="width:100%;padding:10px 12px;border:2px solid var(--gray-200);border-radius:var(--radius);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;transition:border-color .2s" onfocus="this.style.borderColor='var(--yellow)'" onblur="this.style.borderColor=''">
       <label for="new-study-addr" style="margin-top:14px;font-size:11px;font-weight:800;color:var(--black);display:block;margin-bottom:5px">📍 Adresse du site</label>
       <div style="position:relative">
         <input type="text" id="new-study-addr" placeholder="Tapez l'adresse du chantier..." oninput="newStudyAutocomplete(this.value)" autocomplete="off" style="width:100%;padding:10px 12px;border:2px solid var(--gray-200);border-radius:var(--radius);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;transition:border-color .2s" onfocus="this.style.borderColor='var(--yellow)'" onblur="this.style.borderColor=''">
         <div id="new-study-suggest" style="position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--gray-200);border-radius:6px;max-height:140px;overflow-y:auto;z-index:999;display:none;box-shadow:0 4px 12px rgba(0,0,0,0.15)"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <div style="flex:0 0 120px">
+          <label for="new-study-cp" style="font-size:11px;font-weight:800;color:var(--black);display:block;margin-bottom:5px">Code postal</label>
+          <input type="text" id="new-study-cp" placeholder="Ex : 85000" spellcheck="false" autocomplete="off" style="width:100%;padding:10px 12px;border:2px solid var(--gray-200);border-radius:var(--radius);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;transition:border-color .2s" onfocus="this.style.borderColor='var(--yellow)'" onblur="this.style.borderColor=''">
+        </div>
+        <div style="flex:1">
+          <label for="new-study-ville" style="font-size:11px;font-weight:800;color:var(--black);display:block;margin-bottom:5px">Ville</label>
+          <input type="text" id="new-study-ville" placeholder="Ex : LA ROCHE SUR YON" spellcheck="false" autocomplete="off" style="width:100%;padding:10px 12px;border:2px solid var(--gray-200);border-radius:var(--radius);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;transition:border-color .2s" onfocus="this.style.borderColor='var(--yellow)'" onblur="this.style.borderColor=''">
+        </div>
       </div>
       <div id="new-study-map-section" style="margin-top:12px">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
@@ -989,7 +1043,10 @@
   <div id="geocarto-panel">
     <div class="gc-header">
       <span>📍 Données du site</span>
-      <button onclick="closeGeocartoPanel()" title="Fermer">✕</button>
+      <div style="display:flex;align-items:center;gap:6px">
+        <button onclick="openEnqueteSolFromSite()" style="background:#4CAF50;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer">🔬 Enquête SOL</button>
+        <button onclick="closeGeocartoPanel()" title="Fermer">✕</button>
+      </div>
     </div>
     <div class="gc-body" id="gc-body">
       <div id="gc-content">
@@ -1182,36 +1239,6 @@
       </div>
     </div>
   </div>
-  <div id="sondage-edit-modal">
-    <div id="sondage-edit-header">
-      <span id="sondage-edit-title">🔬 Sondage</span>
-      <div class="se-actions">
-        <input type="text" id="sondage-name" placeholder="Nom (ex: PD1)">
-        <button class="se-btn se-btn-save" onclick="saveSondage()">💾 Enregistrer</button>
-        <button class="se-btn" onclick="linkSondagePhoto()" style="background:#4CAF50;color:#fff">📸 Photo</button>
-        <button class="se-btn se-btn-close" onclick="closeSondageEdit()">✕</button>
-      </div>
-    </div>
-    <div id="sondage-edit-body">
-      <div id="sondage-table-wrap"></div>
-      <div id="sondage-graph-wrap">
-        <div style="display:flex;flex-direction:row;align-items:flex-start;gap:16px;flex-wrap:nowrap">
-          <canvas id="sondage-canvas" style="flex-shrink:0"></canvas>
-          <div id="qd-graph-wrap" style="display:none;position:relative;flex-shrink:0">
-            <canvas id="qd-canvas"></canvas>
-            <button onclick="downloadQdGraph()" style="position:absolute;top:4px;right:4px;background:#F2B705;color:#1A1A1A;border:none;border-radius:4px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.15)">⬇ Télécharger</button>
-          </div>
-          <div id="qd-photo-panel" style="flex:0 0 200px;max-width:200px;display:none;text-align:center">
-            <div style="font-size:11px;font-weight:700;margin-bottom:6px;color:#555">📸 Photo</div>
-            <img id="qd-photo-img" src="" alt="Photo sondage" style="max-width:100%;border-radius:6px;box-shadow:0 1px 6px rgba(0,0,0,.15);cursor:pointer" onclick="if(this.src)openLightboxSrc(this.src)">
-          </div>
-          <div id="sondage-photo-panel" style="flex:0 0 200px;max-width:200px;display:none;text-align:center">
-            <div style="font-size:11px;font-weight:700;margin-bottom:6px;color:#555">📸 Photo associée</div>
-            <img id="sondage-photo-img" src="" alt="Photo sondage" style="max-width:100%;border-radius:6px;box-shadow:0 1px 6px rgba(0,0,0,.15);cursor:pointer" onclick="if(this.src)openLightboxSrc(this.src)">
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </div>
 <script>
@@ -1387,6 +1414,9 @@ async function restoreFromIDB(id){
   activateApp();
   savedFileHandle=null;
   document.getElementById('project-ref').value=project.projectRef||'';autoSizeRef();
+  projectName=project.projectName||'';
+  projectCp=project.projectCp||'';
+  projectVille=project.projectVille||'';
   if(project.projectAddr){projectAddr=project.projectAddr;projectLat=project.projectLat||null;projectLng=project.projectLng||null;projectInsee=project.projectInsee||null;}
   if(project.geocartoData){geocartoData=project.geocartoData;try{renderGeocartoPanel();}catch(e){}}
   const hAddr0=document.getElementById('ia-geo-addr');if(hAddr0&&projectAddr)hAddr0.value=projectAddr;
@@ -2672,7 +2702,7 @@ let iaMessages=[];
 let iaStreaming=false;
 let geocartoData=null;
 let geocartoInsee=null;
-let projectAddr='',projectLat=null,projectLng=null,projectInsee=null;
+let projectAddr='',projectLat=null,projectLng=null,projectInsee=null,projectName='',projectCp='',projectVille='';
 
 // ═══ PANNEAU GÉOCARTO ═══
 function toggleGeocartoPanel(){document.getElementById('geocarto-panel').classList.toggle('open');}
@@ -2761,6 +2791,8 @@ async function reverseGeocodeStudy(lat,lng){
       const p=data.features[0].properties;
       document.getElementById('new-study-addr').value=p.label||'';
       document.getElementById('new-study-insee').value=p.citycode||'';
+      document.getElementById('new-study-cp').value=p.postcode||'';
+      document.getElementById('new-study-ville').value=p.city||'';
     }
   }catch(e){console.warn('Reverse geocode failed:',e);}
 }
@@ -2802,6 +2834,8 @@ function newStudyAutocomplete(val){
           document.getElementById('new-study-lat').value=f.geometry.coordinates[1];
           document.getElementById('new-study-lng').value=f.geometry.coordinates[0];
           document.getElementById('new-study-insee').value=f.properties.citycode||'';
+          document.getElementById('new-study-cp').value=f.properties.postcode||'';
+          document.getElementById('new-study-ville').value=f.properties.city||'';
           $s.style.display='none';
           updateStudyMarker(f.geometry.coordinates[1],f.geometry.coordinates[0],true);
         };
@@ -3489,23 +3523,19 @@ function closeNewStudyModal(){
 
 async function createNewStudy(){
   const refInput=document.getElementById('new-study-ref');
-  const errDiv=document.getElementById('new-study-error');
   const ref=refInput.value.trim();
-  if(!ref){
-    refInput.classList.add('error');
-    errDiv.textContent='Le Numéro de Dossier est obligatoire.';
-    refInput.focus();
-    setTimeout(()=>refInput.classList.remove('error'),400);
-    return;
-  }
   // Remplir la référence projet
   document.getElementById('project-ref').value=ref;autoSizeRef();
+  // Stocker le nom du projet
+  projectName=document.getElementById('new-study-name').value.trim();
   // Stocker l'adresse du site
   projectAddr=document.getElementById('new-study-addr').value.trim();
   projectLat=parseFloat(document.getElementById('new-study-lat').value)||null;
   projectLng=parseFloat(document.getElementById('new-study-lng').value)||null;
   projectInsee=document.getElementById('new-study-insee').value||null;
-  const fileName='VISIO_'+ref+'.geoter';
+  projectCp=document.getElementById('new-study-cp').value.trim();
+  projectVille=document.getElementById('new-study-ville').value.trim();
+  const fileName='GEO-'+(ref||'')+(projectName?'_'+projectName:'')+'.geoter';
   if(window.showSaveFilePicker){
     try{
       const handle=await window.showSaveFilePicker({suggestedName:fileName,startIn:'desktop',types:[{description:'Projet GéoTer',accept:{'application/json':['.geoter']}}]});
@@ -3534,6 +3564,36 @@ async function createNewStudy(){
     geocartoInsee=projectInsee;
     iaGeoInvestigate();
   }
+}
+
+function openEnqueteSol(){
+  const ref=document.getElementById('new-study-ref').value.trim();
+  const nom=document.getElementById('new-study-name').value.trim();
+  const lat=document.getElementById('new-study-lat').value||'';
+  const lng=document.getElementById('new-study-lng').value||'';
+  const addr=document.getElementById('new-study-addr').value.trim();
+  const params=new URLSearchParams();
+  if(ref)params.set('ref',ref);
+  if(nom)params.set('nom',nom);
+  if(lat)params.set('lat',lat);
+  if(lng)params.set('lng',lng);
+  if(addr)params.set('addr',addr);
+  const url='../01_GEOCARTO/index.html'+(params.toString()?'?'+params.toString():'');
+  window.open(url,'_blank');
+}
+
+function openEnqueteSolFromSite(){
+  const ref=document.getElementById('project-ref').value.trim();
+  const params=new URLSearchParams();
+  if(ref)params.set('ref',ref);
+  if(projectName)params.set('nom',projectName);
+  if(projectLat!=null)params.set('lat',projectLat);
+  if(projectLng!=null)params.set('lng',projectLng);
+  if(projectAddr)params.set('addr',projectAddr);
+  if(projectCp)params.set('cp',projectCp);
+  if(projectVille)params.set('ville',projectVille);
+  const url='../01_GEOCARTO/index.html'+(params.toString()?'?'+params.toString():'');
+  window.open(url,'_blank');
 }
 
 function activateApp(){
@@ -3569,7 +3629,10 @@ function buildProjectJSON(){
   };
   if(measureScale!=null)project.measureScale=measureScale;
   // Persister données GéoCarto
+  if(projectName)project.projectName=projectName;
   if(projectAddr)project.projectAddr=projectAddr;
+  if(projectCp)project.projectCp=projectCp;
+  if(projectVille)project.projectVille=projectVille;
   if(projectLat!=null)project.projectLat=projectLat;
   if(projectLng!=null)project.projectLng=projectLng;
   if(projectInsee)project.projectInsee=projectInsee;
@@ -3600,7 +3663,7 @@ function startAutoSave(){
 
 async function exportProject(){
   const refVal=document.getElementById('project-ref').value.trim();
-  const fileName='VISIO_'+(refVal||'projet-geoter')+'.geoter';
+  const fileName='GEO-'+(refVal||'projet')+(projectName?'_'+projectName:'')+'.geoter';
   const project=buildProjectJSON();
   const blob=new Blob([JSON.stringify(project)],{type:'application/json'});
   if(savedFileHandle){
@@ -3625,7 +3688,7 @@ async function exportProject(){
 
 async function exportProjectAs(){
   const refVal=document.getElementById('project-ref').value.trim();
-  const fileName='VISIO_'+(refVal||'projet-geoter')+'.geoter';
+  const fileName='GEO-'+(refVal||'projet')+(projectName?'_'+projectName:'')+'.geoter';
   const project=buildProjectJSON();
   const blob=new Blob([JSON.stringify(project)],{type:'application/json'});
   if(window.showSaveFilePicker){
@@ -3675,6 +3738,7 @@ async function closeProject(){
   document.getElementById('mep-panel').classList.remove('open');
   document.getElementById('sondage-type-modal').classList.remove('open');
   document.getElementById('sondage-edit-modal').classList.remove('open');
+  sondagePinned=false;const sp=document.getElementById('sondage-pin');if(sp)sp.classList.remove('pinned');
   const st=document.getElementById('shape-toolbar');if(st)st.classList.remove('open');
   // Réinitialiser scan 3D
   if(window.importScan3DFromProject) window.importScan3DFromProject(null);
@@ -3691,6 +3755,9 @@ function importProject(e){
     savedFileHandle=null; // Pas de handle en lecture, le 1er "Enregistrer" demandera l'emplacement
     // Restore project ref
     document.getElementById('project-ref').value=project.projectRef||'';autoSizeRef();
+    projectName=project.projectName||'';
+    projectCp=project.projectCp||'';
+    projectVille=project.projectVille||'';
     // Restore données GéoCarto (avant le return pour projet sans plan)
     if(project.projectAddr){projectAddr=project.projectAddr;projectLat=project.projectLat||null;projectLng=project.projectLng||null;projectInsee=project.projectInsee||null;}
     if(project.geocartoData){geocartoData=project.geocartoData;try{renderGeocartoPanel();}catch(e){console.warn('renderGeocartoPanel error:',e);}}
@@ -4057,7 +4124,13 @@ function openMiseEnPage(){
   panel.classList.add('open');
   mepRenderPreview();
 }
-function closeMep(){document.getElementById('mep-panel').classList.remove('open');}
+let mepPinned=false,photoPinned=false,sondagePinned=false;
+function togglePin(panel){
+  if(panel==='mep'){mepPinned=!mepPinned;document.getElementById('mep-pin').classList.toggle('pinned',mepPinned);}
+  else if(panel==='photo'){photoPinned=!photoPinned;document.getElementById('photo-pin').classList.toggle('pinned',photoPinned);}
+  else if(panel==='sondage'){sondagePinned=!sondagePinned;document.getElementById('sondage-pin').classList.toggle('pinned',sondagePinned);}
+}
+function closeMep(){if(mepPinned)return;document.getElementById('mep-panel').classList.remove('open');}
 
 // Resize handle for mep-panel
 (function(){
@@ -4073,6 +4146,25 @@ function closeMep(){document.getElementById('mep-panel').classList.remove('open'
       panel.style.width=nw+'px';
     };
     const onUp=()=>{handle.classList.remove('active');handle.removeEventListener('pointermove',onMove);handle.removeEventListener('pointerup',onUp);mepRenderPreview();};
+    handle.addEventListener('pointermove',onMove);
+    handle.addEventListener('pointerup',onUp);
+  });
+})();
+
+// Resize handle for sondage panel
+(function(){
+  const handle=document.getElementById('sondage-resize-handle');
+  const panel=document.getElementById('sondage-edit-modal');
+  if(!handle||!panel)return;
+  handle.addEventListener('pointerdown',e=>{
+    e.preventDefault();e.stopPropagation();
+    handle.classList.add('active');handle.setPointerCapture(e.pointerId);
+    const startX=e.clientX,startW=panel.offsetWidth;
+    const onMove=ev=>{
+      const nw=Math.max(380,Math.min(window.innerWidth*0.65,startW+(ev.clientX-startX)));
+      panel.style.width=nw+'px';
+    };
+    const onUp=()=>{handle.classList.remove('active');handle.removeEventListener('pointermove',onMove);handle.removeEventListener('pointerup',onUp);};
     handle.addEventListener('pointermove',onMove);
     handle.addEventListener('pointerup',onUp);
   });
@@ -4488,7 +4580,7 @@ function openLightboxSrc(src){
 function closeLightbox(){document.getElementById('photo-lightbox').classList.remove('open');}
 document.getElementById('photo-lightbox').addEventListener('click',ev=>{if(ev.target.id==='photo-lightbox')closeLightbox();});
 document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&document.getElementById('photo-lightbox').classList.contains('open'))closeLightbox();});
-function togglePhotoSection(){document.getElementById('photo-section').classList.toggle('open');}
+function togglePhotoSection(){const ps=document.getElementById('photo-section');if(ps.classList.contains('open')&&photoPinned)return;ps.classList.toggle('open');}
 
 // ═══ SONDAGES GÉOTECHNIQUES ═══
 const SOIL_TYPES={
@@ -4732,6 +4824,7 @@ function openSondageEdit(s){
 }
 
 function closeSondageEdit(){
+  if(sondagePinned)return;
   const s=getCurrentSondage();
   const nameChanged=s&&document.getElementById('sondage-name').value.trim()!==s.name;
   const notesEl=document.querySelector('.sondage-notes');
