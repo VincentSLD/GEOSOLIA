@@ -100,7 +100,9 @@
   #measure-overlay .mo-box input{width:120px;height:32px;border:2px solid var(--gray-200);border-radius:8px;text-align:center;font-size:14px;font-weight:700;padding:0 8px;margin:8px 0}
   #measure-overlay .mo-box input:focus{border-color:var(--yellow);outline:none;box-shadow:0 0 0 2px var(--yellow-glow)}
   #measure-overlay .mo-box button{background:var(--yellow);border:none;border-radius:8px;padding:8px 20px;font-weight:700;cursor:pointer;font-size:13px;font-family:inherit;margin:4px}
-  .measure-scale-info{font-size:9px;font-weight:700;color:var(--gray-500);white-space:nowrap;padding:2px 6px;background:var(--gray-100);border-radius:4px}
+  .measure-scale-info{font-size:9px;font-weight:700;color:var(--gray-500);white-space:nowrap;padding:2px 6px;background:var(--gray-100);border-radius:4px;transition:all .3s}
+  .measure-scale-info.not-calibrated{background:#D94040;color:#fff;padding:3px 8px;border-radius:6px;animation:meas-pulse 1.5s ease-in-out infinite}
+  @keyframes meas-pulse{0%,100%{opacity:1}50%{opacity:.6}}
   .meas-handle{position:absolute;width:14px;height:14px;border-radius:50%;background:#fff;border:2.5px solid;cursor:grab;transform:translate(-50%,-50%);display:none;z-index:15;box-shadow:0 1px 4px rgba(0,0,0,0.3)}
   .plan-element.selected .meas-handle{display:block}
 
@@ -109,6 +111,7 @@
   #plan-img{position:absolute;pointer-events:none;box-shadow:var(--shadow-lg);border-radius:3px;display:none;-webkit-user-select:none;user-select:none;-webkit-user-drag:none;outline:none}
   #draw-canvas{position:absolute;top:0;left:0;pointer-events:none}
   #elements-layer{position:absolute;inset:0}
+  #elements-layer.tools-active .plan-element,#elements-layer.tools-active .plan-element *{pointer-events:none!important}
   #eraser-cursor{position:absolute;border:2px solid #D94040;border-radius:50%;pointer-events:none;z-index:60;display:none;transform:translate(-50%,-50%)}
   #mrpropre-cursor{position:absolute;border:2px solid #888;border-radius:50%;pointer-events:none;z-index:60;display:none;transform:translate(-50%,-50%);background:rgba(255,255,255,0.3);box-sizing:border-box}
   #mrpropre-cursor::after{content:'';position:absolute;top:50%;left:50%;width:6px;height:6px;background:#4CAF50;border-radius:50%;transform:translate(-50%,-50%)}
@@ -510,9 +513,9 @@
   /* ═══ MODAL NOUVEAU PROJET ═══ */
   #new-study-modal{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;z-index:950;backdrop-filter:blur(4px)}
   #new-study-modal.open{display:flex}
-  #new-study-inner{background:var(--white);border-radius:var(--radius-lg);padding:28px;width:560px;max-width:92vw;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);border-top:4px solid var(--yellow)}
+  #new-study-inner{background:var(--white);border-radius:var(--radius-lg);padding:22px;width:440px;max-width:92vw;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);border-top:4px solid var(--yellow)}
   #new-study-inner h2{font-size:18px;font-weight:900;color:var(--black);margin:0 0 6px}
-  #new-study-inner p{font-size:12px;color:var(--gray-500);margin:0 0 18px}
+  #new-study-inner p{font-size:12px;color:var(--gray-500);margin:0 0 8px}
   #new-study-inner label{font-size:11px;font-weight:800;color:var(--black);display:block;margin-bottom:5px}
   #new-study-ref{width:100%;padding:10px 12px;border:2px solid var(--gray-200);border-radius:var(--radius);font-size:14px;font-weight:700;font-family:inherit;outline:none;transition:border-color .2s;box-sizing:border-box}
   #new-study-ref:focus{border-color:var(--yellow)}
@@ -968,7 +971,7 @@
   <div id="new-study-modal">
     <div id="new-study-inner">
       <h2>Nouveau Projet</h2>
-      <p>Créez un nouveau projet.</p>
+      <p></p>
       <label for="new-study-ref">Numéro de Dossier</label>
       <input type="text" id="new-study-ref" placeholder="Ex : 2607011" spellcheck="false" autocomplete="off" onkeydown="if(event.key==='Enter')createNewStudy()">
       <label for="new-study-name" style="margin-top:10px;font-size:11px;font-weight:800;color:var(--black);display:block;margin-bottom:5px">Nom du Projet</label>
@@ -994,7 +997,7 @@
           <button type="button" id="btn-study-layer" onclick="newStudyToggleLayer()">🛰 Satellite</button>
           <button type="button" id="btn-study-cadastre" onclick="newStudyToggleCadastre()">📐 Cadastre</button>
         </div>
-        <div id="new-study-map" style="width:100%;height:260px;border-radius:var(--radius);border:2px solid var(--gray-200);overflow:hidden;cursor:crosshair"></div>
+        <div id="new-study-map" style="width:100%;height:200px;border-radius:var(--radius);border:2px solid var(--gray-200);overflow:hidden;cursor:crosshair"></div>
         <div id="new-study-coords" style="font-size:10px;color:var(--gray-500);margin-top:4px;font-weight:600"></div>
       </div>
       <input type="hidden" id="new-study-lat">
@@ -1044,7 +1047,7 @@
     </div>
     <div class="gc-body" id="gc-body">
       <div id="gc-content">
-        <div class="gc-empty">Aucune donnée de site.<br>Créez un nouveau projet avec une adresse<br>ou utilisez le bouton 🔄 pour relancer.</div>
+        <div class="gc-empty">Aucune donnée de site.<br><button onclick="openEditSiteModal()" style="margin-top:10px;background:var(--yellow);border:none;border-radius:8px;padding:8px 16px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit">🔄 Modifier les données du site</button></div>
       </div>
     </div>
   </div>
@@ -1624,9 +1627,11 @@ function selectTool(t){
   document.getElementById('insert-options').classList.remove('show');
   const isMp=(t==='mrpropre'||t==='cleanzone');
   const isMeas=(t==='measure'||t==='measureDist'||t==='measureArea');
-  if(t==='measure')t=measToolMode;
+  const measureMenuOnly=(t==='measure');
+  if(t==='measure')t='measure';
   const realTool=t==='shape'?'sticker':t;
   currentTool=realTool;
+  $elemLayer.classList.toggle('tools-active',realTool!=='select'&&realTool!=='measure');
   document.querySelectorAll('.tool-btn[data-tool]').forEach(b=>{b.className='tool-btn';if(b.dataset.tool===t||(isMp&&b.dataset.tool==='mrpropre')||(isMeas&&b.dataset.tool==='measure')){const c={select:'active',sticker:'active-yellow',shape:'active-yellow',text:'active-dark',draw:'active-red',erase:'active-orange',mrpropre:'active',cleanzone:'active',arrow:'active-red',measureDist:'active',measureArea:'active'};b.classList.add(c[t]||'active');}});
   $area.style.cursor={select:'grab',draw:'crosshair',erase:'none',mrpropre:'none',cleanzone:'crosshair',sticker:'crosshair',text:'text',arrow:'crosshair',measureDist:'crosshair',measureArea:'crosshair'}[realTool]||'crosshair';
   document.getElementById('color-options').style.display=(t==='draw'||t==='text'||t==='erase')?'flex':'none';
@@ -1639,7 +1644,7 @@ function selectTool(t){
   if(t==='mrpropre')updateMrPropreCursor();
   if(isMp){document.getElementById('btn-mp-fin').classList.toggle('active',t==='mrpropre');document.getElementById('btn-mp-plus').classList.toggle('active',t==='cleanzone');}
   document.getElementById('measure-options').style.display=isMeas?'flex':'none';
-  if(isMeas){document.getElementById('btn-meas-dist').classList.toggle('active',currentTool==='measureDist');document.getElementById('btn-meas-area').classList.toggle('active',currentTool==='measureArea');updateMeasureScaleDisplay();}
+  if(isMeas){document.getElementById('btn-meas-dist').classList.toggle('active',currentTool==='measureDist');document.getElementById('btn-meas-area').classList.toggle('active',currentTool==='measureArea');if(measureMenuOnly)$area.style.cursor='default';updateMeasureScaleDisplay();}
   if(!isMeas){measureDistStart=null;measureDistPreviewEnd=null;measureAreaPts=[];measureAreaPreview=null;}
   document.getElementById('text-options').style.display=t==='text'?'flex':'none';
   czPoints=[];czPreview=null;
@@ -1654,7 +1659,7 @@ function buildColorOptions(){const $c=document.getElementById('color-options');C
 function updateColorDots(){const a=currentTool==='draw'?drawColor:textColor;document.querySelectorAll('.color-dot').forEach((d,i)=>{d.classList.toggle('active',COLORS[i]===a);});}
 
 function switchCleanMode(mode){
-  currentTool=mode;
+  currentTool=mode;$elemLayer.classList.add('tools-active');
   $area.style.cursor=mode==='mrpropre'?'none':'crosshair';
   document.getElementById('mrpropre-cursor').style.display=mode==='mrpropre'?'block':'none';
   if(mode==='mrpropre')updateMrPropreCursor();
@@ -1671,7 +1676,7 @@ function updateMeasEl(id,prop,val){const el=elements.find(e=>e.id===id);if(!el)r
 function recalcMeasure(el){if(!measureScale)return;const dx=el.x2-el.x,dy=el.y2-el.y;el.pxDist=Math.sqrt(dx*dx+dy*dy);el.distance=el.pxDist*measureScale;}
 function recalcMeasureArea(el){if(!measureScale)return;const pts=el.points;let area=0;for(let i=0;i<pts.length;i++){const j=(i+1)%pts.length;area+=pts[i].x*pts[j].y;area-=pts[j].x*pts[i].y;}area=Math.abs(area)/2;el.pxArea=area;el.area=area*measureScale*measureScale;let cx=0,cy=0;pts.forEach(p=>{cx+=p.x;cy+=p.y;});el.cx=cx/pts.length;el.cy=cy/pts.length;}
 function switchMeasureMode(mode){
-  measToolMode=mode;currentTool=mode;
+  measToolMode=mode;currentTool=mode;$elemLayer.classList.add('tools-active');
   $area.style.cursor='crosshair';
   measureDistStart=null;measureDistPreviewEnd=null;
   measureAreaPts=[];measureAreaPreview=null;
@@ -1681,11 +1686,13 @@ function switchMeasureMode(mode){
 }
 function updateMeasureScaleDisplay(){
   const el=document.getElementById('measure-scale-display');
-  if(!measureScale){el.textContent='Non calibré';el.style.color='#D94040';}
-  else{el.textContent='Échelle : 1px = '+measureScale.toFixed(4)+' m';el.style.color='var(--gray-500)';}
+  if(!measureScale){el.textContent='⚠ Non calibré';el.classList.add('not-calibrated');el.style.color='';}
+  else{el.textContent='Échelle : 1px = '+measureScale.toFixed(4)+' m';el.classList.remove('not-calibrated');el.style.color='';}
 }
+const SNIPER_CURSOR="url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%23D94040' stroke-width='1.5'/%3E%3Cline x1='16' y1='2' x2='16' y2='11' stroke='%23D94040' stroke-width='1.5'/%3E%3Cline x1='16' y1='21' x2='16' y2='30' stroke='%23D94040' stroke-width='1.5'/%3E%3Cline x1='2' y1='16' x2='11' y2='16' stroke='%23D94040' stroke-width='1.5'/%3E%3Cline x1='21' y1='16' x2='30' y2='16' stroke='%23D94040' stroke-width='1.5'/%3E%3Ccircle cx='16' cy='16' r='1.5' fill='%23D94040'/%3E%3C/svg%3E\") 16 16, crosshair";
 function startCalibration(){
   isCalibrating=true;measureCalibPts=[];calibDragPtIdx=-1;
+  $area.style.cursor=SNIPER_CURSOR;
   const ov=document.getElementById('measure-overlay');
   ov.classList.add('open');
   ov.style.pointerEvents='none';
@@ -1716,6 +1723,7 @@ function showToast(msg,color){const t=document.createElement('div');t.textConten
 })();
 function cancelCalibration(){
   isCalibrating=false;measureCalibPts=[];
+  $area.style.cursor='default';
   const ov=document.getElementById('measure-overlay');
   ov.classList.remove('open');ov.style.pointerEvents='';
   renderElements();
@@ -1731,7 +1739,10 @@ function finishCalibration(){
   const ov=document.getElementById('measure-overlay');
   ov.classList.remove('open');ov.style.pointerEvents='';
   document.getElementById('measure-real-dist').value='';
-  updateMeasureScaleDisplay();renderElements();
+  updateMeasureScaleDisplay();
+  currentTool='measure';$area.style.cursor='default';$elemLayer.classList.remove('tools-active');
+  document.getElementById('btn-meas-dist').classList.remove('active');document.getElementById('btn-meas-area').classList.remove('active');
+  renderElements();
 }
 function setArrowMode(m){arrowMode=m;arrowDoubleHead=(m==='double');document.querySelectorAll('.arr-mode-btn[data-arrmode]').forEach(b=>b.classList.toggle('active',b.dataset.arrmode===m));updateSelectedArrow();}
 function buildArrowColorDots(){const $c=document.getElementById('arr-color-dots');COLORS.forEach(c=>{const d=document.createElement('button');d.className='cdot';d.style.background=c;if(c==='#FFFFFF')d.style.border='2px solid #D4D4D4';d.onclick=()=>{arrowColor=c;updateArrowColorDots();updateSelectedArrow();};$c.appendChild(d);});updateArrowColorDots();}
@@ -1930,6 +1941,9 @@ function redrawCleanCanvas(){
 $area.addEventListener('pointermove',function(e){const r=$area.getBoundingClientRect();const x=e.clientX-r.left,y=e.clientY-r.top;if(currentTool==='erase'){const el=document.getElementById('eraser-cursor');el.style.left=x+'px';el.style.top=y+'px';}if(currentTool==='mrpropre'){const el=document.getElementById('mrpropre-cursor');el.style.left=x+'px';el.style.top=y+'px';}});
 
 $area.addEventListener('pointerdown',onPD);$area.addEventListener('pointermove',onPM);$area.addEventListener('pointerup',onPU);$area.addEventListener('wheel',onW,{passive:false});
+let _midLastClick=0;
+$area.addEventListener('pointerdown',function(e){if(e.button===1){e.preventDefault();const now=Date.now();if(now-_midLastClick<400){resetView();_midLastClick=0;}else{_midLastClick=now;}}});
+$area.addEventListener('auxclick',function(e){e.preventDefault();});
 // Pinch-to-zoom for touch
 let pinchStartDist=0,pinchStartScale=1,pinchMidX=0,pinchMidY=0;
 $area.addEventListener('touchstart',function(e){
@@ -1959,7 +1973,7 @@ function gP(e){const r=$area.getBoundingClientRect();const cx=(e.clientX||0)-r.l
 function onPD(e){
   if(e.target.closest('#empty-state'))return;
   if(e.target.closest('#btn-recadrer'))return;
-  if(e.target.closest('.plan-element'))return;const pt=gP(e);
+  if(currentTool==='select'&&e.target.closest('.plan-element'))return;const pt=gP(e);
   if(isCalibrating){
     // Check if clicking near an existing calibration point to drag it
     for(let i=0;i<measureCalibPts.length;i++){
@@ -1969,7 +1983,7 @@ function onPD(e){
       if(Math.sqrt((mx-cpx)*(mx-cpx)+(my-cpy)*(my-cpy))<18){calibDragPtIdx=i;$area.setPointerCapture(e.pointerId);return;}
     }
     if(measureCalibPts.length===0){measureCalibPts.push({x:pt.px,y:pt.py});document.getElementById('measure-overlay-msg').textContent='Cliquez un deuxième point sur le plan';renderElements();}
-    else if(measureCalibPts.length===1){measureCalibPts.push({x:pt.px,y:pt.py});document.getElementById('measure-overlay-msg').textContent='Ajustez les points si besoin, puis saisissez la distance';document.getElementById('measure-overlay-input').style.display='';const ov=document.getElementById('measure-overlay');ov.style.pointerEvents='';document.getElementById('measure-overlay-box').style.pointerEvents='auto';document.getElementById('measure-real-dist').focus();renderElements();}
+    else if(measureCalibPts.length===1){measureCalibPts.push({x:pt.px,y:pt.py});document.getElementById('measure-overlay-msg').textContent='Saisissez la distance réelle entre les 2 points';document.getElementById('measure-overlay-input').style.display='';const ov=document.getElementById('measure-overlay');ov.style.pointerEvents='';document.getElementById('measure-overlay-box').style.pointerEvents='auto';renderElements();setTimeout(()=>{document.getElementById('measure-real-dist').focus();},50);}
     return;
   }
   if(currentTool==='measureDist'){
@@ -2212,6 +2226,7 @@ function renderElements(){
       div.innerHTML=`<div class="image-wrap" style="transform:rotate(${irot}deg)"><img src="${el.imgSrc}" style="width:${iw}px;height:${ih}px;pointer-events:none;display:block;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,0.3)"></div><button class="del-btn" data-action="del" data-eid="${el.id}">×</button><button class="edit-btn" data-action="editImage" data-eid="${el.id}">✏️</button><button class="rotate-btn" data-action="rotate" data-eid="${el.id}">↻</button><div class="resize-handle" data-resize="1"></div>`;
     }
     div.addEventListener('pointerdown',e=>{
+      if(currentTool!=='select'){e.stopPropagation();e.preventDefault();onPD(e);return;}
       const actionBtn = e.target.closest('[data-action]');
       if(actionBtn){
         e.stopPropagation();e.preventDefault();
@@ -2721,6 +2736,32 @@ function reloadGeocartoData(){
     iaGeoInvestigate();
   }else{alert("Aucune adresse de site d\u00e9finie. Cr\u00e9ez un nouveau projet avec une adresse.");}
 }
+let editSiteMode=false;
+function openEditSiteModal(){
+  editSiteMode=true;
+  const $m=document.getElementById('new-study-inner');
+  $m.querySelector('h2').textContent='Modifier les données du site';
+  $m.querySelector('p').textContent='Modifiez les informations et relancez l\u2019enquête.';
+  document.getElementById('new-study-ref').value=document.getElementById('project-ref').value||'';
+  document.getElementById('new-study-name').value=projectName||'';
+  document.getElementById('new-study-addr').value=projectAddr||'';
+  document.getElementById('new-study-cp').value=projectCp||'';
+  document.getElementById('new-study-ville').value=projectVille||'';
+  document.getElementById('new-study-lat').value=projectLat!=null?projectLat:'';
+  document.getElementById('new-study-lng').value=projectLng!=null?projectLng:'';
+  document.getElementById('new-study-insee').value=projectInsee||'';
+  document.getElementById('new-study-error').textContent='';
+  document.getElementById('new-study-ref').classList.remove('error');
+  document.getElementById('new-study-suggest').style.display='none';
+  if(projectLat!=null&&projectLng!=null){document.getElementById('new-study-coords').textContent='GPS : '+projectLat.toFixed(6)+', '+projectLng.toFixed(6);}
+  else{document.getElementById('new-study-coords').textContent='';}
+  if(studyMarker&&studyMap){studyMap.removeLayer(studyMarker);studyMarker=null;}
+  document.getElementById('new-study-modal').classList.add('open');
+  setTimeout(()=>{
+    initStudyMap();
+    if(projectLat!=null&&projectLng!=null){updateStudyMarker(projectLat,projectLng,true);}
+  },150);
+}
 
 // ═══ CARTE LEAFLET DANS MODAL NOUVEAU PROJET ═══
 let studyMap=null,studyMarker=null,studyOsmLayer=null,studySatLayer=null;
@@ -2793,7 +2834,7 @@ async function reverseGeocodeStudy(lat,lng){
     const data=await iaFetchJSON('https://api-adresse.data.gouv.fr/reverse/?lon='+lng+'&lat='+lat+'&limit=1');
     if(data.features&&data.features.length>0){
       const p=data.features[0].properties;
-      document.getElementById('new-study-addr').value=p.label||'';
+      document.getElementById('new-study-addr').value=p.name||p.label||'';
       document.getElementById('new-study-insee').value=p.citycode||'';
       document.getElementById('new-study-cp').value=p.postcode||'';
       document.getElementById('new-study-ville').value=p.city||'';
@@ -2834,7 +2875,7 @@ function newStudyAutocomplete(val){
         d.onmouseover=function(){this.style.background='#FFF9E6';};
         d.onmouseout=function(){this.style.background='';};
         d.onclick=()=>{
-          document.getElementById('new-study-addr').value=f.properties.label;
+          document.getElementById('new-study-addr').value=f.properties.name||f.properties.label;
           document.getElementById('new-study-lat').value=f.geometry.coordinates[1];
           document.getElementById('new-study-lng').value=f.geometry.coordinates[0];
           document.getElementById('new-study-insee').value=f.properties.citycode||'';
@@ -3086,7 +3127,7 @@ function gcWmsMap(layers,wmsUrl,lat,lng,span,w,h){
 function renderGeocartoPanel(){
   const $c=document.getElementById('gc-content');
   if(!$c)return;
-  if(!geocartoData){$c.innerHTML='<div class="gc-empty">Aucune donn\u00e9e de site.<br>Cr\u00e9ez un nouveau projet avec une adresse.</div>';return;}
+  if(!geocartoData){$c.innerHTML='<div class="gc-empty">Aucune donnée de site.<br><button onclick="openEditSiteModal()" style="margin-top:10px;background:var(--yellow);border:none;border-radius:8px;padding:8px 16px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit">🔄 Modifier les données du site</button></div>';return;}
   const g=geocartoData;
   const sismLabels={1:'Très faible',2:'Faible',3:'Modérée',4:'Moyenne',5:'Forte'};
   const sismColors={1:'green',2:'green',3:'orange',4:'red',5:'red'};
@@ -3534,9 +3575,36 @@ function closeNewStudyModal(){
   document.getElementById('new-study-modal').classList.remove('open');
   // Détruire la carte (Leaflet ne supporte pas bien display:none)
   if(studyMap){studyMap.remove();studyMap=null;studyMarker=null;studyOsmLayer=null;studySatLayer=null;studyCadastreLayer=null;studyCadastreVisible=false;studyCurrentLayer='osm';}
+  // Remettre le titre original si on était en mode édition
+  if(editSiteMode){
+    editSiteMode=false;
+    const $m=document.getElementById('new-study-inner');
+    $m.querySelector('h2').textContent='Nouveau Projet';
+    $m.querySelector('p').textContent='Créez un nouveau projet.';
+  }
 }
 
 async function createNewStudy(){
+  if(editSiteMode){
+    // Mode édition : mettre à jour les variables sans créer de fichier
+    document.getElementById('project-ref').value=document.getElementById('new-study-ref').value.trim();autoSizeRef();
+    projectName=document.getElementById('new-study-name').value.trim();
+    projectAddr=document.getElementById('new-study-addr').value.trim();
+    projectLat=parseFloat(document.getElementById('new-study-lat').value)||null;
+    projectLng=parseFloat(document.getElementById('new-study-lng').value)||null;
+    projectInsee=document.getElementById('new-study-insee').value||null;
+    projectCp=document.getElementById('new-study-cp').value.trim();
+    projectVille=document.getElementById('new-study-ville').value.trim();
+    closeNewStudyModal();
+    if(projectLat!=null&&projectLng!=null){
+      document.getElementById('ia-geo-lat').value=projectLat;
+      document.getElementById('ia-geo-lng').value=projectLng;
+      document.getElementById('ia-geo-addr').value=projectAddr;
+      geocartoInsee=projectInsee;
+      iaGeoInvestigate();
+    }
+    return;
+  }
   const refInput=document.getElementById('new-study-ref');
   const ref=refInput.value.trim();
   // Remplir la référence projet
