@@ -108,14 +108,14 @@
 
   #canvas-area{flex:1;position:relative;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;background:radial-gradient(ellipse at 15% 25%,rgba(242,183,5,0.03),transparent 50%),radial-gradient(ellipse at 85% 75%,rgba(26,26,26,0.03),transparent 50%),var(--gray-50)}
   #grid-svg{position:absolute;inset:0;width:100%;height:100%;opacity:.18;pointer-events:none}
-  #plan-img{position:absolute;pointer-events:none;box-shadow:var(--shadow-lg);border-radius:3px;display:none;-webkit-user-select:none;user-select:none;-webkit-user-drag:none;outline:none}
-  #draw-canvas{position:absolute;top:0;left:0;pointer-events:none}
-  #elements-layer{position:absolute;inset:0}
+  #plan-img{position:absolute;pointer-events:none;box-shadow:var(--shadow-lg);border-radius:3px;display:none;-webkit-user-select:none;user-select:none;-webkit-user-drag:none;outline:none;z-index:1}
+  #draw-canvas{position:absolute;top:0;left:0;pointer-events:none;z-index:3}
+  #elements-layer{position:absolute;inset:0;z-index:5}
   #elements-layer.tools-active .plan-element,#elements-layer.tools-active .plan-element *{pointer-events:none!important}
   #eraser-cursor{position:absolute;border:2px solid #D94040;border-radius:50%;pointer-events:none;z-index:60;display:none;transform:translate(-50%,-50%)}
   #mrpropre-cursor{position:absolute;border:2px solid #888;border-radius:50%;pointer-events:none;z-index:60;display:none;transform:translate(-50%,-50%);background:rgba(255,255,255,0.3);box-sizing:border-box}
   #mrpropre-cursor::after{content:'';position:absolute;top:50%;left:50%;width:6px;height:6px;background:#4CAF50;border-radius:50%;transform:translate(-50%,-50%)}
-  #clean-canvas{position:absolute;top:0;left:0;pointer-events:none}
+  #clean-canvas{position:absolute;top:0;left:0;pointer-events:none;z-index:2}
   #btn-recadrer{position:absolute;bottom:14px;right:14px;z-index:50;width:40px;height:40px;border-radius:50%;border:none;background:var(--black);color:var(--yellow);font-size:20px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;transition:transform .15s,box-shadow .15s}
   #btn-recadrer:hover{transform:scale(1.1);box-shadow:0 3px 12px rgba(0,0,0,0.5)}
   #empty-state{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;pointer-events:auto;z-index:60}
@@ -1024,8 +1024,8 @@
     <input type="hidden" id="ia-geo-addr"><input type="hidden" id="ia-geo-lat"><input type="hidden" id="ia-geo-lng">
     <div id="ia-geo-btn" style="display:none"></div><div id="ia-geo-status" style="display:none"></div>
     <div class="ia-ctx-toggle">
-      <input type="checkbox" id="ia-ctx-sondages" checked>
-      <label for="ia-ctx-sondages">Inclure les sondages</label>
+      <input type="checkbox" id="ia-ctx-sondages" checked disabled>
+      <label for="ia-ctx-sondages">Sondages toujours inclus</label>
     </div>
     <div class="ia-ctx-toggle">
       <input type="checkbox" id="ia-ctx-geocarto" checked disabled>
@@ -1596,6 +1596,8 @@ const $area=document.getElementById('canvas-area'),$planImg=document.getElementB
 const $drawCanvas=document.getElementById('draw-canvas'),$cleanCanvas=document.getElementById('clean-canvas'),$elemLayer=document.getElementById('elements-layer');
 const cleanCtx=$cleanCanvas.getContext('2d');
 const $empty=document.getElementById('empty-state');
+// Forcer l'ordre d'empilement : plan en arrière, éléments au premier plan
+$planImg.style.zIndex='1';$cleanCanvas.style.zIndex='2';$drawCanvas.style.zIndex='3';$elemLayer.style.zIndex='5';
 const drawCtx=$drawCanvas.getContext('2d');
 
 const NOTES_CATALOG=[
@@ -3280,7 +3282,6 @@ function clearIAChat(){
 }
 
 function buildSondageContext(){
-  if(!document.getElementById('ia-ctx-sondages').checked)return '';
   if(sondages.length===0)return '';
   const typeNames={penetro_dyn:'Pénétromètre dynamique',penetro_stat:'Pénétromètre statique',tariere:'Sondage à la tarière',pelle_meca:'Sondage pelle mécanique',fondation:'Reconnaissance de fondation'};
   const soilNames=Object.fromEntries(Object.entries(SOIL_TYPES).map(([k,v])=>[k,v.label]));
@@ -3298,6 +3299,7 @@ function buildSondageContext(){
     if(s.sondageDepth!=null) ctx+="  Profondeur atteinte : "+s.sondageDepth.toFixed(2)+" m\n";
     if(s.waterLevel!=null) ctx+="  Niveau d'eau : "+s.waterLevel.toFixed(2)+" m\n";
     if(s.refusal) ctx+="  REFUS de l'outil en fond de sondage\n";
+    if(s.stopCriterion) ctx+="  Critère d'arrêt : "+s.stopCriterion+"\n";
     // --- Pénétromètre dynamique ---
     if(s.type==='penetro_dyn'&&s.data&&s.data.length>0){
       const filled=s.data.filter(d=>d.blows!=null);
@@ -3441,11 +3443,9 @@ function updateIACtxStatus(){
   const $s=document.getElementById('ia-ctx-status');
   if(!$s)return;
   const nSond=sondages.length;
-  const sondChecked=document.getElementById('ia-ctx-sondages').checked;
   const gcChecked=document.getElementById('ia-ctx-geocarto').checked&&!document.getElementById('ia-ctx-geocarto').disabled;
   let parts=[];
-  if(sondChecked&&nSond>0)parts.push('✅ '+nSond+' sondage'+(nSond>1?'s':''));
-  else if(!sondChecked)parts.push('⬜ Sondages désactivés');
+  if(nSond>0)parts.push('✅ '+nSond+' sondage'+(nSond>1?'s':'')+' chargé'+(nSond>1?'s':''));
   else parts.push('⚠️ 0 sondage');
   if(gcChecked&&geocartoData)parts.push('✅ GéoCarto');
   else if(!geocartoData)parts.push('⚠️ Pas de GéoCarto');
@@ -3462,7 +3462,7 @@ async function sendIAMessage(){
   let ctxSondages='';try{ctxSondages=buildSondageContext();}catch(e){console.warn('[GéoTrouveTout] buildSondageContext ERREUR:',e);}
   let ctxGeocarto='';try{ctxGeocarto=buildGeocartoContext();}catch(e){console.warn('[GéoTrouveTout] buildGeocartoContext ERREUR:',e);}
   const iaContext=ctxSondages+ctxGeocarto;
-  console.log('[GéoTrouveTout] Envoi — sondages en mémoire:',sondages.length,'| checkbox sondages:',document.getElementById('ia-ctx-sondages').checked,'| ctxSondages:',ctxSondages.length,'car | ctxGeocarto:',ctxGeocarto.length,'car | total contexte:',iaContext.length,'car');
+  console.log('[GéoTrouveTout] Envoi — sondages en mémoire:',sondages.length,'(toujours inclus) | ctxSondages:',ctxSondages.length,'car | ctxGeocarto:',ctxGeocarto.length,'car | total contexte:',iaContext.length,'car');
   updateIACtxStatus();
 
   iaMessages.push({role:'user',content:text});
@@ -4906,7 +4906,7 @@ function newSondage(type){
     name:prefix+countOfType,
     date:new Date().toLocaleDateString('fr-FR'),
     depth:0,data:[],notes:'',
-    refusal:false,waterLevel:null,
+    refusal:true,stopCriterion:'',waterLevel:null,
     tnAltitude:null,
     stickerId:null,photoIndex:null
   };
@@ -5060,23 +5060,36 @@ function renderPenetroDynTable(s,$wrap){
   const dpVal=s.sondageDepth!=null?s.sondageDepth:'';
   const showDepthLine=s.showDepthLine!==false;
   const hasTn=s.tnAltitude!=null;
-  let html=`<div style="display:flex;flex-direction:column;align-items:flex-start;gap:6px;margin-bottom:8px;padding:6px 8px;background:#F5F5F5;border-radius:6px">
-    <div style="display:flex;align-items:center;gap:6px">
-      <label style="font-weight:600;font-size:12px;white-space:nowrap;min-width:110px">Nivellement TN :</label>
-      <input type="text" inputmode="decimal" value="${tnVal}" placeholder="Ex: 125.30" style="width:130px;padding:4px 6px;border:1px solid #ccc;border-radius:4px;font-size:12px" onchange="sondageTnInput(this.value)">
-    </div>
-    <div style="display:flex;align-items:center;gap:6px">
-      <label style="font-weight:600;font-size:12px;white-space:nowrap;color:#A0724A;min-width:110px">Profondeur (m) :</label>
-      <div style="display:flex;align-items:center;gap:0">
-        <input type="number" step="0.10" min="0" id="sonde-depth-input" value="${dpVal}" placeholder="Ex: 4.60" style="width:100px;padding:4px 6px;border:1px solid #ccc;border-radius:6px 0 0 6px;font-size:14px;font-weight:700;color:#A0724A;-moz-appearance:textfield;outline:none" oninput="sondageDepthInput(this.value)">
-        <div style="display:flex;flex-direction:column;gap:0">
-          <button onclick="sondageDepthStep(-0.10)" tabindex="-1" style="width:30px;height:20px;border:1px solid #ccc;border-left:none;border-radius:0 6px 0 0;background:#f5f0e4;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;color:#A0724A;padding:0" title="-0.10 m">&#x25B2;</button>
-          <button onclick="sondageDepthStep(0.10)" tabindex="-1" style="width:30px;height:20px;border:1px solid #ccc;border-left:none;border-top:none;border-radius:0 0 6px 0;background:#f5f0e4;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;color:#A0724A;padding:0" title="+0.10 m">&#x25BC;</button>
-        </div>
+  let html=`<div style="display:grid;grid-template-columns:auto 1fr;align-items:center;gap:6px 10px;margin-bottom:8px;padding:8px 10px;background:#F5F5F5;border-radius:6px">
+    <label style="font-weight:600;font-size:12px;white-space:nowrap">Nivellement TN :</label>
+    <input type="text" inputmode="decimal" value="${tnVal}" placeholder="Ex: 125.30" style="width:100%;max-width:260px;padding:5px 8px;border:1px solid #ccc;border-radius:4px;font-size:13px;font-weight:600;box-sizing:border-box" onchange="sondageTnInput(this.value)">
+
+    <label style="font-weight:600;font-size:12px;white-space:nowrap;color:#A0724A">Profondeur (m) :</label>
+    <div style="display:flex;align-items:center;gap:0">
+      <input type="number" step="0.10" min="0" id="sonde-depth-input" value="${dpVal}" placeholder="Ex: 4.60" style="flex:1;max-width:226px;padding:5px 8px;border:1px solid #ccc;border-radius:6px 0 0 6px;font-size:14px;font-weight:700;color:#A0724A;-moz-appearance:textfield;outline:none;box-sizing:border-box" oninput="sondageDepthInput(this.value)">
+      <div style="display:flex;flex-direction:column">
+        <button onclick="sondageDepthStep(-0.10)" tabindex="-1" style="width:34px;height:20px;border:1px solid #ccc;border-left:none;border-radius:0 6px 0 0;background:#f5f0e4;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;color:#A0724A;padding:0">&#x25B2;</button>
+        <button onclick="sondageDepthStep(0.10)" tabindex="-1" style="width:34px;height:20px;border:1px solid #ccc;border-left:none;border-top:none;border-radius:0 0 6px 0;background:#f5f0e4;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;color:#A0724A;padding:0">&#x25BC;</button>
       </div>
     </div>
-    <label style="font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px;color:#A0724A;margin-left:116px">
+
+    <span></span>
+    <label style="font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px;color:#A0724A">
       <input type="checkbox" ${showDepthLine?'checked':''} onchange="toggleQdGraphVisibility(this.checked)" style="cursor:pointer"> Afficher la profondeur
+    </label>
+
+    <label style="font-weight:600;font-size:12px;white-space:nowrap;color:#2196F3">Niveau d'eau (m) :</label>
+    <div style="display:flex;align-items:center;gap:0">
+      <input type="number" step="0.10" min="0" id="sonde-water-input" value="${s.waterLevel!=null?s.waterLevel:''}" placeholder="Non rencontré" style="flex:1;max-width:226px;padding:5px 8px;border:1px solid #ccc;border-radius:6px 0 0 6px;font-size:14px;font-weight:700;color:#2196F3;-moz-appearance:textfield;outline:none;box-sizing:border-box" oninput="waterLevelInput(this.value)">
+      <div style="display:flex;flex-direction:column">
+        <button onclick="waterLevelStep(-0.10)" tabindex="-1" style="width:34px;height:20px;border:1px solid #ccc;border-left:none;border-radius:0 6px 0 0;background:#e3f2fd;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;color:#2196F3;padding:0">&#x25B2;</button>
+        <button onclick="waterLevelStep(0.10)" tabindex="-1" style="width:34px;height:20px;border:1px solid #ccc;border-left:none;border-top:none;border-radius:0 0 6px 0;background:#e3f2fd;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;color:#2196F3;padding:0">&#x25BC;</button>
+      </div>
+    </div>
+
+    <span></span>
+    <label style="font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px;color:#2196F3">
+      <input type="checkbox" ${s.showWaterLine!==false?'checked':''} onchange="toggleWaterLineVisibility(this.checked)" style="cursor:pointer"> Afficher le niveau d'eau
     </label>
   </div>`;
   // Dévoilement progressif : afficher les lignes remplies + la 1ère ligne vide
@@ -5087,7 +5100,7 @@ function renderPenetroDynTable(s,$wrap){
   html+=`<table class="sondage-table"><thead><tr><th>Prof. (m)</th>${hasTn?'<th>Niv. (m)</th>':''}<th>N (coups)</th><th>qd (MPa)</th></tr></thead><tbody>`;
   s.data.forEach((d,i)=>{
     if(i>=visibleCount)return; // masquer les lignes au-delà
-    const isRefus=s.refusal&&i===s.data.findIndex(x=>x.blows!=null&&x.blows>=100);
+    const isRefus=s.refusal&&i===s.data.findIndex(x=>x.blows!=null&&x.blows>=50);
     const qd=calcQd(d.blows,d.depth);
     const qdStr=qd!=null?qd.toFixed(2):'\u2014';
     const nivStr=hasTn?(s.tnAltitude-d.depth).toFixed(2):'';
@@ -5103,7 +5116,21 @@ function renderPenetroDynTable(s,$wrap){
     <td style="text-align:center;font-size:11px;color:#555;font-weight:600">${qdStr}</td></tr>`;
   });
   html+=`</tbody></table>`;
-  html+=`<div class="sondage-add-row"><button onclick="toggleRefusal()">🛑 ${s.refusal?'Masquer Refus':'Marquer Refus'}</button></div>`;
+  html+=`<div style="display:grid;grid-template-columns:auto 1fr;align-items:center;gap:6px 10px;margin-bottom:8px;padding:8px 10px;background:#F5F5F5;border-radius:6px">
+    <label style="font-weight:600;font-size:12px;white-space:nowrap;color:#D94040">Refus :</label>
+    <button onclick="toggleRefusal()" style="padding:5px 12px;border:1px solid ${s.refusal?'#D94040':'#ccc'};border-radius:4px;font-size:12px;font-weight:700;cursor:pointer;background:${s.refusal?'#FDECEA':'#fff'};color:${s.refusal?'#D94040':'#555'};font-family:inherit;text-align:left">🛑 ${s.refusal?'Refus marqué':'Marquer Refus'}</button>
+    <label style="font-weight:600;font-size:12px;white-space:nowrap;color:#555">Critère d'arrêt :</label>
+    <select onchange="setStopCriterion(this.value)" style="width:100%;max-width:260px;font-size:12px;padding:5px 8px;border:1px solid #ccc;border-radius:4px;font-family:inherit;font-weight:600;box-sizing:border-box">
+      <option value=""${!s.stopCriterion?' selected':''}>— Aucun —</option>
+      <option value="Refus"${s.stopCriterion==='Refus'?' selected':''}>Refus</option>
+      <option value="Refus progressif"${s.stopCriterion==='Refus progressif'?' selected':''}>Refus progressif</option>
+      <option value="Refus net"${s.stopCriterion==='Refus net'?' selected':''}>Refus net</option>
+      <option value="Refus sur remblai probable"${s.stopCriterion==='Refus sur remblai probable'?' selected':''}>Refus sur remblai probable</option>
+      <option value="Arrêt"${s.stopCriterion==='Arrêt'?' selected':''}>Arrêt</option>
+      <option value="Arrêt (déviation des tiges)"${s.stopCriterion==='Arrêt (déviation des tiges)'?' selected':''}>Arrêt (déviation des tiges)</option>
+      <option value="Arrêt sur remblai probable"${s.stopCriterion==='Arrêt sur remblai probable'?' selected':''}>Arrêt sur remblai probable</option>
+    </select>
+  </div>`;
   html+=`<textarea class="sondage-notes" placeholder="Observations...">${s.notes||''}</textarea>`;
   $wrap.innerHTML=html;
 }
@@ -5139,6 +5166,26 @@ function sondageDepthStep(delta){
   if(inp)inp.value=s.sondageDepth;
   if(s.type==='penetro_dyn'){renderPenetroDynGraph(s);renderQdGraph(s);}
   renderElements();
+}
+
+function waterLevelInput(val){
+  const s=getCurrentSondage();if(!s)return;
+  s.waterLevel=val===''?null:parseFloat(val);
+  if(s.type==='penetro_dyn'){renderPenetroDynGraph(s);renderQdGraph(s);}
+}
+function waterLevelStep(delta){
+  const s=getCurrentSondage();if(!s)return;
+  const cur=s.waterLevel!=null?s.waterLevel:0;
+  s.waterLevel=Math.max(0,+(cur+delta).toFixed(2));
+  const inp=document.getElementById('sonde-water-input');
+  if(inp)inp.value=s.waterLevel;
+  if(s.type==='penetro_dyn'){renderPenetroDynGraph(s);renderQdGraph(s);}
+}
+function toggleWaterLineVisibility(checked){
+  const s=getCurrentSondage();if(!s)return;
+  s.showWaterLine=checked;
+  renderPenetroDynGraph(s);
+  renderQdGraph(s);
 }
 
 function sondageDynInput(idx,val){
@@ -5214,6 +5261,10 @@ function toggleRefusal(){
   const s=getCurrentSondage();if(!s)return;
   s.refusal=!s.refusal;
   renderSondageContent(s);
+}
+function setStopCriterion(val){
+  const s=getCurrentSondage();if(!s)return;
+  s.stopCriterion=val;
 }
 
 function renderPenetroDynGraph(s){
@@ -5300,12 +5351,25 @@ function renderPenetroDynGraph(s){
       ctx.restore();
     }
   }
+  // ── Trait horizontal niveau d'eau ──
+  if(s.showWaterLine!==false&&s.waterLevel!=null&&s.waterLevel>0){
+    const wY=mt+(s.waterLevel/maxDepth)*ph;
+    if(wY<=mt+ph){
+      ctx.save();
+      ctx.strokeStyle='#2196F3';ctx.lineWidth=2;ctx.setLineDash([8,4]);
+      ctx.beginPath();ctx.moveTo(ml,wY);ctx.lineTo(ml+plotW,wY);ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle='#2196F3';ctx.font='bold 9px Arial';ctx.textAlign='right';
+      ctx.fillText('\u{1F4A7} '+s.waterLevel.toFixed(2)+' m',ml+plotW,wY-5);
+      ctx.restore();
+    }
+  }
   // ── Barres N ──
   filled.forEach(d=>{
     const idx=Math.round(d.depth/0.20)-1;
     const y=mt+idx*rowH+1;
     const bw=(d.blows/maxBlows)*plotW;
-    const isRefus=s.refusal&&d.blows>=100;
+    const isRefus=s.refusal&&d.blows>=50;
     ctx.fillStyle=isRefus?'#D94040':'#F2B705';
     ctx.fillRect(ml+1,y,Math.max(1,bw),rowH-2);
     ctx.strokeStyle=isRefus?'#A33030':'#D9A004';ctx.lineWidth=0.5;
@@ -5414,6 +5478,19 @@ function renderQdGraph(s){
       ctx.restore();
     }
   }
+  // ── Trait horizontal niveau d'eau ──
+  if(s.showWaterLine!==false&&s.waterLevel!=null&&s.waterLevel>0){
+    const wY=mt+(s.waterLevel/maxDepth)*ph;
+    if(wY<=mt+ph){
+      ctx.save();
+      ctx.strokeStyle='#2196F3';ctx.lineWidth=2;ctx.setLineDash([8,4]);
+      ctx.beginPath();ctx.moveTo(ml,wY);ctx.lineTo(ml+plotW,wY);ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle='#2196F3';ctx.font='bold 9px Arial';ctx.textAlign='left';
+      ctx.fillText('\u{1F4A7} '+s.waterLevel.toFixed(2)+' m',ml+4,wY-5);
+      ctx.restore();
+    }
+  }
   // ── Axe altimétrique (nivellement) à droite ──
   if(hasTn){
     const tnX=ml+plotW+12;
@@ -5517,6 +5594,11 @@ function downloadQdGraph(){
   if(s.sondageDepth!=null&&s.sondageDepth>0){
     const dy=mt+(s.sondageDepth/maxDepth)*ph;
     if(dy<=mt+ph){ctx.save();ctx.strokeStyle='#A0724A';ctx.lineWidth=2;ctx.setLineDash([8,4]);ctx.beginPath();ctx.moveTo(ml,dy);ctx.lineTo(ml+plotW,dy);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#A0724A';ctx.font='bold 9px Arial';ctx.textAlign='right';ctx.fillText('Prof. '+s.sondageDepth.toFixed(2)+' m',ml-6,dy+3);ctx.restore();}
+  }
+  // Niveau d'eau
+  if(s.showWaterLine!==false&&s.waterLevel!=null&&s.waterLevel>0){
+    const wY=mt+(s.waterLevel/maxDepth)*ph;
+    if(wY<=mt+ph){ctx.save();ctx.strokeStyle='#2196F3';ctx.lineWidth=2;ctx.setLineDash([8,4]);ctx.beginPath();ctx.moveTo(ml,wY);ctx.lineTo(ml+plotW,wY);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#2196F3';ctx.font='bold 9px Arial';ctx.textAlign='right';ctx.fillText('\u{1F4A7} '+s.waterLevel.toFixed(2)+' m',ml-6,wY+12);ctx.restore();}
   }
   // Nivellement
   if(hasTn){
