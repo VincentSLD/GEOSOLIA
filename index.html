@@ -410,8 +410,41 @@
   .sondage-add-row{margin-top:8px;display:flex;gap:6px}
   .sondage-add-row button{flex:1;padding:8px;border:2px dashed var(--gray-200);border-radius:var(--radius);background:var(--white);font-size:11px;font-weight:800;font-family:inherit;cursor:pointer;color:var(--gray-500);transition:all .2s}
   .sondage-add-row button:hover{border-color:var(--yellow);color:var(--black);background:var(--yellow-pale)}
-  .sondage-notes{width:100%;margin-top:10px;padding:6px 8px;border:1px solid var(--gray-200);border-radius:6px;font-size:11px;font-family:inherit;resize:vertical;min-height:40px;outline:none}
+  .sondage-notes-wrap{display:flex;gap:6px;margin-top:10px;align-items:flex-start}
+  .sondage-notes{flex:1;padding:6px 8px;border:1px solid var(--gray-200);border-radius:6px;font-size:11px;font-family:inherit;resize:vertical;min-height:40px;outline:none}
   .sondage-notes:focus{border-color:var(--yellow)}
+  .btn-dictation{width:36px;height:36px;border:2px solid var(--gray-200);border-radius:8px;background:var(--white);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .2s;flex-shrink:0;padding:0}
+  .btn-dictation:hover{border-color:var(--yellow);background:var(--yellow-pale)}
+  .btn-dictation.recording{border-color:#D94040;background:#FDE8E8;animation:pulse-rec .8s ease-in-out infinite}
+  @keyframes pulse-rec{0%,100%{box-shadow:0 0 0 0 rgba(217,64,64,.3)}50%{box-shadow:0 0 0 6px rgba(217,64,64,0)}}
+  .btn-gps-sondage{border:1px solid var(--gray-200);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;background:var(--white);color:var(--gray-600);transition:all .15s;font-family:inherit;display:inline-flex;align-items:center;gap:4px}
+  .btn-gps-sondage:hover{border-color:#4CAF50;color:#4CAF50;background:#E8F5E9}
+  .btn-gps-sondage.locating{border-color:#F2B705;color:#F2B705;animation:pulse-rec .8s ease-in-out infinite}
+  .gps-calib-section{margin-bottom:14px;padding:10px 12px;background:#E8F5E9;border-radius:8px;border-left:4px solid #4CAF50}
+  .gps-calib-title{font-weight:700;font-size:13px;margin-bottom:6px;color:#2E7D32;display:flex;align-items:center;gap:6px}
+  .gps-calib-status{font-size:11px;color:#666;margin-bottom:8px}
+  .gps-calib-status.calibrated{color:#2E7D32;font-weight:700}
+  .gps-calib-point{display:flex;align-items:center;gap:6px;margin-bottom:6px;padding:6px 8px;background:#fff;border-radius:6px;border:1px solid #C8E6C9;font-size:11px}
+  .gps-calib-point.done{border-color:#4CAF50;background:#F1F8E9}
+  .gps-calib-point .pt-label{font-weight:800;color:#2E7D32;min-width:18px}
+  .gps-calib-point .pt-info{flex:1;color:#555}
+  .gps-calib-btn{padding:5px 10px;border:none;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s}
+  .gps-calib-btn-gps{background:#4CAF50;color:#fff}.gps-calib-btn-gps:hover{background:#388E3C}
+  .gps-calib-btn-gps.waiting{background:#FF9800;color:#fff;animation:pulse-rec .8s ease-in-out infinite}
+  .gps-calib-btn-plan{background:#2196F3;color:#fff}.gps-calib-btn-plan:hover{background:#1976D2}
+  .gps-calib-btn-plan.waiting{background:#FF9800;color:#fff;animation:pulse-rec .8s ease-in-out infinite}
+  .gps-calib-btn-reset{background:#eee;color:#666}.gps-calib-btn-reset:hover{background:#ddd}
+  .chrono-bar{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#FFF8E1;border:2px solid #F2B705;border-radius:8px;margin:8px 0}
+  .chrono-display{font-size:20px;font-weight:800;font-family:'Courier New',monospace;color:var(--black);min-width:90px;text-align:center}
+  .chrono-btn{border:none;border-radius:6px;padding:6px 12px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .15s}
+  .chrono-start{background:#4CAF50;color:#fff}
+  .chrono-start:hover{background:#43A047}
+  .chrono-pause{background:#FF9800;color:#fff}
+  .chrono-pause:hover{background:#F57C00}
+  .chrono-lap{background:var(--yellow);color:var(--black)}
+  .chrono-lap:hover{background:#e0a800}
+  .chrono-reset{background:var(--gray-200);color:var(--black)}
+  .chrono-reset:hover{background:var(--gray-300)}
   .fondation-form{display:flex;flex-direction:column;gap:10px;padding:4px 0}
   .fondation-form label{font-size:11px;font-weight:800;color:var(--black);display:flex;flex-direction:column;gap:3px}
   .fondation-form select,.fondation-form input,.fondation-form textarea{padding:6px 8px;border:1px solid var(--gray-200);border-radius:6px;font-size:12px;font-weight:600;font-family:inherit;outline:none}
@@ -642,6 +675,82 @@
   .mep-download-btn{width:100%;padding:10px;border:none;border-radius:8px;background:var(--yellow);color:var(--black);font-size:13px;font-weight:800;cursor:pointer;transition:all .2s;margin-top:auto;flex-shrink:0}
   .mep-download-btn:hover{background:#e0a800;transform:scale(1.02)}
 
+  /* ═══ PANNEAU RAPPORT (FULLSCREEN OVERLAY) ═══ */
+  #rapport-panel{position:fixed;inset:0;display:none;flex-direction:column;background:var(--gray-50);z-index:9999;overflow:hidden}
+  #rapport-panel.open{display:flex}
+  .rpt-header{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:var(--black);border-bottom:3px solid var(--yellow);flex-shrink:0}
+  .rpt-header>span{font-weight:800;font-size:16px;color:var(--yellow);display:flex;align-items:center;gap:8px}
+  .rpt-header-right{display:flex;align-items:center;gap:10px}
+  .rpt-header-close{background:none;border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:14px;cursor:pointer;padding:6px 14px;border-radius:6px;font-weight:700;font-family:inherit;transition:all .15s}
+  .rpt-header-close:hover{background:rgba(255,255,255,0.15);border-color:rgba(255,255,255,0.4)}
+  .rpt-top-bar{display:flex;align-items:center;gap:16px;padding:12px 24px;background:var(--white);border-bottom:1px solid var(--gray-200);flex-shrink:0;flex-wrap:wrap}
+  .rpt-mission-bar{display:flex;align-items:center;gap:8px;flex:1;min-width:250px}
+  .rpt-mission-bar select{flex:1;max-width:320px;border:2px solid var(--gray-200);border-radius:8px;padding:8px 12px;font-size:14px;font-weight:700;font-family:inherit;outline:none;cursor:pointer;transition:border-color .2s}
+  .rpt-mission-bar select:focus{border-color:var(--yellow)}
+  .rpt-mission-label{font-size:12px;font-weight:800;color:var(--gray-500);white-space:nowrap}
+  .rpt-progress{display:flex;align-items:center;gap:10px;min-width:200px}
+  .rpt-progress-bar{flex:1;height:8px;background:var(--gray-200);border-radius:4px;overflow:hidden;min-width:100px}
+  .rpt-progress-fill{height:100%;background:var(--yellow);border-radius:4px;transition:width .3s}
+  .rpt-progress-text{font-size:11px;font-weight:800;color:var(--gray-500);white-space:nowrap}
+  .rpt-body{display:flex;flex:1;overflow:hidden}
+  .rpt-sidebar{width:300px;min-width:240px;background:var(--white);border-right:1px solid var(--gray-200);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden}
+  .rpt-sidebar-tabs{display:flex;border-bottom:2px solid var(--yellow);flex-shrink:0}
+  .rpt-tab{flex:1;padding:10px 8px;border:none;background:var(--gray-100);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--gray-500);transition:all .15s;border-bottom:2px solid transparent;margin-bottom:-2px}
+  .rpt-tab:hover{background:var(--gray-50);color:var(--black)}
+  .rpt-tab.active{background:var(--white);color:var(--black);border-bottom-color:var(--yellow)}
+  .rpt-tab-content{flex:1;overflow-y:auto;display:flex;flex-direction:column}
+  .rpt-sidebar-title{font-weight:800;font-size:13px;color:var(--black);padding:14px 16px 10px;border-bottom:2px solid var(--yellow)}
+  .rpt-chapter-list{flex:1;overflow-y:auto;padding:6px}
+  .rpt-chapter-item{display:flex;align-items:center;gap:8px;padding:10px 12px;cursor:pointer;border-radius:8px;transition:all .15s;border:2px solid transparent;margin-bottom:2px}
+  .rpt-chapter-item:hover{background:var(--gray-50)}
+  .rpt-chapter-item.active{background:var(--yellow-pale);border-color:var(--yellow)}
+  .rpt-chapter-num{font-size:11px;font-weight:800;color:var(--white);background:var(--black);border-radius:5px;padding:2px 8px;min-width:24px;text-align:center;flex-shrink:0}
+  .rpt-chapter-item.active .rpt-chapter-num{background:var(--yellow);color:var(--black)}
+  .rpt-chapter-title{font-size:13px;font-weight:700;color:var(--black);flex:1;line-height:1.3}
+  .rpt-chapter-status{font-size:9px;font-weight:800;border-radius:10px;padding:2px 8px;flex-shrink:0}
+  .rpt-status-empty{background:var(--gray-100);color:var(--gray-400)}
+  .rpt-status-draft{background:#FFF3CD;color:#856404}
+  .rpt-status-done{background:#D4EDDA;color:#155724}
+  .rpt-main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+  .rpt-editor-header{padding:20px 28px 12px;flex-shrink:0;background:var(--white);border-bottom:1px solid var(--gray-100)}
+  .rpt-editor-chapter-title{font-size:20px;font-weight:800;color:var(--black);margin:0 0 4px}
+  .rpt-editor-hint{font-size:12px;color:var(--gray-400);font-weight:600;margin:0}
+  .rpt-editor-wrap{flex:1;padding:16px 28px 20px;overflow-y:auto;background:var(--gray-50)}
+  .rpt-editor{width:100%;min-height:400px;border:2px solid var(--gray-200);border-radius:10px;padding:16px 20px;font-size:14px;font-family:inherit;line-height:1.7;color:var(--black);resize:vertical;outline:none;transition:border-color .2s;box-sizing:border-box;background:var(--white);box-shadow:0 2px 12px rgba(0,0,0,0.04)}
+  .rpt-editor:focus{border-color:var(--yellow);box-shadow:0 0 0 3px rgba(242,183,5,0.15)}
+  .rpt-editor-actions{display:flex;gap:8px;padding:12px 28px;flex-shrink:0;background:var(--white);border-top:1px solid var(--gray-100)}
+  .rpt-autofill-btn{display:inline-flex;align-items:center;gap:6px;border:2px solid var(--gray-200);border-radius:8px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;background:var(--white);color:var(--gray-600);transition:all .15s;font-family:inherit}
+  .rpt-autofill-btn:hover{border-color:var(--yellow);color:var(--black);background:var(--yellow-pale)}
+  .rpt-ia-btn{display:inline-flex;align-items:center;gap:6px;border:none;border-radius:8px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;background:#7C4DFF;color:#fff;transition:all .15s;font-family:inherit}
+  .rpt-ia-btn:hover{background:#651FFF;transform:scale(1.02)}
+  .rpt-actions{display:flex;gap:8px;padding:12px 24px;border-top:2px solid var(--gray-200);flex-shrink:0;background:var(--white)}
+  .rpt-actions button{padding:12px 24px;border:none;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;transition:all .2s;font-family:inherit}
+  .rpt-btn-export{background:var(--yellow);color:var(--black)}
+  .rpt-btn-export:hover{background:#e0a800;transform:scale(1.02)}
+  .rpt-btn-secondary{background:var(--gray-100);color:var(--black)}
+  .rpt-btn-secondary:hover{background:var(--gray-200)}
+  .rpt-empty-editor{display:flex;align-items:center;justify-content:center;flex:1;color:var(--gray-400);font-size:14px;font-weight:700;text-align:center;padding:40px}
+
+  /* ═══ PANNEAU MODÈLE GÉOTECHNIQUE ═══ */
+  #modele-panel{position:fixed;inset:0;display:none;flex-direction:column;background:var(--gray-50);z-index:9999;overflow:hidden}
+  #modele-panel.open{display:flex}
+  .mdl-header{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:#2C3E50;border-bottom:3px solid #E67E22;flex-shrink:0}
+  .mdl-header>span{font-weight:800;font-size:16px;color:#E67E22;display:flex;align-items:center;gap:8px}
+  .mdl-header-close{background:none;border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:14px;cursor:pointer;padding:6px 14px;border-radius:6px;font-weight:700;font-family:inherit}
+  .mdl-header-close:hover{background:rgba(255,255,255,0.15)}
+  .mdl-body{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:20px}
+  .mdl-section-title{font-size:14px;font-weight:800;color:#2C3E50;border-bottom:2px solid #E67E22;padding-bottom:6px;margin-bottom:8px}
+  .mdl-table{width:100%;border-collapse:collapse;font-size:12px;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+  .mdl-table th{background:#2C3E50;color:#fff;padding:8px 10px;text-align:center;font-weight:700;white-space:nowrap}
+  .mdl-table td{padding:6px 8px;border-bottom:1px solid #eee;text-align:center}
+  .mdl-table input,.mdl-table select{width:100%;padding:4px;border:1px solid #ddd;border-radius:4px;font-size:11px;text-align:center;box-sizing:border-box}
+  .mdl-table input:focus,.mdl-table select:focus{border-color:#E67E22;outline:none}
+  .mdl-btn{padding:8px 16px;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700;font-family:inherit;transition:all .15s}
+  .mdl-btn-add{background:#27AE60;color:#fff}.mdl-btn-add:hover{background:#219653}
+  .mdl-btn-del{background:#C0392B;color:#fff}.mdl-btn-del:hover{background:#A93226}
+  .mdl-btn-auto{background:#2980B9;color:#fff}.mdl-btn-auto:hover{background:#2471A3}
+  .mdl-coupe-canvas{width:100%;max-width:800px;border:1px solid #ddd;border-radius:8px;background:#fff}
+
   /* ═══ TOUCH / TABLET IMPROVEMENTS ═══ */
   /* :active states for all interactive elements */
   .tool-btn:active{background:var(--gray-200);color:var(--black)}
@@ -808,6 +917,8 @@
     <button class="tool-btn" onclick="toggleInsertMenu()"><span class="icon" style="font-size:15px;line-height:1;display:inline-flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></span><span class="label">Insérer</span></button>
     <div class="tool-sep"></div>
     <button class="tool-btn" onclick="openMiseEnPage()"><span class="icon">📐</span><span class="label">Mise en Page</span></button>
+    <button class="tool-btn" onclick="openRapport()"><span class="icon">📋</span><span class="label">Rapport</span></button>
+    <button class="tool-btn" onclick="openModeleGeotech()"><span class="icon">🏗️</span><span class="label">Modèle</span></button>
     <div class="tool-sep"></div>
     <button class="tool-btn" onclick="exportProject()"><span class="icon">💾</span><span class="label">Enregistrer</span></button>
     <button class="tool-btn" onclick="exportProjectAs()"><span class="icon">📥</span><span class="label">Enreg. sous...</span></button>
@@ -896,6 +1007,175 @@
     </div>
   </div>
   <div id="main-body">
+  <div id="rapport-panel">
+    <div class="rpt-header">
+      <span>📋 Rapport Géotechnique</span>
+      <div class="rpt-header-right">
+        <button class="rpt-btn-secondary" onclick="rptAutoFillAll()" style="font-size:12px;padding:6px 14px;border-radius:6px">⚡ Remplissage auto</button>
+        <button class="rpt-btn-secondary" onclick="rptExportTxt()" style="font-size:12px;padding:6px 14px;border-radius:6px">📝 Export TXT</button>
+        <button class="rpt-btn-export" onclick="rptExportPDF()" style="font-size:12px;padding:6px 14px;border-radius:6px">📄 Export PDF</button>
+        <button class="rpt-header-close" onclick="closeRapport()">✕ Fermer</button>
+      </div>
+    </div>
+    <div class="rpt-top-bar">
+      <div class="rpt-mission-bar">
+        <span class="rpt-mission-label">Mission :</span>
+        <select id="rpt-mission-select" onchange="rptChangeMission(this.value)">
+          <option value="">— Sélectionner le type de mission —</option>
+          <option value="G1_ES">G1 ES — Étude de Site</option>
+          <option value="G1_PGC">G1 PGC — Principes Généraux de Construction</option>
+          <option value="G2_AVP">G2 AVP — Avant-Projet</option>
+          <option value="G2_PRO">G2 PRO — Projet</option>
+          <option value="G2_DCE">G2 DCE/ACT — Dossier de Consultation</option>
+          <option value="G3">G3 — Suivi d'exécution</option>
+          <option value="G4">G4 — Supervision</option>
+          <option value="G5">G5 — Diagnostic</option>
+        </select>
+      </div>
+      <div class="rpt-progress">
+        <div class="rpt-progress-bar"><div class="rpt-progress-fill" id="rpt-progress-fill" style="width:0%"></div></div>
+        <span class="rpt-progress-text" id="rpt-progress-text">0 / 0</span>
+      </div>
+    </div>
+    <div class="rpt-body">
+      <div class="rpt-sidebar">
+        <div class="rpt-sidebar-tabs">
+          <button class="rpt-tab active" id="rpt-tab-sommaire" onclick="rptSwitchTab('sommaire')">Sommaire</button>
+          <button class="rpt-tab" id="rpt-tab-textes" onclick="rptSwitchTab('textes')">📚 Textes-types</button>
+        </div>
+        <div id="rpt-tab-content-sommaire" class="rpt-tab-content">
+          <div class="rpt-chapter-list" id="rpt-chapter-list"></div>
+        </div>
+        <div id="rpt-tab-content-textes" class="rpt-tab-content" style="display:none">
+          <div style="padding:8px 10px">
+            <input type="text" id="rpt-text-lib-search" placeholder="Rechercher..." oninput="rptRenderTextLib(this.value)" style="width:100%;padding:6px 10px;border:2px solid #eee;border-radius:6px;font-size:12px;box-sizing:border-box">
+          </div>
+          <div id="text-lib-list" style="flex:1;overflow-y:auto;padding:0 10px 10px"></div>
+        </div>
+      </div>
+      <div class="rpt-main" id="rpt-main">
+        <div class="rpt-empty-editor" id="rpt-empty-editor">Sélectionnez un type de mission puis<br>cliquez sur un chapitre pour commencer</div>
+      </div>
+    </div>
+  </div>
+  <div id="modele-panel">
+    <div class="mdl-header">
+      <span>🏗️ Modèle Géotechnique</span>
+      <div style="display:flex;gap:10px;align-items:center">
+        <button class="mdl-btn mdl-btn-auto" onclick="mdlAutoFromSondages()">⚡ Auto depuis sondages</button>
+        <button class="mdl-btn" onclick="gtrAutoClassify()" style="background:#8E44AD;color:#fff">🔬 GTR auto</button>
+        <button class="mdl-btn" onclick="mdlDrawCoupe()" style="background:#E67E22;color:#fff">📊 Coupe géotechnique</button>
+        <button class="mdl-header-close" onclick="closeModeleGeotech()">✕ Fermer</button>
+      </div>
+    </div>
+    <div class="mdl-body">
+      <div>
+        <div class="mdl-section-title">Tableau synthétique des formations</div>
+        <div id="mdl-table-wrap"></div>
+        <div style="margin-top:8px;display:flex;gap:8px">
+          <button class="mdl-btn mdl-btn-add" onclick="mdlAddFormation()">+ Formation</button>
+          <button class="mdl-btn mdl-btn-del" onclick="mdlRemoveFormation()">− Supprimer</button>
+        </div>
+      </div>
+      <div>
+        <div class="mdl-section-title">Coupe géotechnique synthétique</div>
+        <canvas id="mdl-coupe-canvas" class="mdl-coupe-canvas" width="800" height="400"></canvas>
+      </div>
+      <div>
+        <div class="mdl-section-title">Dimensionnement fondations</div>
+        <div style="display:flex;gap:24px;flex-wrap:wrap">
+          <div style="flex:1;min-width:340px;background:#fff;border-radius:8px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+            <h4 style="margin:0 0 12px;font-size:13px;color:#2C3E50">Fondation superficielle (pressiomètre)</h4>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;font-size:12px;margin-bottom:8px">
+              <label>B (m) <input type="number" step="0.1" value="0.6" id="dim-B" style="width:60px;padding:3px;border:1px solid #ccc;border-radius:4px"></label>
+              <label>L (m) <input type="number" step="0.1" value="1.0" id="dim-L" style="width:60px;padding:3px;border:1px solid #ccc;border-radius:4px"></label>
+              <label>D (m) <input type="number" step="0.1" value="0.8" id="dim-D" style="width:60px;padding:3px;border:1px solid #ccc;border-radius:4px"></label>
+              <label>Ple* (MPa) <input type="number" step="0.01" value="" id="dim-Ple" style="width:70px;padding:3px;border:1px solid #ccc;border-radius:4px" placeholder="auto"></label>
+              <label>kp <input type="number" step="0.01" value="0.8" id="dim-kp" style="width:55px;padding:3px;border:1px solid #ccc;border-radius:4px"></label>
+              <label>gamma (kN/m3) <input type="number" step="0.1" value="18" id="dim-gamma" style="width:55px;padding:3px;border:1px solid #ccc;border-radius:4px"></label>
+            </div>
+            <button class="mdl-btn mdl-btn-auto" onclick="dimCalcSuperficielle()" style="margin-bottom:8px">Calculer q_u & q_adm</button>
+            <div id="dim-result-sup" style="font-size:12px;color:#333;background:#f8f8f8;padding:10px;border-radius:6px;min-height:40px"></div>
+          </div>
+          <div style="flex:1;min-width:340px;background:#fff;border-radius:8px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+            <h4 style="margin:0 0 12px;font-size:13px;color:#2C3E50">Fondation profonde (pieu, pressiomètre)</h4>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;font-size:12px;margin-bottom:8px">
+              <label>Diam. (m) <input type="number" step="0.05" value="0.5" id="dim-pieu-D" style="width:60px;padding:3px;border:1px solid #ccc;border-radius:4px"></label>
+              <label>L pieu (m) <input type="number" step="0.5" value="8" id="dim-pieu-L" style="width:60px;padding:3px;border:1px solid #ccc;border-radius:4px"></label>
+              <label>Type <select id="dim-pieu-type" style="padding:3px;border:1px solid #ccc;border-radius:4px;font-size:11px"><option value="fore">Foré</option><option value="battu">Battu</option><option value="visse">Vissé</option></select></label>
+            </div>
+            <button class="mdl-btn mdl-btn-auto" onclick="dimCalcProfonde()" style="margin-bottom:8px">Calculer Q_u & Q_adm</button>
+            <div id="dim-result-prof" style="font-size:12px;color:#333;background:#f8f8f8;padding:10px;border-radius:6px;min-height:40px"></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mdl-section-title">Tassement pressiométrique (méthode Ménard)</div>
+        <div style="display:flex;gap:24px;flex-wrap:wrap">
+          <div style="flex:1;min-width:440px;background:#fff;border-radius:8px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;font-size:12px;margin-bottom:10px">
+              <label>B (m) <input type="number" step="0.1" value="0.6" id="tass-B" style="width:60px;padding:3px;border:1px solid #ccc;border-radius:4px"></label>
+              <label>L (m) <input type="number" step="0.1" value="1.0" id="tass-L" style="width:60px;padding:3px;border:1px solid #ccc;border-radius:4px"></label>
+              <label>D (m) <input type="number" step="0.1" value="0.8" id="tass-D" style="width:60px;padding:3px;border:1px solid #ccc;border-radius:4px"></label>
+              <label>q (kPa) <input type="number" step="10" value="150" id="tass-q" style="width:70px;padding:3px;border:1px solid #ccc;border-radius:4px" title="Contrainte nette appliquée"></label>
+              <label title="Coefficient rhéologique alpha">alpha <select id="tass-alpha" style="padding:3px;border:1px solid #ccc;border-radius:4px;font-size:11px">
+                <option value="0.25">Tourbe (1/4)</option>
+                <option value="0.33">Argile molle (1/3)</option>
+                <option value="0.50" selected>Argile ferme (1/2)</option>
+                <option value="0.50">Limon (1/2)</option>
+                <option value="0.33">Sable (1/3)</option>
+                <option value="0.50">Sable compact (1/2)</option>
+                <option value="0.33">Grave (1/3)</option>
+                <option value="0.67">Roche altérée (2/3)</option>
+                <option value="1.00">Roche saine (1)</option>
+              </select></label>
+            </div>
+            <p style="font-size:10px;color:#888;margin:0 0 8px">Les Em sont récupérés automatiquement depuis les sondages pressiométriques ou le modèle géotechnique. Vous pouvez aussi les saisir manuellement ci-dessous.</p>
+            <div id="tass-layers-wrap" style="margin-bottom:8px"></div>
+            <div style="display:flex;gap:8px;margin-bottom:10px">
+              <button class="mdl-btn mdl-btn-auto" onclick="tassAutoLayers()">⚡ Auto depuis données</button>
+              <button class="mdl-btn mdl-btn-add" onclick="tassAddLayer()">+ Couche</button>
+              <button class="mdl-btn mdl-btn-del" onclick="tassRemoveLayer()">− Suppr.</button>
+              <button class="mdl-btn" onclick="dimCalcTassement()" style="background:#E67E22;color:#fff">Calculer tassement</button>
+            </div>
+            <div id="dim-result-tass" style="font-size:12px;color:#333;background:#f8f8f8;padding:10px;border-radius:6px;min-height:40px"></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mdl-section-title">Tassement par corrélation pénétrométrique (qd)</div>
+        <div style="display:flex;gap:24px;flex-wrap:wrap">
+          <div style="flex:1;min-width:440px;background:#fff;border-radius:8px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+            <p style="font-size:10px;color:#888;margin:0 0 8px">Estimation du module de déformation E à partir de la résistance de pointe dynamique qd via des corrélations empiriques (Ménard, Cassan, Baguelin). Le tassement est ensuite calculé par la méthode élastique par couches.</p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;font-size:12px;margin-bottom:10px">
+              <label>B (m) <input type="number" step="0.1" value="0.6" id="tass-pd-B" style="width:60px;padding:3px;border:1px solid #ccc;border-radius:4px"></label>
+              <label>L (m) <input type="number" step="0.1" value="1.0" id="tass-pd-L" style="width:60px;padding:3px;border:1px solid #ccc;border-radius:4px"></label>
+              <label>D (m) <input type="number" step="0.1" value="0.8" id="tass-pd-D" style="width:60px;padding:3px;border:1px solid #ccc;border-radius:4px"></label>
+              <label>q (kPa) <input type="number" step="10" value="150" id="tass-pd-q" style="width:70px;padding:3px;border:1px solid #ccc;border-radius:4px"></label>
+              <label title="Corrélation E/qd">Corrélation <select id="tass-pd-corr" style="padding:3px;border:1px solid #ccc;border-radius:4px;font-size:11px">
+                <option value="cassan_argile">Argile — E = 2.5 × qd (Cassan)</option>
+                <option value="cassan_limon">Limon — E = 3.5 × qd (Cassan)</option>
+                <option value="cassan_sable" selected>Sable — E = 3.0 × qd (Cassan)</option>
+                <option value="cassan_grave">Grave — E = 4.0 × qd (Cassan)</option>
+                <option value="menard_gen">Général — E = alpha × qd (Ménard, alpha ci-dessous)</option>
+                <option value="custom">Personnalisé — coeff. ci-dessous</option>
+              </select></label>
+              <label title="Coefficient E/qd personnalisé">Coeff. E/qd <input type="number" step="0.1" value="3.0" id="tass-pd-coeff" style="width:55px;padding:3px;border:1px solid #ccc;border-radius:4px"></label>
+              <label title="Coefficient de Poisson">nu <input type="number" step="0.05" value="0.30" id="tass-pd-nu" style="width:50px;padding:3px;border:1px solid #ccc;border-radius:4px"></label>
+            </div>
+            <div id="tass-pd-layers-wrap" style="margin-bottom:8px"></div>
+            <div style="display:flex;gap:8px;margin-bottom:10px">
+              <button class="mdl-btn mdl-btn-auto" onclick="tassPdAutoLayers()">⚡ Auto depuis pénétro</button>
+              <button class="mdl-btn mdl-btn-add" onclick="tassPdAddLayer()">+ Couche</button>
+              <button class="mdl-btn mdl-btn-del" onclick="tassPdRemoveLayer()">− Suppr.</button>
+              <button class="mdl-btn" onclick="dimCalcTassPd()" style="background:#D94040;color:#fff">Calculer tassement</button>
+            </div>
+            <div id="dim-result-tass-pd" style="font-size:12px;color:#333;background:#f8f8f8;padding:10px;border-radius:6px;min-height:40px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
   <div id="mep-panel">
     <div class="mep-resize-handle" id="mep-resize-handle"></div>
     <div class="mep-panel-header">
@@ -979,6 +1259,25 @@
         </div>
         <div id="niv-ref-list" style="margin-top:6px"></div>
       </div>
+      <div class="gps-calib-section">
+        <div class="gps-calib-title">📡 Calibration GPS du plan</div>
+        <div class="gps-calib-status" id="gps-calib-status">Non calibré — positionnement GPS approximatif</div>
+        <div class="gps-calib-point" id="gps-calib-pt1">
+          <span class="pt-label">P1</span>
+          <span class="pt-info" id="gps-calib-pt1-info">Non défini</span>
+          <button class="gps-calib-btn gps-calib-btn-gps" id="gps-calib-pt1-gps" onclick="gpsCalibCapture(1)">📡 GPS</button>
+          <button class="gps-calib-btn gps-calib-btn-plan" id="gps-calib-pt1-plan" onclick="gpsCalibPlanClick(1)">🎯 Plan</button>
+        </div>
+        <div class="gps-calib-point" id="gps-calib-pt2">
+          <span class="pt-label">P2</span>
+          <span class="pt-info" id="gps-calib-pt2-info">Non défini</span>
+          <button class="gps-calib-btn gps-calib-btn-gps" id="gps-calib-pt2-gps" onclick="gpsCalibCapture(2)">📡 GPS</button>
+          <button class="gps-calib-btn gps-calib-btn-plan" id="gps-calib-pt2-plan" onclick="gpsCalibPlanClick(2)">🎯 Plan</button>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <button class="gps-calib-btn gps-calib-btn-reset" onclick="gpsCalibReset()">Réinitialiser</button>
+        </div>
+      </div>
       <div class="sondage-type-row"><button class="sondage-type-btn" onclick="newSondage('penetro_dyn')" style="flex:1;margin-bottom:0"><span class="sondage-type-icon">🔴</span> Pénétro. Dynamique</button><button class="sondage-compare-btn" onclick="openCompareModal('penetro_dyn')" title="Comparer">📊</button></div>
       <div class="sondage-type-row"><button class="sondage-type-btn" onclick="newSondage('penetro_stat')" style="flex:1;margin-bottom:0"><span class="sondage-type-icon">🔵</span> Pénétro. Statique</button><button class="sondage-compare-btn" onclick="openCompareModal('penetro_stat')" title="Comparer">📊</button></div>
       <div class="sondage-type-row"><button class="sondage-type-btn" onclick="newSondage('tariere')" style="flex:1;margin-bottom:0"><span class="sondage-type-icon">⚫</span> Tarière</button><button class="sondage-compare-btn" onclick="openCompareModal('tariere')" title="Comparer">📊</button></div>
@@ -987,6 +1286,8 @@
       <div class="sondage-type-row"><button class="sondage-type-btn" onclick="newSondage('piezometre')" style="flex:1;margin-bottom:0"><span class="sondage-type-icon">💧</span> Piézomètre</button><button class="sondage-compare-btn" onclick="openCompareModal('piezometre')" title="Comparer">📊</button></div>
       <div class="sondage-type-row"><button class="sondage-type-btn" onclick="newSondage('infiltro')" style="flex:1;margin-bottom:0"><span class="sondage-type-icon">💦</span> Infiltrométrie</button><button class="sondage-compare-btn" onclick="openCompareModal('infiltro')" title="Comparer">📊</button></div>
       <div class="sondage-type-row"><button class="sondage-type-btn" onclick="newSondage('forage_destr')" style="flex:1;margin-bottom:0"><span class="sondage-type-icon">🔶</span> Forage Destructif</button><button class="sondage-compare-btn" onclick="openCompareModal('forage_destr')" title="Comparer">📊</button></div>
+      <div class="sondage-type-row"><button class="sondage-type-btn" onclick="newSondage('pressio')" style="flex:1;margin-bottom:0"><span class="sondage-type-icon">🔧</span> Pressiomètre Ménard</button><button class="sondage-compare-btn" onclick="openCompareModal('pressio')" title="Comparer">📊</button></div>
+      <div class="sondage-type-row"><button class="sondage-type-btn" onclick="newSondage('spt')" style="flex:1;margin-bottom:0"><span class="sondage-type-icon">🔨</span> Essai SPT</button><button class="sondage-compare-btn" onclick="openCompareModal('spt')" title="Comparer">📊</button></div>
       <button class="sondage-type-btn" onclick="newSondage('essai_labo')"><span class="sondage-type-icon">🧪</span> Essais Laboratoire</button>
       <div id="sondage-existing-list"></div>
     </div>
@@ -1224,6 +1525,13 @@
         <button class="btn-scan3d btn-scan3d-reset" onclick="exportScan3DProject()">💾 Exporter</button>
         <button class="btn-scan3d btn-scan3d-import" onclick="document.getElementById('scan3dProjectInput').click()">📂 Charger projet</button>
         <input type="file" id="scan3dProjectInput" accept=".geosolia3d" style="display:none" onchange="importScan3DProject(event)">
+        <span style="width:1px;height:20px;background:rgba(255,255,255,.2);margin:0 2px"></span>
+        <button class="btn-scan3d btn-scan3d-measure" id="btn-3d-geomodel" onclick="toggle3DGeoModel()">🏗️ Géologie</button>
+        <button class="btn-scan3d btn-scan3d-measure" id="btn-3d-sondages" onclick="toggle3DSondages()">📍 Sondages</button>
+        <button class="btn-scan3d btn-scan3d-measure" id="btn-3d-nappe" onclick="toggle3DNappe()">💧 Nappe</button>
+        <button class="btn-scan3d btn-scan3d-measure" id="btn-3d-coupe" onclick="toggle3DCoupe()">✂️ Coupe</button>
+        <span style="width:1px;height:20px;background:rgba(255,255,255,.2);margin:0 2px"></span>
+        <button class="btn-scan3d btn-scan3d-reset" onclick="captureScan3DToPhotos()">📸 Photo rapport</button>
         <button class="btn-scan3d btn-scan3d-reset" onclick="captureScan3D()">📸 Capture</button>
         <button class="btn-scan3d btn-scan3d-reset" onclick="resetScan3DView()">🔄 Recentrer</button>
         <button class="btn-scan3d btn-scan3d-close" onclick="closeScan3D()">✕</button>
@@ -1288,6 +1596,7 @@
       <input type="text" id="sondage-name" placeholder="Nom (ex: PD1)">
       <button class="se-btn se-btn-save" onclick="saveSondage()">💾 Enregistrer</button>
       <button class="se-btn" onclick="linkSondagePhoto()" style="background:#4CAF50;color:#fff">📸 Photo</button>
+      <button class="btn-gps-sondage" onclick="gpsSondagePosition()">📍 GPS</button>
       <button class="se-btn se-btn-close" onclick="closeSondageEdit()">✕</button>
     </div>
   </div>
@@ -1494,6 +1803,10 @@ async function restoreFromIDB(id){
   projectVille=project.projectVille||'';
   if(project.projectAddr){projectAddr=project.projectAddr;projectLat=project.projectLat||null;projectLng=project.projectLng||null;projectInsee=project.projectInsee||null;}
   if(project.geocartoData){geocartoData=project.geocartoData;try{renderGeocartoPanel();}catch(e){}}
+  if(project.projectMission){projectMission=project.projectMission;const ms=document.getElementById('rpt-mission-select');if(ms)ms.value=projectMission;}
+  if(project.reportChapters)reportChapters=project.reportChapters;
+  if(project.modeleFormations)modeleFormations=project.modeleFormations;
+  if(project.gpsCalib){gpsCalib=project.gpsCalib;try{gpsCalibUpdateUI();}catch(e){}}
   const hAddr0=document.getElementById('ia-geo-addr');if(hAddr0&&projectAddr)hAddr0.value=projectAddr;
   const hLat0=document.getElementById('ia-geo-lat');if(hLat0&&projectLat)hLat0.value=projectLat;
   const hLng0=document.getElementById('ia-geo-lng');if(hLng0&&projectLng)hLng0.value=projectLng;
@@ -2113,6 +2426,8 @@ function gP(e){const r=$area.getBoundingClientRect();const cx=(e.clientX||0)-r.l
 function onPD(e){
   if(e.target.closest('#empty-state'))return;
   if(e.target.closest('#btn-recadrer'))return;
+  // GPS calibration plan click intercept
+  if(gpsCalibPlanClickTarget){const pt=gP(e);if(gpsCalibHandlePlanClick(pt.px,pt.py))return;}
   if(currentTool==='select'&&e.target.closest('.plan-element'))return;const pt=gP(e);
   if(isCalibrating){
     // Check if clicking near an existing calibration point to drag it
@@ -3208,7 +3523,48 @@ async function iaFetchArgiles(lat,lng){
   return null;
 }
 
+function wgs84ToLambert93(lat,lng){
+  const deg=Math.PI/180;
+  const a=6378137.0,e=0.08181919106;
+  const lc=3*deg,phi0=46.5*deg;
+  const n=0.7256077650,C=11754255.426,Xs=700000,Ys=12655612.050;
+  const phi=lat*deg,lambda=lng*deg;
+  const sinPhi=Math.sin(phi);
+  const L=0.5*Math.log((1+sinPhi)/(1-sinPhi))-(e/2)*Math.log((1+e*sinPhi)/(1-e*sinPhi));
+  const R=C*Math.exp(-n*L);
+  const gamma=n*(lambda-lc);
+  return {x:Xs+R*Math.sin(gamma),y:Ys-R*Math.cos(gamma)};
+}
+
 async function iaFetchGeologie(lat,lng){
+  const extractField=(xml,...names)=>{
+    for(const name of names){
+      const re=new RegExp('<(?:[A-Za-z0-9_]+:)?'+name+'>([^<]*)</(?:[A-Za-z0-9_]+:)?'+name+'>','i');
+      const m=xml.match(re);if(m&&m[1].trim())return m[1].trim();
+    }
+    return '';
+  };
+  // 1) InfoTerre SCAN_GEOL50 (notation + description) — comme GEOCARTO
+  let notation='',description='',carte='',nomCarte='';
+  try{
+    const {x,y}=wgs84ToLambert93(lat,lng);
+    const d=500;
+    const bbox=(x-d)+','+(y-d)+','+(x+d)+','+(y+d);
+    const urlGfi='https://infoterre.brgm.fr/services/gfi?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetFeatureInfo'+
+      '&LAYERS=SCAN_GEOL50&QUERY_LAYERS=SCAN_GEOL50&SRS=EPSG:2154'+
+      '&BBOX='+bbox+'&WIDTH=256&HEIGHT=256&X=128&Y=128'+
+      '&INFO_FORMAT=application/vnd.ogc.gml&FEATURE_COUNT=1';
+    const gfiResp=await fetch(urlGfi,{signal:AbortSignal.timeout(12000)});
+    if(gfiResp.ok){
+      const gfiXml=await gfiResp.text();
+      carte=extractField(gfiXml,'carte');
+      nomCarte=extractField(gfiXml,'nom');
+      notation=extractField(gfiXml,'notation');
+      description=extractField(gfiXml,'description');
+    }
+  }catch(e){}
+  // 2) Fallback WFS catalog + litho simplifiée
+  let feuille='',litho='';
   const d1=0.005,d2=0.05;
   const urlCat='https://geoservices.brgm.fr/geologie?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=ms:SCAN_F_GEOL50_CATALOG&COUNT=1&BBOX='+(lat-d1)+','+(lng-d1)+','+(lat+d1)+','+(lng+d1)+',urn:ogc:def:crs:EPSG::4326';
   const urlLitho='https://geoservices.brgm.fr/geologie?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=ms:LITHO_1M_SIMPLIFIEE&COUNT=1&BBOX='+(lat-d2)+','+(lng-d2)+','+(lat+d2)+','+(lng+d2)+',urn:ogc:def:crs:EPSG::4326';
@@ -3220,20 +3576,13 @@ async function iaFetchGeologie(lat,lng){
     catResp.ok?catResp.text():Promise.resolve(''),
     lithoResp.ok?lithoResp.text():Promise.resolve('')
   ]);
-  const extractField=(xml,...names)=>{
-    for(const name of names){
-      const re=new RegExp('<(?:[A-Za-z0-9_]+:)?'+name+'>([^<]*)</(?:[A-Za-z0-9_]+:)?'+name+'>','i');
-      const m=xml.match(re);if(m&&m[1].trim())return m[1].trim();
-    }
-    return '';
-  };
   const numero=extractField(catXml,'numero');
   const nom=extractField(catXml,'nom');
   const descr=extractField(lithoXml,'DESCR','descr');
   const type=extractField(lithoXml,'TYPE','type');
-  const feuille=(numero&&nom)?numero+' — '+nom:(numero||nom||'');
-  const litho=[descr,type].filter(Boolean).join(' — ');
-  return {feuille,litho};
+  feuille=(carte&&nomCarte)?carte+' — '+nomCarte:(numero&&nom)?numero+' — '+nom:(numero||nom||carte||nomCarte||'');
+  litho=[descr,type].filter(Boolean).join(' — ');
+  return {feuille,litho,notation,description};
 }
 
 async function iaFetchAltitude(lat,lng){
@@ -3291,7 +3640,7 @@ async function iaGeoInvestigate(){
     iaFetchJSON('https://georisques.gouv.fr/api/v1/gaspar/catnat?'+(gd.insee?'code_insee='+gd.insee:'latlon='+lng+','+lat+'&rayon=1000')+'&page=1&page_size=100').then(d=>{gd.catnat=d.data||[];}),
     iaFetchJSON('https://georisques.gouv.fr/api/v1/zonage_sismique?latlon='+lng+','+lat+'&rayon=100').then(d=>{gd.sismique=(d.data&&d.data[0])?d.data[0].code_zone:null;}),
     iaFetchJSON('https://georisques.gouv.fr/api/v1/cavites?latlon='+lng+','+lat+'&rayon=2000&page=1&page_size=50').then(d=>{gd.cavites=d.data||[];}),
-    iaFetchJSON('https://georisques.gouv.fr/api/v1/installations?latlon='+lng+','+lat+'&rayon=2000&page=1&page_size=50').then(d=>{gd.icpe=d.data||[];}),
+    iaFetchJSON('https://georisques.gouv.fr/api/v1/installations_classees?latlon='+lng+','+lat+'&rayon=2000&page=1&page_size=50').then(d=>{gd.icpe=d.data||[];}),
     iaFetchJSON('https://georisques.gouv.fr/api/v1/mvt?latlon='+lng+','+lat+'&rayon=2000&page=1&page_size=50').then(d=>{gd.mvt=d.data||[];}),
     iaFetchBSS(lat,lng).then(bss=>{gd.bss=bss;}),
     iaFetchNappes(lat,lng).then(label=>{gd.nappes=label;}),
@@ -3310,14 +3659,6 @@ async function iaGeoInvestigate(){
 }
 
 // ═══ RENDU PANNEAU GÉOCARTO ═══
-function gcWmsMap(layers,wmsUrl,lat,lng,span,w,h){
-  if(!lat||!lng)return '';
-  const s=span||0.015;
-  const size=w||300;
-  const bbox=(lng-s)+','+(lat-s)+','+(lng+s)+','+(lat+s);
-  const url=(wmsUrl||'https://mapsref.brgm.fr/wxs/georisques/risques')+'?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS='+encodeURIComponent(layers)+'&SRS=EPSG:4326&BBOX='+bbox+'&WIDTH='+size+'&HEIGHT='+size+'&FORMAT=image/png&STYLES=&TRANSPARENT=false';
-  return '<div class="gc-map-container" style="position:relative;display:inline-block;margin-top:6px"><img class="gc-map-img" src="'+url+'" alt="Carte '+layers+'" loading="lazy" style="width:'+size+'px;height:'+size+'px;object-fit:cover;border-radius:6px" onerror="this.parentElement.style.display=\'none\'"><div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-110%);font-size:28px;text-shadow:0 1px 4px rgba(0,0,0,.5);pointer-events:none">📍</div></div>';
-}
 
 function renderGeocartoPanel(){
   const $c=document.getElementById('gc-content');
@@ -3345,44 +3686,46 @@ function renderGeocartoPanel(){
   const scLabel=sismLabels[g.sismique]||'';
   const scBadge=g.sismique?'Zone '+sc+' — '+scLabel:'?';
   html+=gcSection('Zone sismique','gc-badge-'+scColor,scBadge,
-    (g.sismique?'Sismicité <strong>'+scLabel.toLowerCase()+'</strong> (Eurocode 8)':'Donnée non disponible')
-    +gcWmsMap('risq_zonage_sismique','https://mapsref.brgm.fr/wxs/georisques/risques',g.lat,g.lng,0.4));
+    (g.sismique?'Sismicité <strong>'+scLabel.toLowerCase()+'</strong> (Eurocode 8)':'Donnée non disponible'));
   // Argiles RGA
   const argLabel=g.argiles||'Non disponible';
   const argShort=argLabel.match(/fort/i)?'Forte':argLabel.match(/moyen/i)?'Moyenne':argLabel.match(/faible/i)?'Faible':argLabel.replace(/^exposition\s*/i,'');
   const argColor=argLabel.match(/fort/i)?'red':argLabel.match(/moyen/i)?'orange':'green';
   html+=gcSection('Aléa argiles (RGA)','gc-badge-'+argColor,argShort,
-    argLabel
-    +gcWmsMap('ALEARG','https://geoservices.brgm.fr/risques',g.lat,g.lng,0.015));
+    argLabel);
   // Nappes
   const napLabel=g.nappes||'Non disponible';
   const napShort=napLabel.match(/débordement/i)?'Débordement':napLabel.match(/cave/i)?'Inond. cave':napLabel.match(/pas.*sensible/i)?'Non sensible':napLabel.length>25?napLabel.substring(0,22)+'…':napLabel;
   const napColor=napLabel.match(/débordement/i)?'red':napLabel.match(/cave/i)?'orange':'green';
   html+=gcSection('Remontée de nappes','gc-badge-'+napColor,napShort,
-    napLabel
-    +gcWmsMap('REMNAPPE_FIAB','https://geoservices.brgm.fr/risques',g.lat,g.lng,0.015));
+    napLabel);
   // Géologie
   let geoHtml='';let geoBadge='';
   if(g.geologie){
+    if(g.geologie.notation){geoHtml+='<strong>Notation :</strong> '+g.geologie.notation+'<br>';geoBadge=g.geologie.notation;}
+    if(g.geologie.description)geoHtml+='<strong>Description :</strong> '+g.geologie.description+'<br>';
     if(g.geologie.feuille)geoHtml+='<strong>Feuille :</strong> '+g.geologie.feuille+'<br>';
-    if(g.geologie.litho){geoHtml+='<strong>Lithologie :</strong> '+g.geologie.litho;geoBadge=g.geologie.litho.length>20?g.geologie.litho.substring(0,18)+'…':g.geologie.litho;}
+    if(g.geologie.litho){geoHtml+='<strong>Lithologie :</strong> '+g.geologie.litho;if(!geoBadge)geoBadge=g.geologie.litho.length>20?g.geologie.litho.substring(0,18)+'…':g.geologie.litho;}
   }
   html+=gcSection('Géologie / Lithologie','gc-badge-blue',geoBadge||'',geoHtml||'Donnée non disponible');
   // Risques
   html+=gcListSection('Risques identifiés',g.risques,r=>r.libelle_risque_long||r.libelle_risque_jo||'?','red');
   // CatNat
-  html+=gcListSection('Catastrophes naturelles',g.catnat,c=>(c.dat_deb||'')+' \u2014 '+(c.lib_risque_jo||''),'orange');
+  html+=gcListSection('Catastrophes naturelles',g.catnat,c=>(c.date_debut_evt||'')+' \u2014 '+(c.libelle_risque_jo||''),'orange');
   // Cavités
-  html+=gcListSection('Cavités souterraines',g.cavites,c=>(c.nom||'?')+' ('+(c.type_cavite||'')+')','orange');
+  html+=gcListSection('Cavités souterraines',g.cavites,c=>(c.nom||'?')+' ('+(c.type_cavite||'')+')'+(c.origine?' · Origine : '+c.origine:'')+(c.commune?' · '+c.commune:''),'orange');
   // ICPE
-  html+=gcListSection('Sites ICPE',g.icpe,i=>(i.raisonSociale||i.nom||'?')+' \u2014 '+(i.regime||'')+(i.seveso?' <strong>SEVESO</strong>':''),'red');
+  html+=gcListSection('Sites ICPE',g.icpe,i=>(i.raisonSociale||i.nom||'?')+' \u2014 '+(i.regime||'')+(i.statutSeveso&&i.statutSeveso!=='Non Seveso'?' <strong>SEVESO ('+i.statutSeveso+')</strong>':'')+(i.etatActivite?' · '+i.etatActivite:''),'red');
   // Mouvements terrain
-  html+=gcListSection('Mouvements de terrain',g.mvt,m=>(m.type||'?')+' ('+(m.date_debut||'')+')', 'orange');
+  html+=gcListSection('Mouvements de terrain',g.mvt,m=>(m.type_mvt||'?')+' ('+(m.date_debut||'')+')'+(m.commune?' · '+m.commune:''), 'orange');
   // BSS
   html+=gcListSection('Sondages BSS proches',g.bss,b=>{
     let t='<strong>'+(b.code_bss||'?')+'</strong> ('+(b.nature||'')+')';
     if(b.profondeur)t+=' \u2014 prof='+b.profondeur+'m';
     if(b.altitude)t+=' alt='+b.altitude+'m';
+    if(b.commune)t+=' · '+b.commune;
+    if(b.nb_piezo)t+=' · Piézo : '+b.nb_piezo+' mes.';
+    if(b.lien)t+=' <a href="'+b.lien+'" target="_blank" rel="noopener" style="color:var(--accent-blue,#1976d2);font-size:0.85em">Fiche InfoTerre →</a>';
     return t;
   },'blue');
   // Infos pour le géotechnicien
@@ -3429,7 +3772,7 @@ function clearIAChat(){
 
 function buildSondageContext(){
   if(sondages.length===0)return '';
-  const typeNames={penetro_dyn:'Pénétromètre dynamique',penetro_stat:'Pénétromètre statique',tariere:'Sondage à la tarière',pelle_meca:'Sondage pelle mécanique',fondation:'Reconnaissance de fondation',piezometre:'Piézomètre',infiltro:'Infiltrométrie',forage_destr:'Forage destructif',essai_labo:'Essais laboratoire'};
+  const typeNames={penetro_dyn:'Pénétromètre dynamique',penetro_stat:'Pénétromètre statique',tariere:'Sondage à la tarière',pelle_meca:'Sondage pelle mécanique',fondation:'Reconnaissance de fondation',piezometre:'Piézomètre',infiltro:'Infiltrométrie',forage_destr:'Forage destructif',essai_labo:'Essais laboratoire',pressio:'Pressiomètre Ménard',spt:'Essai SPT'};
   const soilNames=Object.fromEntries(Object.entries(SOIL_TYPES).map(([k,v])=>[k,v.label]));
   const fondTypeNames={semelle_filante:'Semelle filante',semelle_isolee:'Semelle isolée',radier:'Radier',puits:'Puits',pieux:'Pieux',micropieux:'Micropieux',autre:'Autre'};
   const fondStateNames={bon:'Bon état',moyen:'État moyen',degrade:'Dégradé',tres_degrade:'Très dégradé'};
@@ -3552,6 +3895,38 @@ function buildSondageContext(){
         });
       }
     }
+    // --- Pressiomètre Ménard ---
+    if(s.type==='pressio'&&s.data&&s.data.readings){
+      const filled=s.data.readings.filter(r=>r.depth!=null&&(r.pl!=null||r.em!=null));
+      if(filled.length>0){
+        ctx+="  Résultats pressiomètre Ménard (profondeur → Pl, Pf, Em en MPa) :\n";
+        filled.forEach(r=>{
+          let line="    "+r.depth.toFixed(2)+" m :";
+          if(r.pl!=null) line+=" Pl="+r.pl+" MPa";
+          if(r.pf!=null) line+=" Pf="+r.pf+" MPa";
+          if(r.em!=null) line+=" Em="+r.em+" MPa";
+          if(r.em!=null&&r.pl!=null&&r.pl>0) line+=" Em/Pl="+(r.em/r.pl).toFixed(1);
+          ctx+=line+"\n";
+        });
+        const plVals=filled.filter(r=>r.pl!=null).map(r=>r.pl);
+        if(plVals.length>0) ctx+="  Statistiques Pl : min="+Math.min(...plVals).toFixed(2)+" / max="+Math.max(...plVals).toFixed(2)+" / moy="+(plVals.reduce((a,v)=>a+v,0)/plVals.length).toFixed(2)+" MPa\n";
+        const emVals=filled.filter(r=>r.em!=null).map(r=>r.em);
+        if(emVals.length>0) ctx+="  Statistiques Em : min="+Math.min(...emVals).toFixed(2)+" / max="+Math.max(...emVals).toFixed(2)+" / moy="+(emVals.reduce((a,v)=>a+v,0)/emVals.length).toFixed(2)+" MPa\n";
+      }
+    }
+    // --- SPT ---
+    if(s.type==='spt'&&s.data&&s.data.readings){
+      const filled=s.data.readings.filter(r=>r.depth!=null&&(r.n2!=null||r.n3!=null));
+      if(filled.length>0){
+        ctx+="  Résultats SPT (profondeur → N1, N2, N3, N_SPT=N2+N3) :\n";
+        filled.forEach(r=>{
+          const nspt=(r.n2||0)+(r.n3||0);
+          ctx+="    "+r.depth.toFixed(2)+" m : N1="+(r.n1!=null?r.n1:'?')+" N2="+(r.n2!=null?r.n2:'?')+" N3="+(r.n3!=null?r.n3:'?')+" → N_SPT="+nspt+"\n";
+        });
+        const nVals=filled.map(r=>(r.n2||0)+(r.n3||0));
+        ctx+="  Statistiques N_SPT : min="+Math.min(...nVals)+" / max="+Math.max(...nVals)+" / moy="+(nVals.reduce((a,v)=>a+v,0)/nVals.length).toFixed(1)+"\n";
+      }
+    }
     // --- Notes / observations ---
     if(s.notes&&s.notes.trim()) ctx+="  Observations : "+s.notes.trim()+"\n";
   });
@@ -3584,6 +3959,8 @@ function buildGeocartoContext(){
   if(g.argiles)ctx+="Al\u00e9a retrait-gonflement argiles : "+g.argiles+"\n";
   if(g.nappes)ctx+="Remont\u00e9e de nappes : "+g.nappes+"\n";
   if(g.geologie){
+    if(g.geologie.notation)ctx+="Notation g\u00e9ologique : "+g.geologie.notation+"\n";
+    if(g.geologie.description)ctx+="Description g\u00e9ologique : "+g.geologie.description+"\n";
     if(g.geologie.feuille)ctx+="Carte g\u00e9ologique : feuille "+g.geologie.feuille+"\n";
     if(g.geologie.litho)ctx+="Lithologie : "+g.geologie.litho+"\n";
   }
@@ -3593,7 +3970,7 @@ function buildGeocartoContext(){
   }
   if(g.catnat&&g.catnat.length>0){
     ctx+="\nARR\u00caT\u00c9S CATASTROPHES NATURELLES ("+g.catnat.length+") :\n";
-    g.catnat.forEach(c=>{ctx+="  - "+(c.dat_deb||"")+" : "+(c.lib_risque_jo||"")+"\n";});
+    g.catnat.forEach(c=>{ctx+="  - "+(c.date_debut_evt||"")+" : "+(c.libelle_risque_jo||"")+"\n";});
   }
   if(g.cavites&&g.cavites.length>0){
     ctx+="\nCAVIT\u00c9S SOUTERRAINES ("+g.cavites.length+" dans 2km) :\n";
@@ -3601,11 +3978,11 @@ function buildGeocartoContext(){
   }
   if(g.icpe&&g.icpe.length>0){
     ctx+="\nSITES ICPE ("+g.icpe.length+" dans 2km) :\n";
-    g.icpe.forEach(i=>{ctx+="  - "+(i.raisonSociale||i.nom||"?")+" \u2014 "+(i.regime||"")+(i.seveso?" SEVESO":"")+"\n";});
+    g.icpe.forEach(i=>{ctx+="  - "+(i.raisonSociale||i.nom||"?")+" \u2014 "+(i.regime||"")+(i.statutSeveso&&i.statutSeveso!=='Non Seveso'?" SEVESO ("+i.statutSeveso+")":"")+"\n";});
   }
   if(g.mvt&&g.mvt.length>0){
     ctx+="\nMOUVEMENTS DE TERRAIN ("+g.mvt.length+" dans 2km) :\n";
-    g.mvt.forEach(m=>{ctx+="  - "+(m.type||"")+" ("+(m.date_debut||"")+")\n";});
+    g.mvt.forEach(m=>{ctx+="  - "+(m.type_mvt||"")+" ("+(m.date_debut||"")+")\n";});
   }
   if(g.bss&&g.bss.length>0){
     ctx+="\nSONDAGES BSS PROCHES ("+g.bss.length+" dans 2km) :\n";
@@ -3980,6 +4357,10 @@ function buildProjectJSON(){
   if(projectLng!=null)project.projectLng=projectLng;
   if(projectInsee)project.projectInsee=projectInsee;
   if(geocartoData)project.geocartoData=geocartoData;
+  if(projectMission)project.projectMission=projectMission;
+  if(Object.keys(reportChapters).length>0)project.reportChapters=reportChapters;
+  if(modeleFormations.length>0)project.modeleFormations=modeleFormations;
+  if(gpsCalib.transform)project.gpsCalib={pt1:gpsCalib.pt1,pt2:gpsCalib.pt2,transform:gpsCalib.transform};
   if(window.getScan3DExportData){
     const s3d=window.getScan3DExportData();
     if(s3d) project.scan3d=s3d;
@@ -4104,6 +4485,10 @@ function importProject(e){
     // Restore données GéoCarto (avant le return pour projet sans plan)
     if(project.projectAddr){projectAddr=project.projectAddr;projectLat=project.projectLat||null;projectLng=project.projectLng||null;projectInsee=project.projectInsee||null;}
     if(project.geocartoData){geocartoData=project.geocartoData;try{renderGeocartoPanel();}catch(e){console.warn('renderGeocartoPanel error:',e);}}
+    if(project.projectMission){projectMission=project.projectMission;const ms=document.getElementById('rpt-mission-select');if(ms)ms.value=projectMission;}
+    if(project.reportChapters)reportChapters=project.reportChapters;
+    if(project.modeleFormations)modeleFormations=project.modeleFormations;
+    if(project.gpsCalib){gpsCalib=project.gpsCalib;try{gpsCalibUpdateUI();}catch(e){}}
     const hAddr0=document.getElementById('ia-geo-addr');if(hAddr0&&projectAddr)hAddr0.value=projectAddr;
     const hLat0=document.getElementById('ia-geo-lat');if(hLat0&&projectLat)hLat0.value=projectLat;
     const hLng0=document.getElementById('ia-geo-lng');if(hLng0&&projectLng)hLng0.value=projectLng;
@@ -4434,6 +4819,1825 @@ function roundRect(ctx,x,y,w,h,r){
   ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
   ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);
   ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+}
+
+// ═══ PANNEAU RAPPORT GÉOTECHNIQUE ═══
+let projectMission='';
+let reportChapters={};
+
+const RPT_TEMPLATES={
+  G1_ES:{label:'G1 ES — Étude de Site',chapters:[
+    {id:'objet',title:'Objet de l\'étude',hint:'Décrire l\'objet et le cadre de la mission (maître d\'ouvrage, référence, date).'},
+    {id:'docs',title:'Documents de référence',hint:'Lister les documents transmis (plans, PC, PLU…) et normes applicables.'},
+    {id:'site',title:'Description du site',hint:'Localisation, topographie, accès, environnement immédiat.',auto:'site'},
+    {id:'geologie',title:'Contexte géologique',hint:'Géologie régionale et locale, formations attendues.',auto:'geologie'},
+    {id:'hydrogeo',title:'Contexte hydrogéologique',hint:'Nappes, remontées, sensibilité aux eaux souterraines.',auto:'hydrogeo'},
+    {id:'risques',title:'Risques naturels',hint:'Sismicité, argiles, cavités, mouvements de terrain, inondation.',auto:'risques'},
+    {id:'synthese',title:'Synthèse et avis',hint:'Synthèse des contraintes identifiées, avis sur la faisabilité géotechnique.'}
+  ]},
+  G1_PGC:{label:'G1 PGC — Principes Généraux de Construction',chapters:[
+    {id:'objet',title:'Objet de l\'étude',hint:'Cadre de la mission G1 PGC.'},
+    {id:'docs',title:'Documents de référence',hint:'Documents transmis et normes applicables.'},
+    {id:'projet',title:'Description du projet',hint:'Nature de la construction, charges, niveaux, sous-sol.'},
+    {id:'site',title:'Description du site',hint:'Localisation, topographie, accès.',auto:'site'},
+    {id:'geologie',title:'Contexte géologique',hint:'Géologie régionale et locale.',auto:'geologie'},
+    {id:'hydrogeo',title:'Contexte hydrogéologique',hint:'Nappes et sensibilité aux eaux.',auto:'hydrogeo'},
+    {id:'risques',title:'Risques naturels',hint:'Sismicité, argiles, cavités, mouvements de terrain.',auto:'risques'},
+    {id:'principes',title:'Principes généraux de construction',hint:'Types de fondations envisageables, dispositions constructives, contraintes.'},
+    {id:'programme',title:'Programme d\'investigations prévisionnel',hint:'Sondages recommandés pour la phase G2.'},
+    {id:'synthese',title:'Synthèse et avis',hint:'Synthèse des contraintes et recommandations.'}
+  ]},
+  G2_AVP:{label:'G2 AVP — Avant-Projet',chapters:[
+    {id:'objet',title:'Objet de l\'étude',hint:'Cadre de la mission G2 AVP.'},
+    {id:'docs',title:'Documents de référence',hint:'Documents transmis et normes.'},
+    {id:'projet',title:'Description du projet',hint:'Nature de la construction, charges, niveaux.'},
+    {id:'site',title:'Description du site',hint:'Localisation, topographie, accès.',auto:'site'},
+    {id:'geologie',title:'Contexte géologique',hint:'Géologie régionale et locale.',auto:'geologie'},
+    {id:'hydrogeo',title:'Contexte hydrogéologique',hint:'Nappes et sensibilité aux eaux.',auto:'hydrogeo'},
+    {id:'risques',title:'Risques naturels',hint:'Sismicité, argiles, cavités.',auto:'risques'},
+    {id:'programme',title:'Programme de reconnaissance',hint:'Nature, implantation et objectifs des sondages réalisés.',auto:'sondages_programme'},
+    {id:'resultats',title:'Résultats des investigations',hint:'Synthèse des résultats par type de sondage.',auto:'sondages_resultats'},
+    {id:'modele',title:'Modèle géotechnique',hint:'Couches identifiées, caractéristiques mécaniques, niveau d\'eau.'},
+    {id:'fondations',title:'Principes de fondation',hint:'Type de fondation retenu, profondeur d\'ancrage, contrainte admissible.'},
+    {id:'predim',title:'Pré-dimensionnement',hint:'Calculs de capacité portante, tassements prévisionnels.'},
+    {id:'terrassement',title:'Terrassements et soutènements',hint:'Conditions de terrassement, réutilisation des matériaux, soutènements.'},
+    {id:'aleas',title:'Aléas résiduels et recommandations',hint:'Aléas identifiés, mesures de prévention, réserves.'}
+  ]},
+  G2_PRO:{label:'G2 PRO — Projet',chapters:[
+    {id:'objet',title:'Objet de l\'étude',hint:'Cadre de la mission G2 PRO.'},
+    {id:'docs',title:'Documents de référence',hint:'Documents et normes.'},
+    {id:'projet',title:'Description du projet',hint:'Description détaillée du projet.',},
+    {id:'site',title:'Description du site',auto:'site',hint:'Localisation, topographie.'},
+    {id:'geologie',title:'Contexte géologique',auto:'geologie',hint:'Géologie régionale et locale.'},
+    {id:'hydrogeo',title:'Contexte hydrogéologique',auto:'hydrogeo',hint:'Nappes.'},
+    {id:'risques',title:'Risques naturels',auto:'risques',hint:'Sismicité, argiles, cavités.'},
+    {id:'programme',title:'Programme de reconnaissance',auto:'sondages_programme',hint:'Sondages réalisés.'},
+    {id:'resultats',title:'Résultats des investigations',auto:'sondages_resultats',hint:'Résultats par type.'},
+    {id:'modele',title:'Modèle géotechnique',hint:'Couches, paramètres mécaniques.'},
+    {id:'fondations',title:'Dimensionnement des fondations',hint:'Calculs détaillés ELU/ELS.'},
+    {id:'notes',title:'Notes de calcul',hint:'Capacité portante, tassements, semelles, pieux…'},
+    {id:'terrassement',title:'Terrassements et soutènements',hint:'Conditions, réutilisation.'},
+    {id:'execution',title:'Dispositions d\'exécution',hint:'Contrôles, suivi, adaptations à prévoir.'},
+    {id:'aleas',title:'Aléas résiduels et recommandations',hint:'Réserves et mesures de prévention.'}
+  ]},
+  G2_DCE:{label:'G2 DCE/ACT',chapters:[
+    {id:'objet',title:'Objet',hint:'Cadre de la mission G2 DCE/ACT.'},
+    {id:'synthese_geo',title:'Synthèse géotechnique',hint:'Rappel du modèle géotechnique et des résultats.'},
+    {id:'cctp',title:'Éléments pour le CCTP',hint:'Prescriptions techniques pour les lots fondations / terrassements.'},
+    {id:'quantites',title:'Quantités estimatives',hint:'Métrés prévisionnels fondations, terrassements.'},
+    {id:'criteres',title:'Critères de sélection',hint:'Critères pour l\'analyse des offres.'}
+  ]},
+  G3:{label:'G3 — Suivi d\'exécution',chapters:[
+    {id:'objet',title:'Objet de la mission',hint:'Cadre du suivi géotechnique G3.'},
+    {id:'rappel',title:'Rappel du contexte',hint:'Synthèse des études précédentes (G1/G2).'},
+    {id:'suivi',title:'Suivi des travaux',hint:'Visites, observations, contrôles réalisés.'},
+    {id:'adaptations',title:'Adaptations en cours de chantier',hint:'Modifications apportées par rapport au projet.'},
+    {id:'conformite',title:'Conformité des ouvrages',hint:'Vérification de la conformité avec les préconisations.'},
+    {id:'avis',title:'Avis et recommandations',hint:'Avis final sur les ouvrages réalisés.'}
+  ]},
+  G4:{label:'G4 — Supervision',chapters:[
+    {id:'objet',title:'Objet de la mission',hint:'Cadre de la supervision G4.'},
+    {id:'rappel',title:'Rappel du contexte',hint:'Synthèse des études.'},
+    {id:'avis_etudes',title:'Avis sur les études géotechniques',hint:'Analyse critique des études G1/G2.'},
+    {id:'avis_execution',title:'Avis sur l\'exécution',hint:'Analyse critique du suivi G3.'},
+    {id:'synthese',title:'Synthèse et recommandations',hint:'Avis final, réserves éventuelles.'}
+  ]},
+  G5:{label:'G5 — Diagnostic',chapters:[
+    {id:'objet',title:'Objet du diagnostic',hint:'Contexte du diagnostic (sinistre, pathologie, extension…).'},
+    {id:'docs',title:'Documents de référence',hint:'Documents, rapports antérieurs.'},
+    {id:'site',title:'Description du site et de l\'ouvrage',auto:'site',hint:'Localisation, description de l\'ouvrage existant.'},
+    {id:'geologie',title:'Contexte géologique',auto:'geologie',hint:'Géologie régionale et locale.'},
+    {id:'desordres',title:'Constatations et désordres',hint:'Description des désordres observés, relevé photographique.'},
+    {id:'investigations',title:'Investigations complémentaires',auto:'sondages_programme',hint:'Sondages et essais réalisés.'},
+    {id:'resultats',title:'Résultats',auto:'sondages_resultats',hint:'Résultats des investigations.'},
+    {id:'diagnostic',title:'Diagnostic',hint:'Analyse des causes probables des désordres.'},
+    {id:'preconisations',title:'Préconisations',hint:'Solutions de confortement ou de reprise.'}
+  ]}
+};
+
+// Auto-fill generators
+function rptAutoSite(){
+  let t='';
+  if(projectAddr)t+='Le site étudié se situe '+projectAddr;
+  if(projectCp||projectVille)t+=(t?' — ':'')+[projectCp,projectVille].filter(Boolean).join(' ');
+  if(projectLat&&projectLng)t+=(t?'.\n':'')+'Coordonnées GPS : '+Number(projectLat).toFixed(6)+', '+Number(projectLng).toFixed(6);
+  if(geocartoData){
+    const g=geocartoData;
+    if(g.altitude)t+=(t?'.\n':'')+'Altitude du terrain naturel : environ '+g.altitude+' m NGF';
+  }
+  return t+(t?'.':'');
+}
+
+function rptAutoGeologie(){
+  if(!geocartoData||!geocartoData.geologie)return '';
+  const g=geocartoData.geologie;
+  let t='';
+  if(g.feuille)t+='Carte géologique : feuille '+g.feuille+'.';
+  if(g.notation)t+=(t?'\n':'')+'Notation : '+g.notation+'.';
+  if(g.description)t+=(t?'\n':'')+'Description : '+g.description+'.';
+  if(g.litho)t+=(t?'\n':'')+'Lithologie : '+g.litho+'.';
+  return t;
+}
+
+function rptAutoHydrogeo(){
+  if(!geocartoData)return '';
+  let t='';
+  if(geocartoData.nappes)t+='Remontée de nappes : '+geocartoData.nappes+'.';
+  return t;
+}
+
+function rptAutoRisques(){
+  if(!geocartoData)return '';
+  const g=geocartoData;
+  let t='';
+  const sismLabels={1:'très faible',2:'faible',3:'modérée',4:'moyenne',5:'forte'};
+  if(g.sismique)t+='Zone sismique : '+g.sismique+' ('+( sismLabels[g.sismique]||'')+').\n';
+  if(g.argiles)t+='Aléa argiles (RGA) : '+g.argiles+'.\n';
+  if(g.risques&&g.risques.length>0){
+    t+='Risques identifiés ('+g.risques.length+') :\n';
+    g.risques.forEach(r=>{t+='  - '+(r.libelle_risque_long||r.libelle_risque_jo||'?')+'\n';});
+  }
+  if(g.catnat&&g.catnat.length>0)t+='Arrêtés CatNat : '+g.catnat.length+' arrêté(s) recensé(s).\n';
+  if(g.cavites&&g.cavites.length>0)t+='Cavités souterraines : '+g.cavites.length+' dans un rayon de 2 km.\n';
+  if(g.mvt&&g.mvt.length>0)t+='Mouvements de terrain : '+g.mvt.length+' dans un rayon de 2 km.\n';
+  return t.trim();
+}
+
+function rptAutoSondagesProgramme(){
+  if(!sondages||sondages.length===0)return '';
+  const types={penetroDyn:'Pénétromètre dynamique',penetroStat:'Pénétromètre statique',tariere:'Tarière',pelleMeca:'Pelle mécanique',piezo:'Piézomètre',infiltro:'Infiltrométrie',forageDestructif:'Forage destructif',recoFondation:'Reconnaissance de fondation',labo:'Essai de laboratoire'};
+  const counts={};
+  sondages.forEach(s=>{counts[s.type]=(counts[s.type]||0)+1;});
+  let t='Le programme de reconnaissance a comporté :\n';
+  Object.keys(counts).forEach(k=>{
+    t+='  - '+counts[k]+' '+(types[k]||k)+(counts[k]>1?'s':'')+'\n';
+  });
+  t+='\nImplantation des sondages :\n';
+  sondages.forEach(s=>{t+='  - '+(s.name||s.id)+' ('+(types[s.type]||s.type)+') — profondeur : '+(s.sondageDepth||s.depth||'?')+' m\n';});
+  return t.trim();
+}
+
+function rptAutoSondagesResultats(){
+  if(!sondages||sondages.length===0)return '';
+  const typeNames={penetro_dyn:'Pénétromètre dynamique',penetro_stat:'Pénétromètre statique',tariere:'Tarière',pelle_meca:'Pelle mécanique',fondation:'Reconnaissance fondation',piezometre:'Piézomètre',infiltro:'Infiltrométrie',forage_destr:'Forage destructif',essai_labo:'Essais labo',pressio:'Pressiomètre Ménard',spt:'Essai SPT'};
+  let t='';
+  sondages.forEach(s=>{
+    t+=(s.name||s.id)+' ('+(typeNames[s.type]||s.type)+') :\n';
+    if(s.tnAltitude!=null) t+='  Altitude TN : '+s.tnAltitude.toFixed(2)+' m NGF\n';
+    if(s.sondageDepth!=null) t+='  Profondeur : '+s.sondageDepth.toFixed(2)+' m\n';
+    if(s.waterLevel!=null) t+='  Niveau d\'eau : '+s.waterLevel.toFixed(2)+' m\n';
+    if(s.refusal) t+='  Refus de l\'outil\n';
+    if(s.type==='penetro_dyn'&&s.data&&Array.isArray(s.data)){
+      const filled=s.data.filter(d=>d.blows!=null);
+      if(filled.length>0){
+        const maxB=Math.max(...filled.map(d=>d.blows));
+        const minB=Math.min(...filled.map(d=>d.blows));
+        t+='  Résultats : '+filled.length+' mesures, N min='+minB+' max='+maxB+' coups/20cm\n';
+      }
+    }
+    if((s.type==='tariere'||s.type==='pelle_meca')&&s.data&&Array.isArray(s.data)){
+      s.data.forEach(l=>{t+='  '+(l.from||0)+' - '+(l.to||'?')+' m : '+(l.nature||'')+(l.description?' — '+l.description:'')+'\n';});
+    }
+    if(s.type==='pressio'&&s.data&&s.data.readings){
+      const filled=s.data.readings.filter(r=>r.pl!=null);
+      if(filled.length>0){
+        const plMin=Math.min(...filled.map(r=>r.pl)).toFixed(2);
+        const plMax=Math.max(...filled.map(r=>r.pl)).toFixed(2);
+        t+='  Pl : '+filled.length+' mesures, min='+plMin+' max='+plMax+' MPa\n';
+        const emFilled=s.data.readings.filter(r=>r.em!=null);
+        if(emFilled.length>0) t+='  Em : min='+Math.min(...emFilled.map(r=>r.em)).toFixed(2)+' max='+Math.max(...emFilled.map(r=>r.em)).toFixed(2)+' MPa\n';
+      }
+    }
+    if(s.type==='spt'&&s.data&&s.data.readings){
+      const filled=s.data.readings.filter(r=>r.n2!=null||r.n3!=null);
+      if(filled.length>0){
+        const nVals=filled.map(r=>(r.n2||0)+(r.n3||0));
+        t+='  N_SPT : '+filled.length+' mesures, min='+Math.min(...nVals)+' max='+Math.max(...nVals)+'\n';
+      }
+    }
+    t+='\n';
+  });
+  return t.trim();
+}
+
+function rptGetAutoContent(autoKey){
+  switch(autoKey){
+    case 'site':return rptAutoSite();
+    case 'geologie':return rptAutoGeologie();
+    case 'hydrogeo':return rptAutoHydrogeo();
+    case 'risques':return rptAutoRisques();
+    case 'sondages_programme':return rptAutoSondagesProgramme();
+    case 'sondages_resultats':return rptAutoSondagesResultats();
+    default:return '';
+  }
+}
+
+// Panel open/close
+let rptActiveChapter=null;
+
+function openRapport(){
+  const p=document.getElementById('rapport-panel');
+  p.classList.add('open');
+  const sel=document.getElementById('rpt-mission-select');
+  if(projectMission&&sel.value!==projectMission)sel.value=projectMission;
+  rptRenderSidebar();
+}
+function closeRapport(){
+  document.getElementById('rapport-panel').classList.remove('open');
+}
+
+function rptChangeMission(val){
+  projectMission=val;
+  rptActiveChapter=null;
+  rptRenderSidebar();
+  rptRenderEditor();
+}
+
+function rptRenderSidebar(){
+  const container=document.getElementById('rpt-chapter-list');
+  const tpl=RPT_TEMPLATES[projectMission];
+  if(!tpl){
+    container.innerHTML='<div style="text-align:center;padding:40px 16px;color:var(--gray-400);font-size:13px;font-weight:700">Sélectionnez un type de mission</div>';
+    document.getElementById('rpt-progress-fill').style.width='0%';
+    document.getElementById('rpt-progress-text').textContent='0 / 0';
+    document.getElementById('rpt-main').innerHTML='<div class="rpt-empty-editor">Sélectionnez un type de mission puis<br>cliquez sur un chapitre pour commencer</div>';
+    return;
+  }
+  if(!reportChapters[projectMission])reportChapters[projectMission]={};
+  const chapData=reportChapters[projectMission];
+
+  let html='';
+  tpl.chapters.forEach((ch,i)=>{
+    const content=chapData[ch.id]||'';
+    const status=content.trim()===''?'empty':content.length>50?'done':'draft';
+    const statusLabel=status==='empty'?'Vide':status==='draft'?'Brouillon':'Rédigé';
+    const active=rptActiveChapter===ch.id?' active':'';
+    html+='<div class="rpt-chapter-item'+active+'" data-chapter="'+ch.id+'" onclick="rptSelectChapter(\''+ch.id+'\')">';
+    html+='<span class="rpt-chapter-num">'+(i+1)+'</span>';
+    html+='<span class="rpt-chapter-title">'+ch.title+'</span>';
+    html+='<span class="rpt-chapter-status rpt-status-'+status+'">'+statusLabel+'</span>';
+    html+='</div>';
+  });
+  container.innerHTML=html;
+  rptUpdateProgress();
+  // Auto-select first chapter if none selected
+  if(!rptActiveChapter&&tpl.chapters.length>0){rptSelectChapter(tpl.chapters[0].id);}
+  else if(rptActiveChapter){rptRenderEditor();}
+}
+
+function rptSelectChapter(chapterId){
+  rptActiveChapter=chapterId;
+  // Update sidebar active state
+  document.querySelectorAll('.rpt-chapter-item').forEach(el=>{
+    el.classList.toggle('active',el.dataset.chapter===chapterId);
+  });
+  rptRenderEditor();
+}
+
+function rptRenderEditor(){
+  const main=document.getElementById('rpt-main');
+  const tpl=RPT_TEMPLATES[projectMission];
+  if(!tpl||!rptActiveChapter){
+    main.innerHTML='<div class="rpt-empty-editor">Sélectionnez un chapitre dans le sommaire</div>';
+    return;
+  }
+  const chIdx=tpl.chapters.findIndex(c=>c.id===rptActiveChapter);
+  const ch=tpl.chapters[chIdx];
+  if(!ch){main.innerHTML='<div class="rpt-empty-editor">Chapitre introuvable</div>';return;}
+  if(!reportChapters[projectMission])reportChapters[projectMission]={};
+  const content=reportChapters[projectMission][ch.id]||'';
+
+  let html='';
+  html+='<div class="rpt-editor-header">';
+  html+='<h2 class="rpt-editor-chapter-title">'+(chIdx+1)+'. '+ch.title+'</h2>';
+  html+='<p class="rpt-editor-hint">'+ch.hint+'</p>';
+  html+='</div>';
+  html+='<div class="rpt-editor-wrap">';
+  html+='<textarea class="rpt-editor" id="rpt-editor-ta" placeholder="'+ch.hint+'" oninput="rptUpdateChapter(\''+ch.id+'\',this.value)">'+escapeHtml(content)+'</textarea>';
+  html+='</div>';
+  html+='<div class="rpt-editor-actions">';
+  if(ch.auto)html+='<button class="rpt-autofill-btn" onclick="rptAutoFill(\''+ch.id+'\',\''+ch.auto+'\')">⚡ Remplir depuis les données du projet</button>';
+  html+='<button class="rpt-ia-btn" onclick="rptIARediger(\''+ch.id+'\')">🤖 Rédiger avec l\'IA</button>';
+  html+='<div style="flex:1"></div>';
+  if(chIdx>0)html+='<button class="rpt-btn-secondary" onclick="rptSelectChapter(\''+tpl.chapters[chIdx-1].id+'\')" style="padding:8px 14px;border-radius:6px;border:1px solid var(--gray-200)">← Précédent</button>';
+  if(chIdx<tpl.chapters.length-1)html+='<button class="rpt-btn-export" onclick="rptSelectChapter(\''+tpl.chapters[chIdx+1].id+'\')" style="padding:8px 14px;border-radius:6px;margin-left:4px">Suivant →</button>';
+  html+='</div>';
+  main.innerHTML=html;
+  // Focus textarea
+  const ta=document.getElementById('rpt-editor-ta');
+  if(ta)ta.focus();
+}
+
+function escapeHtml(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function rptUpdateChapter(chapterId,value){
+  if(!reportChapters[projectMission])reportChapters[projectMission]={};
+  reportChapters[projectMission][chapterId]=value;
+  // Update sidebar status badge
+  const item=document.querySelector('.rpt-chapter-item[data-chapter="'+chapterId+'"]');
+  if(item){
+    const badge=item.querySelector('.rpt-chapter-status');
+    const status=value.trim()===''?'empty':value.length>50?'done':'draft';
+    badge.className='rpt-chapter-status rpt-status-'+status;
+    badge.textContent=status==='empty'?'Vide':status==='draft'?'Brouillon':'Rédigé';
+  }
+  rptUpdateProgress();
+}
+
+function rptAutoFill(chapterId,autoKey){
+  const content=rptGetAutoContent(autoKey);
+  if(!content){alert('Aucune donnée disponible. Lancez d\'abord l\'enquête GéoCarto ou ajoutez des sondages.');return;}
+  if(!reportChapters[projectMission])reportChapters[projectMission]={};
+  reportChapters[projectMission][chapterId]=content;
+  const ta=document.getElementById('rpt-editor-ta');
+  if(ta)ta.value=content;
+  rptUpdateChapter(chapterId,content);
+}
+
+function rptAutoFillAll(){
+  const tpl=RPT_TEMPLATES[projectMission];
+  if(!tpl){alert('Sélectionnez d\'abord un type de mission.');return;}
+  let filled=0;
+  tpl.chapters.forEach(ch=>{
+    if(ch.auto){
+      const existing=reportChapters[projectMission]&&reportChapters[projectMission][ch.id];
+      if(!existing||existing.trim()===''){
+        const content=rptGetAutoContent(ch.auto);
+        if(content){
+          if(!reportChapters[projectMission])reportChapters[projectMission]={};
+          reportChapters[projectMission][ch.id]=content;
+          filled++;
+        }
+      }
+    }
+  });
+  rptRenderSidebar();
+  if(typeof showToast==='function')showToast(filled+' chapitre(s) rempli(s) automatiquement');
+}
+
+function rptUpdateProgress(){
+  const tpl=RPT_TEMPLATES[projectMission];
+  if(!tpl)return;
+  const chapData=reportChapters[projectMission]||{};
+  const total=tpl.chapters.length;
+  const done=tpl.chapters.filter(ch=>(chapData[ch.id]||'').trim().length>50).length;
+  const pct=total>0?Math.round(done/total*100):0;
+  document.getElementById('rpt-progress-fill').style.width=pct+'%';
+  document.getElementById('rpt-progress-text').textContent=done+' / '+total+' chapitres';
+}
+
+function rptIARediger(chapterId){
+  const tpl=RPT_TEMPLATES[projectMission];
+  if(!tpl)return;
+  const ch=tpl.chapters.find(c=>c.id===chapterId);
+  if(!ch)return;
+  let prompt='Rédige le chapitre "'+ch.title+'" d\'un rapport géotechnique de mission '+projectMission.replace('_',' ')+'.\n';
+  prompt+='Consigne : '+ch.hint+'\n';
+  if(ch.auto){
+    const data=rptGetAutoContent(ch.auto);
+    if(data)prompt+='\nDonnées disponibles :\n'+data+'\n';
+  }
+  const existing=reportChapters[projectMission]&&reportChapters[projectMission][chapterId];
+  if(existing&&existing.trim())prompt+='\nContenu actuel (à améliorer/compléter) :\n'+existing+'\n';
+  prompt+='\nRédige un texte professionnel, technique, conforme aux normes NF P 94-500 et Eurocode 7. Style rapport géotechnique.';
+  closeRapport();
+  openIAPanel();
+  const taIA=document.getElementById('ia-input');
+  if(taIA){taIA.value=prompt;taIA.focus();}
+}
+
+function rptExportTxt(){
+  const tpl=RPT_TEMPLATES[projectMission];
+  if(!tpl){alert('Sélectionnez d\'abord un type de mission.');return;}
+  const chapData=reportChapters[projectMission]||{};
+  const ref=document.getElementById('project-ref').value.trim()||'RAPPORT';
+  let text='';
+  text+='═══════════════════════════════════════════════════\n';
+  text+='  RAPPORT GÉOTECHNIQUE — '+tpl.label+'\n';
+  text+='═══════════════════════════════════════════════════\n\n';
+  text+='Dossier : '+ref+'\n';
+  if(projectName)text+='Projet : '+projectName+'\n';
+  if(projectAddr)text+='Adresse : '+projectAddr+'\n';
+  if(projectCp||projectVille)text+=[projectCp,projectVille].filter(Boolean).join(' ')+'\n';
+  text+='Date : '+new Date().toLocaleDateString('fr-FR')+'\n\n';
+  text+='───────────────────────────────────────────────────\n';
+  text+='  SOMMAIRE\n';
+  text+='───────────────────────────────────────────────────\n\n';
+  tpl.chapters.forEach((ch,i)=>{text+='  '+(i+1)+'. '+ch.title+'\n';});
+  text+='\n';
+  tpl.chapters.forEach((ch,i)=>{
+    text+='═══════════════════════════════════════════════════\n';
+    text+='  '+(i+1)+'. '+ch.title.toUpperCase()+'\n';
+    text+='═══════════════════════════════════════════════════\n\n';
+    text+=(chapData[ch.id]||'(chapitre non rédigé)')+'\n\n';
+  });
+  text+='───────────────────────────────────────────────────\n';
+  text+='  Rapport généré par GéoSolia\' — '+new Date().toLocaleString('fr-FR')+'\n';
+  text+='───────────────────────────────────────────────────\n';
+  const blob=new Blob([text],{type:'text/plain;charset=utf-8'});
+  const link=document.createElement('a');
+  link.download='RAPPORT_'+ref+'_'+projectMission+'.txt';
+  link.href=URL.createObjectURL(blob);
+  document.body.appendChild(link);link.click();document.body.removeChild(link);
+  URL.revokeObjectURL(link.href);
+  if(typeof showToast==='function')showToast('Rapport TXT exporté');
+}
+
+function rptExportPDF(){
+  const tpl=RPT_TEMPLATES[projectMission];
+  if(!tpl){alert('Sélectionnez d\'abord un type de mission.');return;}
+  const chapData=reportChapters[projectMission]||{};
+  const ref=document.getElementById('project-ref').value.trim()||'RAPPORT';
+  const date=new Date().toLocaleDateString('fr-FR',{year:'numeric',month:'long',day:'numeric'});
+  const lieu=[projectCp,projectVille].filter(Boolean).join(' ');
+
+  // Build HTML document for print
+  let h='<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Rapport '+ref+'</title>';
+  h+='<style>';
+  h+='@page{size:A4;margin:20mm 18mm 22mm 18mm}';
+  h+='*{box-sizing:border-box;margin:0;padding:0}';
+  h+='body{font-family:"Segoe UI",Tahoma,Geneva,Verdana,sans-serif;font-size:11pt;line-height:1.6;color:#1a1a1a;-webkit-print-color-adjust:exact;print-color-adjust:exact}';
+  // Cover page
+  h+='.cover{display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:100vh;page-break-after:always;text-align:center;padding:40px}';
+  h+='.cover-band{width:100%;height:6px;background:linear-gradient(90deg,#F2B705,#E0A800);border-radius:3px;margin-bottom:60px}';
+  h+='.cover-type{font-size:13pt;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:3px;margin-bottom:12px}';
+  h+='.cover-title{font-size:28pt;font-weight:800;color:#1a1a1a;margin-bottom:8px}';
+  h+='.cover-mission{font-size:16pt;font-weight:700;color:#F2B705;margin-bottom:50px}';
+  h+='.cover-info{text-align:left;width:100%;max-width:400px;margin:0 auto}';
+  h+='.cover-info-row{display:flex;padding:8px 0;border-bottom:1px solid #eee;font-size:10.5pt}';
+  h+='.cover-info-label{font-weight:700;color:#666;width:120px;flex-shrink:0}';
+  h+='.cover-info-value{font-weight:600;color:#1a1a1a;flex:1}';
+  h+='.cover-footer{margin-top:60px;font-size:9pt;color:#999}';
+  // TOC
+  h+='.toc{page-break-after:always;padding-top:20px}';
+  h+='.toc h2{font-size:18pt;font-weight:800;color:#1a1a1a;border-bottom:3px solid #F2B705;padding-bottom:8px;margin-bottom:24px}';
+  h+='.toc-item{display:flex;align-items:baseline;padding:7px 0;border-bottom:1px dotted #ccc}';
+  h+='.toc-num{font-weight:800;color:#F2B705;width:36px;flex-shrink:0;font-size:11pt}';
+  h+='.toc-title{font-weight:600;color:#1a1a1a;flex:1;font-size:11pt}';
+  h+='.toc-status{font-size:8pt;font-weight:700;padding:2px 8px;border-radius:10px;flex-shrink:0;margin-left:8px}';
+  h+='.toc-done{background:#D4EDDA;color:#155724}';
+  h+='.toc-draft{background:#FFF3CD;color:#856404}';
+  h+='.toc-empty{background:#F0F0F0;color:#999}';
+  // Chapters
+  h+='.chapter{page-break-before:always;padding-top:10px}';
+  h+='.chapter:first-of-type{page-break-before:auto}';
+  h+='.chapter-header{margin-bottom:20px;padding-bottom:12px;border-bottom:2px solid #F2B705}';
+  h+='.chapter-num{font-size:12pt;font-weight:800;color:#F2B705}';
+  h+='.chapter-title{font-size:17pt;font-weight:800;color:#1a1a1a;margin-top:2px}';
+  h+='.chapter-content{white-space:pre-wrap;font-size:11pt;line-height:1.7;text-align:justify}';
+  h+='.chapter-empty{color:#999;font-style:italic;font-size:10.5pt}';
+  // Header/footer for printed pages
+  h+='.page-header{position:fixed;top:0;left:0;right:0;height:14mm;display:flex;align-items:center;justify-content:space-between;padding:0 18mm;font-size:8pt;color:#999;border-bottom:1px solid #eee}';
+  h+='.page-header-left{font-weight:700}';
+  h+='.page-header-right{font-weight:600}';
+  h+='.page-footer{position:fixed;bottom:0;left:0;right:0;height:12mm;display:flex;align-items:center;justify-content:space-between;padding:0 18mm;font-size:7.5pt;color:#bbb;border-top:1px solid #eee}';
+  // Annexes placeholder
+  h+='.annexes-cover{page-break-before:always;display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:60vh;text-align:center}';
+  h+='.annexes-cover h2{font-size:22pt;font-weight:800;color:#1a1a1a;margin-bottom:8px}';
+  h+='.annexes-cover p{font-size:11pt;color:#666}';
+  h+='.annexes-band{width:200px;height:4px;background:#F2B705;border-radius:2px;margin:20px auto}';
+  h+='</style></head><body>';
+
+  // Running header & footer
+  h+='<div class="page-header"><span class="page-header-left">'+escapeHtml(ref)+' — '+escapeHtml(tpl.label)+'</span><span class="page-header-right">'+escapeHtml(projectName||'')+'</span></div>';
+  h+='<div class="page-footer"><span>GéoSolia\' — Rapport généré le '+date+'</span><span>Confidentiel</span></div>';
+
+  // === COVER PAGE ===
+  h+='<div class="cover">';
+  h+='<div class="cover-band"></div>';
+  h+='<div class="cover-type">Rapport Géotechnique</div>';
+  h+='<div class="cover-title">'+escapeHtml(tpl.label)+'</div>';
+  h+='<div class="cover-mission">Norme NF P 94-500</div>';
+  h+='<div class="cover-info">';
+  h+='<div class="cover-info-row"><span class="cover-info-label">Dossier</span><span class="cover-info-value">'+escapeHtml(ref)+'</span></div>';
+  if(projectName)h+='<div class="cover-info-row"><span class="cover-info-label">Projet</span><span class="cover-info-value">'+escapeHtml(projectName)+'</span></div>';
+  if(projectAddr)h+='<div class="cover-info-row"><span class="cover-info-label">Adresse</span><span class="cover-info-value">'+escapeHtml(projectAddr)+'</span></div>';
+  if(lieu)h+='<div class="cover-info-row"><span class="cover-info-label">Commune</span><span class="cover-info-value">'+escapeHtml(lieu)+'</span></div>';
+  h+='<div class="cover-info-row"><span class="cover-info-label">Date</span><span class="cover-info-value">'+date+'</span></div>';
+  if(projectMission)h+='<div class="cover-info-row"><span class="cover-info-label">Mission</span><span class="cover-info-value">'+escapeHtml(projectMission.replace('_',' '))+'</span></div>';
+  h+='</div>';
+  h+='<div class="cover-footer">Document généré par GéoSolia\'</div>';
+  h+='</div>';
+
+  // === TABLE OF CONTENTS ===
+  h+='<div class="toc">';
+  h+='<h2>Sommaire</h2>';
+  tpl.chapters.forEach((ch,i)=>{
+    const content=chapData[ch.id]||'';
+    const status=content.trim()===''?'empty':content.length>50?'done':'draft';
+    const statusLabel=status==='empty'?'Vide':status==='draft'?'Brouillon':'Rédigé';
+    h+='<div class="toc-item">';
+    h+='<span class="toc-num">'+(i+1)+'.</span>';
+    h+='<span class="toc-title">'+escapeHtml(ch.title)+'</span>';
+    h+='<span class="toc-status toc-'+status+'">'+statusLabel+'</span>';
+    h+='</div>';
+  });
+  h+='</div>';
+
+  // === CHAPTERS ===
+  tpl.chapters.forEach((ch,i)=>{
+    const content=chapData[ch.id]||'';
+    h+='<div class="chapter">';
+    h+='<div class="chapter-header">';
+    h+='<div class="chapter-num">Chapitre '+(i+1)+'</div>';
+    h+='<div class="chapter-title">'+escapeHtml(ch.title)+'</div>';
+    h+='</div>';
+    if(content.trim()){
+      h+='<div class="chapter-content">'+escapeHtml(content)+'</div>';
+    }else{
+      h+='<div class="chapter-empty">Ce chapitre n\'a pas encore été rédigé.</div>';
+    }
+    h+='</div>';
+  });
+
+  // === ANNEXES ===
+  h+='<div class="annexes-cover">';
+  h+='<div class="annexes-band"></div>';
+  h+='<h2>Annexes</h2>';
+  h+='<p>Plans de sondages, logs, graphiques, planches photos</p>';
+  h+='<div class="annexes-band"></div>';
+  h+='</div>';
+
+  // --- Annexe 1: Plan de situation ---
+  if(planImgSrc){
+    h+='<div class="chapter"><div class="chapter-header"><div class="chapter-num">Annexe 1</div><div class="chapter-title">Plan de situation / Implantation des sondages</div></div>';
+    h+='<div style="text-align:center;padding:20px 0"><img src="'+planImgSrc+'" style="max-width:100%;max-height:680px;border:1px solid #ddd;border-radius:4px" alt="Plan"></div></div>';
+  }
+
+  // --- Annexe 2: Logs de sondages ---
+  if(sondages.length>0){
+    h+='<div class="chapter"><div class="chapter-header"><div class="chapter-num">Annexe '+(planImgSrc?'2':'1')+'</div><div class="chapter-title">Logs de sondages et graphiques</div></div>';
+    // Generate graphs for each sondage
+    const tmpCvs=document.createElement('canvas');
+    const tmpCtx=tmpCvs.getContext('2d');
+    // Save current canvas state
+    const origCvs=document.getElementById('sondage-canvas');
+    const origW=origCvs.width,origH=origCvs.height;
+    sondages.forEach((s,si)=>{
+      try{
+        // Render graph to temp canvas
+        if(s.type==='penetro_dyn'){renderPenetroDynGraph(s);}
+        else if(s.type==='penetro_stat'){renderPenetroStatGraph(s);}
+        else if(s.type==='tariere'||s.type==='pelle_meca'){renderStratiGraph(s);}
+        else if(s.type==='pressio'){renderPressioGraph(s);}
+        else if(s.type==='spt'){renderSPTGraph(s);}
+        else if(s.type==='piezometre'){renderPiezoGraph(s);}
+        else if(s.type==='infiltro'){renderInfiltroGraph(s);}
+        else if(s.type==='forage_destr'){renderForageDestrGraph(s);}
+        else if(s.type==='fondation'){renderFondationSummary(s);}
+        else if(s.type==='essai_labo'){renderEssaiLaboSummary(s);}
+        else return;
+        const dataUrl=origCvs.toDataURL('image/png');
+        if(si>0)h+='<div style="page-break-before:always"></div>';
+        h+='<div style="margin-bottom:20px">';
+        h+='<h3 style="font-size:13pt;font-weight:700;color:#2C3E50;margin-bottom:8px;border-bottom:1px solid #E67E22;padding-bottom:4px">'+escapeHtml(s.name||'Sondage '+(si+1))+' — '+(SONDAGE_LABELS[s.type]||s.type)+'</h3>';
+        h+='<div style="text-align:center"><img src="'+dataUrl+'" style="max-width:100%;max-height:520px" alt="'+escapeHtml(s.name||'')+'"></div>';
+        // Add metadata
+        h+='<div style="font-size:9pt;color:#666;margin-top:8px;display:flex;gap:16px;flex-wrap:wrap">';
+        if(s.date)h+='<span>Date: '+s.date+'</span>';
+        if(s.tnAltitude!=null)h+='<span>Alt. TN: '+s.tnAltitude.toFixed(2)+' m NGF</span>';
+        if(s.sondageDepth!=null)h+='<span>Prof.: '+s.sondageDepth.toFixed(2)+' m</span>';
+        if(s.waterLevel!=null)h+='<span>Niveau d\'eau: '+s.waterLevel.toFixed(2)+' m</span>';
+        if(s.refusal)h+='<span style="color:#C0392B;font-weight:700">Refus</span>';
+        h+='</div></div>';
+      }catch(e){console.warn('PDF annexe sondage error:',e);}
+    });
+    h+='</div>';
+  }
+
+  // --- Annexe 3: Modèle géotechnique ---
+  if(modeleFormations.length>0){
+    const annexNum=1+(planImgSrc?1:0)+(sondages.length>0?1:0);
+    h+='<div class="chapter"><div class="chapter-header"><div class="chapter-num">Annexe '+annexNum+'</div><div class="chapter-title">Modèle géotechnique synthétique</div></div>';
+    // Table
+    h+='<table style="width:100%;border-collapse:collapse;font-size:9pt;margin-bottom:20px">';
+    h+='<thead><tr style="background:#2C3E50;color:#fff"><th style="padding:6px;border:1px solid #ddd">Formation</th><th style="padding:6px;border:1px solid #ddd">Toit (m)</th><th style="padding:6px;border:1px solid #ddd">Mur (m)</th><th style="padding:6px;border:1px solid #ddd">Nature</th><th style="padding:6px;border:1px solid #ddd">Pl (MPa)</th><th style="padding:6px;border:1px solid #ddd">Em (MPa)</th><th style="padding:6px;border:1px solid #ddd">N SPT</th><th style="padding:6px;border:1px solid #ddd">GTR</th><th style="padding:6px;border:1px solid #ddd">Observations</th></tr></thead><tbody>';
+    modeleFormations.forEach(f=>{
+      h+='<tr><td style="padding:4px 6px;border:1px solid #ddd;font-weight:700">'+escapeHtml(f.name||'')+'</td>';
+      h+='<td style="padding:4px;border:1px solid #ddd;text-align:center">'+(f.top!=null?f.top.toFixed(1):'')+'</td>';
+      h+='<td style="padding:4px;border:1px solid #ddd;text-align:center">'+(f.bottom!=null?f.bottom.toFixed(1):'')+'</td>';
+      h+='<td style="padding:4px;border:1px solid #ddd">'+escapeHtml(f.nature||'')+'</td>';
+      h+='<td style="padding:4px;border:1px solid #ddd;text-align:center">'+(f.plMoy!=null?f.plMoy:'')+'</td>';
+      h+='<td style="padding:4px;border:1px solid #ddd;text-align:center">'+(f.emMoy!=null?f.emMoy:'')+'</td>';
+      h+='<td style="padding:4px;border:1px solid #ddd;text-align:center">'+(f.nSpt!=null?f.nSpt:'')+'</td>';
+      h+='<td style="padding:4px;border:1px solid #ddd;text-align:center;font-weight:700;color:#8E44AD">'+escapeHtml(f.gtr||'')+'</td>';
+      h+='<td style="padding:4px;border:1px solid #ddd;font-size:8pt">'+escapeHtml(f.obs||'')+'</td></tr>';
+    });
+    h+='</tbody></table>';
+    // Coupe graph
+    mdlDrawCoupe();
+    const coupeCvs=document.getElementById('mdl-coupe-canvas');
+    if(coupeCvs){h+='<div style="text-align:center"><img src="'+coupeCvs.toDataURL('image/png')+'" style="max-width:100%;max-height:400px" alt="Coupe géotechnique"></div>';}
+    h+='</div>';
+  }
+
+  // --- Annexe 4: Planches photos ---
+  if(photos.length>0){
+    const annexNum=1+(planImgSrc?1:0)+(sondages.length>0?1:0)+(modeleFormations.length>0?1:0);
+    h+='<div class="chapter"><div class="chapter-header"><div class="chapter-num">Annexe '+annexNum+'</div><div class="chapter-title">Planches photographiques</div></div>';
+    h+='<div style="display:flex;flex-wrap:wrap;gap:16px;justify-content:center">';
+    photos.forEach((p,i)=>{
+      if(i>0&&i%4===0)h+='</div><div style="page-break-before:always;display:flex;flex-wrap:wrap;gap:16px;justify-content:center;padding-top:20px">';
+      h+='<div style="width:45%;text-align:center">';
+      h+='<img src="'+p.dataUrl+'" style="max-width:100%;max-height:280px;border:1px solid #ddd;border-radius:4px" alt="'+escapeHtml(p.name||'Photo '+(i+1))+'">';
+      h+='<div style="font-size:9pt;font-weight:700;color:#333;margin-top:4px">'+escapeHtml(p.name||'Photo '+(i+1))+'</div>';
+      h+='</div>';
+    });
+    h+='</div></div>';
+  }
+
+  h+='</body></html>';
+
+  // Open in new window and trigger print (Save as PDF)
+  const printWin=window.open('','_blank','width=900,height=700');
+  if(!printWin){alert('Autorisez les popups pour exporter en PDF.');return;}
+  printWin.document.write(h);
+  printWin.document.close();
+  printWin.onload=function(){
+    setTimeout(function(){printWin.print();},400);
+  };
+  if(typeof showToast==='function')showToast('Fenêtre d\'impression PDF ouverte');
+}
+
+// ═══ MODÈLE GÉOTECHNIQUE ═══
+let modeleFormations=[];
+
+function openModeleGeotech(){
+  document.getElementById('modele-panel').classList.add('open');
+  mdlRenderTable();
+}
+function closeModeleGeotech(){
+  document.getElementById('modele-panel').classList.remove('open');
+}
+
+function mdlRenderTable(){
+  const $w=document.getElementById('mdl-table-wrap');
+  if(modeleFormations.length===0){$w.innerHTML='<p style="color:#999;font-size:13px;padding:12px">Aucune formation définie. Cliquez sur « + Formation » ou « Auto depuis sondages ».</p>';return;}
+  let h='<table class="mdl-table"><thead><tr>';
+  h+='<th>#</th><th>Nom de la formation</th><th>Toit (m)</th><th>Mur (m)</th><th>Ép. (m)</th>';
+  h+='<th>Nature</th><th>Couleur</th><th>Pl moy (MPa)</th><th>Em moy (MPa)</th>';
+  h+='<th>N SPT moy</th><th>qd moy (MPa)</th><th>K (m/s)</th><th>Classe GTR</th><th>Observations</th>';
+  h+='</tr></thead><tbody>';
+  modeleFormations.forEach((f,i)=>{
+    h+='<tr>';
+    h+='<td style="font-weight:700;color:#E67E22">'+(i+1)+'</td>';
+    h+='<td><input value="'+escapeHtml(f.name||'')+'" onchange="mdlUpd('+i+',\'name\',this.value)" style="text-align:left"></td>';
+    h+='<td><input type="number" step="0.1" value="'+(f.top!=null?f.top:'')+'" onchange="mdlUpd('+i+',\'top\',+this.value)"></td>';
+    h+='<td><input type="number" step="0.1" value="'+(f.bottom!=null?f.bottom:'')+'" onchange="mdlUpd('+i+',\'bottom\',+this.value)"></td>';
+    h+='<td style="font-weight:700;color:#2C3E50">'+(f.top!=null&&f.bottom!=null?(f.bottom-f.top).toFixed(1):'—')+'</td>';
+    h+='<td><select onchange="mdlUpd('+i+',\'nature\',this.value)">';
+    const natures=['','Remblais','Terre végétale','Argile','Argile marneuse','Limon','Limon argileux','Sable','Sable argileux','Grave','Gravier','Marne','Calcaire','Schiste','Granite','Roche altérée','Roche saine'];
+    natures.forEach(n=>{h+='<option value="'+n+'"'+(f.nature===n?' selected':'')+'>'+n+'</option>';});
+    h+='</select></td>';
+    h+='<td><input type="color" value="'+(f.color||'#D2B48C')+'" onchange="mdlUpd('+i+',\'color\',this.value)" style="width:32px;height:24px;padding:0;border:1px solid #ccc;cursor:pointer"></td>';
+    h+='<td><input type="number" step="0.01" value="'+(f.plMoy!=null?f.plMoy:'')+'" onchange="mdlUpd('+i+',\'plMoy\',+this.value)"></td>';
+    h+='<td><input type="number" step="0.1" value="'+(f.emMoy!=null?f.emMoy:'')+'" onchange="mdlUpd('+i+',\'emMoy\',+this.value)"></td>';
+    h+='<td><input type="number" step="1" value="'+(f.nSpt!=null?f.nSpt:'')+'" onchange="mdlUpd('+i+',\'nSpt\',+this.value)"></td>';
+    h+='<td><input type="number" step="0.1" value="'+(f.qdMoy!=null?f.qdMoy:'')+'" onchange="mdlUpd('+i+',\'qdMoy\',+this.value)"></td>';
+    h+='<td><input value="'+(f.permeability||'')+'" onchange="mdlUpd('+i+',\'permeability\',this.value)" placeholder="ex: 1e-6"></td>';
+    h+='<td><input value="'+(f.gtr||'')+'" onchange="mdlUpd('+i+',\'gtr\',this.value)" placeholder="ex: A1" style="width:50px"></td>';
+    h+='<td><input value="'+escapeHtml(f.obs||'')+'" onchange="mdlUpd('+i+',\'obs\',this.value)" style="text-align:left;min-width:100px"></td>';
+    h+='</tr>';
+  });
+  h+='</tbody></table>';
+  $w.innerHTML=h;
+}
+function mdlUpd(idx,field,val){modeleFormations[idx][field]=val;mdlRenderTable();}
+function mdlAddFormation(){
+  const last=modeleFormations.length?modeleFormations[modeleFormations.length-1]:null;
+  const top=last?last.bottom:0;
+  modeleFormations.push({name:'Formation '+(modeleFormations.length+1),top:top,bottom:+(top+2).toFixed(1),nature:'',color:'#D2B48C',plMoy:null,emMoy:null,nSpt:null,qdMoy:null,permeability:'',gtr:'',obs:''});
+  mdlRenderTable();
+}
+function mdlRemoveFormation(){
+  if(!modeleFormations.length)return;
+  modeleFormations.pop();
+  mdlRenderTable();
+}
+
+function mdlAutoFromSondages(){
+  if(!sondages||sondages.length===0){alert('Aucun sondage disponible.');return;}
+  // Collect stratigraphic layers from tariere/pelle_meca/forage_destr
+  const allLayers=[];
+  const soilColors={remblai:'#8B7355',terre_vegetale:'#6B8E23',argile:'#CD853F',argile_marneuse:'#BC8F8F',limon:'#DEB887',limon_argileux:'#D2B48C',sable:'#F4E4BA',sable_argileux:'#E8D5A0',grave:'#A9A9A9',gravier:'#C0C0C0',marne:'#D3C5A0',calcaire:'#E8E0D0',schiste:'#708090',granite:'#B0A090',argile_sableuse:'#D2B48C',argile_limoneuse:'#C9A87C'};
+  sondages.forEach(s=>{
+    if((s.type==='tariere'||s.type==='pelle_meca')&&s.data&&Array.isArray(s.data)){
+      s.data.forEach(l=>{allLayers.push({from:l.from,to:l.to,nature:l.nature||'',description:l.description||''});});
+    }
+    if(s.type==='forage_destr'&&s.data&&s.data.layers){
+      s.data.layers.forEach(l=>{allLayers.push({from:l.from,to:l.to,nature:l.nature||'',description:l.description||''});});
+    }
+  });
+  // Collect pressio data by depth
+  const pressioByDepth={};
+  sondages.filter(s=>s.type==='pressio'&&s.data&&s.data.readings).forEach(s=>{
+    s.data.readings.forEach(r=>{if(r.depth!=null&&r.pl!=null){const k=Math.round(r.depth*2)/2;if(!pressioByDepth[k])pressioByDepth[k]={pl:[],em:[]};pressioByDepth[k].pl.push(r.pl);if(r.em!=null)pressioByDepth[k].em.push(r.em);}});
+  });
+  // Collect SPT data
+  const sptByDepth={};
+  sondages.filter(s=>s.type==='spt'&&s.data&&s.data.readings).forEach(s=>{
+    s.data.readings.forEach(r=>{if(r.depth!=null&&(r.n2!=null||r.n3!=null)){const k=Math.round(r.depth*2)/2;if(!sptByDepth[k])sptByDepth[k]=[];sptByDepth[k].push((r.n2||0)+(r.n3||0));}});
+  });
+  // Collect penetro data
+  const qdByDepth={};
+  sondages.filter(s=>s.type==='penetro_dyn'&&s.data&&Array.isArray(s.data)).forEach(s=>{
+    s.data.forEach(r=>{if(r.depth!=null&&r.blows!=null){const qd=calcQd(r.blows,r.depth);if(qd!=null){const k=Math.round(r.depth*2)/2;if(!qdByDepth[k])qdByDepth[k]=[];qdByDepth[k].push(qd);}}});
+  });
+  // Group layers by nature (simplified merge)
+  if(allLayers.length===0&&Object.keys(pressioByDepth).length===0&&Object.keys(sptByDepth).length===0){
+    alert('Aucune donnée stratigraphique trouvée dans les sondages.');return;
+  }
+  // Build formations from layers
+  const formations=[];
+  if(allLayers.length>0){
+    allLayers.sort((a,b)=>a.from-b.from);
+    let current=null;
+    allLayers.forEach(l=>{
+      const SOIL_LABELS=typeof SOIL_TYPES!=='undefined'?Object.fromEntries(Object.entries(SOIL_TYPES).map(([k,v])=>[k,v.label])):{};
+      const natureName=SOIL_LABELS[l.nature]||l.nature||'Inconnu';
+      if(current&&current.nature===l.nature&&Math.abs(current.bottom-l.from)<0.5){
+        current.bottom=Math.max(current.bottom,l.to);
+      }else{
+        if(current)formations.push(current);
+        current={name:natureName,top:l.from,bottom:l.to,nature:natureName,color:soilColors[l.nature]||'#D2B48C',plMoy:null,emMoy:null,nSpt:null,qdMoy:null,permeability:'',gtr:'',obs:l.description||''};
+      }
+    });
+    if(current)formations.push(current);
+  }else{
+    // Build from geomech data depths
+    const depths=new Set([...Object.keys(pressioByDepth),...Object.keys(sptByDepth),...Object.keys(qdByDepth)].map(Number));
+    const sorted=[...depths].sort((a,b)=>a-b);
+    sorted.forEach((d,i)=>{
+      const top=i===0?0:sorted[i-1];
+      formations.push({name:'Formation '+(i+1),top:top,bottom:d,nature:'',color:'#D2B48C',plMoy:null,emMoy:null,nSpt:null,qdMoy:null,permeability:'',gtr:'',obs:''});
+    });
+  }
+  // Enrich formations with geomech data
+  formations.forEach(f=>{
+    const plVals=[],emVals=[],nVals=[],qVals=[];
+    Object.entries(pressioByDepth).forEach(([k,v])=>{const d=+k;if(d>=f.top&&d<=f.bottom){plVals.push(...v.pl);emVals.push(...v.em);}});
+    Object.entries(sptByDepth).forEach(([k,v])=>{const d=+k;if(d>=f.top&&d<=f.bottom)nVals.push(...v);});
+    Object.entries(qdByDepth).forEach(([k,v])=>{const d=+k;if(d>=f.top&&d<=f.bottom)qVals.push(...v);});
+    if(plVals.length)f.plMoy=+(plVals.reduce((a,v)=>a+v,0)/plVals.length).toFixed(2);
+    if(emVals.length)f.emMoy=+(emVals.reduce((a,v)=>a+v,0)/emVals.length).toFixed(1);
+    if(nVals.length)f.nSpt=Math.round(nVals.reduce((a,v)=>a+v,0)/nVals.length);
+    if(qVals.length)f.qdMoy=+(qVals.reduce((a,v)=>a+v,0)/qVals.length).toFixed(2);
+  });
+  modeleFormations=formations;
+  mdlRenderTable();
+  mdlDrawCoupe();
+}
+
+function mdlDrawCoupe(){
+  const cvs=document.getElementById('mdl-coupe-canvas');
+  const ctx=cvs.getContext('2d');
+  const cw=800,ch=400;cvs.width=cw;cvs.height=ch;
+  ctx.fillStyle='#FFF';ctx.fillRect(0,0,cw,ch);
+  if(!modeleFormations.length){ctx.fillStyle='#AAA';ctx.font='14px Arial';ctx.textAlign='center';ctx.fillText('Aucune formation à afficher',cw/2,ch/2);return;}
+  const marginL=80,marginR=200,marginT=50,marginB=40;
+  const gw=cw-marginL-marginR,gh=ch-marginT-marginB;
+  const maxDepth=Math.max(...modeleFormations.map(f=>f.bottom))*1.1||10;
+  // Title
+  ctx.fillStyle='#2C3E50';ctx.font='bold 14px Arial';ctx.textAlign='center';
+  ctx.fillText('COUPE GÉOTECHNIQUE SYNTHÉTIQUE',cw/2,25);
+  ctx.font='10px Arial';ctx.fillStyle='#7A7A7A';
+  const ref=document.getElementById('project-ref')?.value||'';
+  ctx.fillText(ref?'Projet: '+ref:'',cw/2,40);
+  // Depth axis
+  ctx.strokeStyle='#333';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(marginL,marginT);ctx.lineTo(marginL,marginT+gh);ctx.stroke();
+  for(let i=0;i<=5;i++){
+    const y=marginT+(gh/5)*i;const d=(maxDepth/5)*i;
+    ctx.beginPath();ctx.moveTo(marginL-6,y);ctx.lineTo(marginL,y);ctx.stroke();
+    ctx.fillStyle='#333';ctx.font='10px Arial';ctx.textAlign='right';
+    ctx.fillText(d.toFixed(1)+' m',marginL-10,y+4);
+  }
+  ctx.save();ctx.translate(16,marginT+gh/2);ctx.rotate(-Math.PI/2);ctx.fillStyle='#333';ctx.font='bold 11px Arial';ctx.textAlign='center';ctx.fillText('Profondeur (m)',0,0);ctx.restore();
+  // Draw formations
+  const colW=gw*0.6;
+  modeleFormations.forEach((f,i)=>{
+    const y1=marginT+(f.top/maxDepth)*gh;
+    const y2=marginT+(f.bottom/maxDepth)*gh;
+    const h=y2-y1;
+    // Fill
+    ctx.fillStyle=f.color||'#D2B48C';ctx.fillRect(marginL,y1,colW,h);
+    ctx.strokeStyle='#333';ctx.lineWidth=0.8;ctx.strokeRect(marginL,y1,colW,h);
+    // Label inside
+    ctx.fillStyle='#1A1A1A';ctx.font='bold 11px Arial';ctx.textAlign='center';
+    const labelY=y1+h/2+4;
+    ctx.fillText(f.name+(f.nature?' ('+f.nature+')':''),marginL+colW/2,labelY);
+    // Depth labels
+    ctx.fillStyle='#E67E22';ctx.font='bold 10px Arial';ctx.textAlign='left';
+    ctx.fillText(f.top.toFixed(1)+' m',marginL+colW+8,y1+10);
+    if(i===modeleFormations.length-1)ctx.fillText(f.bottom.toFixed(1)+' m',marginL+colW+8,y2-2);
+    // Geomech data on right
+    let info=[];
+    if(f.plMoy!=null)info.push('Pl='+f.plMoy+' MPa');
+    if(f.emMoy!=null)info.push('Em='+f.emMoy+' MPa');
+    if(f.nSpt!=null)info.push('N_SPT='+f.nSpt);
+    if(f.qdMoy!=null)info.push('qd='+f.qdMoy+' MPa');
+    if(f.gtr)info.push('GTR: '+f.gtr);
+    if(info.length>0){
+      ctx.fillStyle='#555';ctx.font='9px Arial';ctx.textAlign='left';
+      info.forEach((txt,j)=>{ctx.fillText(txt,marginL+colW+8,y1+22+j*12);});
+    }
+  });
+  // Water level indicator if available
+  const waterSondages=sondages.filter(s=>s.waterLevel!=null);
+  if(waterSondages.length>0){
+    const avgWater=waterSondages.reduce((a,s)=>a+s.waterLevel,0)/waterSondages.length;
+    const yw=marginT+(avgWater/maxDepth)*gh;
+    ctx.strokeStyle='#3498DB';ctx.lineWidth=2;ctx.setLineDash([8,4]);
+    ctx.beginPath();ctx.moveTo(marginL,yw);ctx.lineTo(marginL+colW,yw);ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='#3498DB';ctx.font='bold 10px Arial';ctx.textAlign='left';
+    ctx.fillText('Eau: '+avgWater.toFixed(1)+' m',marginL+colW+8,yw+4);
+  }
+}
+
+// ═══ CLASSIFICATION GTR AUTOMATIQUE ═══
+function classifyGTR(granulo,atterberg,vbs){
+  // Classification simplifiée selon NF P 11-300 (GTR 2000)
+  // granulo: {p80um, p2mm, p20mm, dmax}
+  // atterberg: {wl, wp, ip}
+  // vbs: {vbs}
+  const p80=granulo?.p80um; // % passant à 80 µm
+  const dmax=granulo?.dmax; // Dmax en mm
+  const ip=atterberg?.ip;
+  const wl=atterberg?.wl;
+  const vbsVal=vbs?.vbs;
+  if(p80==null&&dmax==null&&ip==null&&vbsVal==null)return{classe:'?',desc:'Données insuffisantes'};
+  // Sols organiques et sous-produits industriels → hors scope
+  // Classification principale
+  if(dmax!=null&&dmax>50){
+    // Sols grossiers → classe D ou R
+    if(p80!=null&&p80<12)return{classe:'D1',desc:'Sol grossier insensible à l\'eau (Dmax>50mm, fines<12%)'};
+    if(p80!=null&&p80>=12)return{classe:'D2',desc:'Sol grossier sensible à l\'eau (Dmax>50mm, fines>=12%)'};
+    return{classe:'D',desc:'Sol grossier (Dmax>50mm)'};
+  }
+  if(p80!=null&&p80>=35){
+    // Sols fins → classe A
+    if(ip!=null){
+      if(ip<=12)return{classe:'A1',desc:'Sol fin peu plastique (fines>=35%, IP<=12)'};
+      if(ip<=25){
+        if(wl!=null&&wl<=50)return{classe:'A2',desc:'Sol fin moyennement plastique (IP=12-25, WL<=50)'};
+        return{classe:'A3',desc:'Sol fin plastique (IP=12-25, WL>50)'};
+      }
+      return{classe:'A4',desc:'Sol fin très plastique (IP>25)'};
+    }
+    if(vbsVal!=null){
+      if(vbsVal<=2.5)return{classe:'A1',desc:'Sol fin peu argileux (VBS<=2.5)'};
+      if(vbsVal<=6)return{classe:'A2',desc:'Sol fin moyennement argileux (VBS=2.5-6)'};
+      if(vbsVal<=8)return{classe:'A3',desc:'Sol fin argileux (VBS=6-8)'};
+      return{classe:'A4',desc:'Sol fin très argileux (VBS>8)'};
+    }
+    return{classe:'A',desc:'Sol fin (fines>=35%)'};
+  }
+  if(p80!=null&&p80<35){
+    // Sols grenus → classe B ou C
+    if(dmax!=null&&dmax<=50){
+      if(p80<5)return{classe:'B1',desc:'Sol sableux/graveleux propre (fines<5%)'};
+      if(p80<12){
+        if(vbsVal!=null&&vbsVal<=0.1)return{classe:'B1',desc:'Sol sableux/graveleux propre (fines<12%, VBS<=0.1)'};
+        return{classe:'B2',desc:'Sol sableux/graveleux avec fines (5-12%)'};
+      }
+      // 12-35% fines
+      if(ip!=null){
+        if(ip<=12)return{classe:'B5',desc:'Sol graveleux/sableux avec fines peu plastiques (IP<=12)'};
+        return{classe:'B6',desc:'Sol graveleux/sableux avec fines plastiques (IP>12)'};
+      }
+      if(vbsVal!=null){
+        if(vbsVal<=1.5)return{classe:'B3',desc:'Sol sableux/graveleux limoneux (VBS<=1.5)'};
+        return{classe:'B4',desc:'Sol sableux/graveleux argileux (VBS>1.5)'};
+      }
+      return{classe:'B',desc:'Sol grenu avec fines (fines=12-35%)'};
+    }
+  }
+  // Fallback based on VBS alone
+  if(vbsVal!=null){
+    if(vbsVal<=0.1)return{classe:'B1',desc:'Sol insensible à l\'eau (VBS<=0.1)'};
+    if(vbsVal<=2.5)return{classe:'A1/B',desc:'Sol peu sensible (VBS=0.1-2.5)'};
+    if(vbsVal<=6)return{classe:'A2',desc:'Sol moyennement argileux (VBS=2.5-6)'};
+    if(vbsVal<=8)return{classe:'A3',desc:'Sol argileux (VBS=6-8)'};
+    return{classe:'A4',desc:'Sol très argileux (VBS>8)'};
+  }
+  return{classe:'?',desc:'Classification impossible — compléter les essais'};
+}
+
+function gtrAutoClassify(){
+  // Apply GTR classification to all essai_labo sondages and update modeleFormations
+  let count=0;
+  sondages.filter(s=>s.type==='essai_labo'&&s.data).forEach(s=>{
+    const essais=s.data.essais||[];
+    const granulo=essais.find(e=>e.type==='granulo')?.values||null;
+    const atterberg=essais.find(e=>e.type==='atterberg')?.values||null;
+    const vbsEssai=essais.find(e=>e.type==='vbs')?.values||null;
+    const result=classifyGTR(granulo,atterberg,vbsEssai);
+    if(result.classe==='?')return;
+    // Try to assign to matching modeleFormation by depth
+    const depth=s.data.sampleDepth;
+    if(depth!=null){
+      const formation=modeleFormations.find(f=>depth>=f.top&&depth<=f.bottom);
+      if(formation){formation.gtr=result.classe;count++;}
+    }
+    // Store on sondage for display
+    s.gtrClassification=result;
+    count++;
+  });
+  if(count>0){
+    mdlRenderTable();
+    alert('Classification GTR appliquée à '+count+' résultat(s).');
+  }else{
+    alert('Aucun essai laboratoire avec données suffisantes trouvé.');
+  }
+}
+
+// Add GTR display in essai labo summary
+function getGTRForSondage(s){
+  if(!s||s.type!=='essai_labo'||!s.data)return null;
+  const essais=s.data.essais||[];
+  const granulo=essais.find(e=>e.type==='granulo')?.values||null;
+  const atterberg=essais.find(e=>e.type==='atterberg')?.values||null;
+  const vbsEssai=essais.find(e=>e.type==='vbs')?.values||null;
+  return classifyGTR(granulo,atterberg,vbsEssai);
+}
+
+// ═══ BIBLIOTHÈQUE TEXTES-TYPES ═══
+const TEXTES_TYPES={
+  cadre_normatif:[
+    {title:'Cadre normatif NF P 94-500',text:'La présente étude a été réalisée conformément à la norme NF P 94-500 (révision de novembre 2013) relative aux missions d\'ingénierie géotechnique. Elle définit les différentes missions géotechniques et leur enchaînement au cours de la vie d\'un projet.'},
+    {title:'Limites de la mission',text:'Conformément à la norme NF P 94-500, les résultats de la présente étude ne sont valables que pour le projet décrit dans le cadre de cette mission. Toute modification du projet (implantation, charges, niveaux) nécessite une réévaluation des conclusions et recommandations formulées.'},
+    {title:'Responsabilités',text:'Les recommandations de la présente étude sont formulées en l\'état actuel des connaissances du site. Elles ne dispensent pas le maître d\'ouvrage de faire appel à un bureau de contrôle technique pour la vérification des ouvrages de fondation conformément à la réglementation en vigueur.'}
+  ],
+  geologie:[
+    {title:'Contexte géologique général',text:'D\'après la carte géologique au 1/50 000 du BRGM, le site se situe dans un contexte géologique caractérisé par [FORMATION]. Les terrains rencontrés sont constitués de [DESCRIPTION].'},
+    {title:'Hydrogéologie',text:'D\'après les données disponibles (BSS du BRGM, relevés piézométriques), la nappe phréatique a été rencontrée à une profondeur de [PROFONDEUR] m par rapport au terrain naturel. Ce niveau est susceptible de fluctuations saisonnières.'},
+    {title:'Risque retrait-gonflement',text:'Le site se situe en zone d\'aléa [NIVEAU] vis-à-vis du phénomène de retrait-gonflement des argiles. Les recommandations de construction en zone argileuse devront être respectées conformément aux dispositions de l\'arrêté du 22 juillet 2020.'}
+  ],
+  fondations_superficielles:[
+    {title:'Recommandation fondations superficielles',text:'Au regard des résultats des investigations géotechniques, les fondations superficielles de type semelles filantes et isolées sont envisageables. Elles devront être ancrées à une profondeur minimale de [D] m par rapport au terrain naturel fini, hors gel (0,50 m minimum en zone de gel modéré).'},
+    {title:'Contrainte admissible',text:'La contrainte admissible du sol au niveau d\'assise des fondations superficielles est estimée à [Q] kPa à l\'état limite de service (ELS). Cette valeur est déterminée à partir des essais pressiométriques réalisés dans le cadre de cette étude.'},
+    {title:'Tassements',text:'Les tassements absolus sous charges de service sont estimés à [TASSEMENT] mm. Les tassements différentiels entre points d\'appui voisins ne devraient pas excéder [DIFF] mm, valeur compatible avec la tolérance des structures envisagées.'}
+  ],
+  fondations_profondes:[
+    {title:'Recommandation fondations profondes',text:'Compte tenu de la nature des terrains superficiels et des charges à transmettre, il est recommandé de recourir à des fondations profondes de type [TYPE] ancrées dans [FORMATION] à une profondeur de [L] m par rapport au terrain naturel.'},
+    {title:'Charge portante pieu',text:'La charge portante admissible par pieu de diamètre [D] m et de longueur [L] m est estimée à [Q] kN à l\'état limite de service (ELS), déterminée par la méthode pressiométrique selon le fascicule 62 titre V.'}
+  ],
+  terrassements:[
+    {title:'Conditions de terrassement',text:'Les terrassements seront réalisés à l\'aide d\'engins mécaniques classiques (pelle mécanique, tractopelle). Aucune difficulté particulière n\'est attendue dans les terrains meubles superficiels. En cas de rencontre de niveaux indurés ou rocheux, l\'utilisation d\'un brise-roche hydraulique pourra s\'avérer nécessaire.'},
+    {title:'Réutilisation des matériaux',text:'Les matériaux extraits des terrassements sont classés [GTR] selon la classification GTR (NF P 11-300). Leur réutilisation en remblai est envisageable sous réserve d\'un traitement adapté (aération, traitement à la chaux) et d\'un compactage conforme aux prescriptions du GTR.'},
+    {title:'Drainage et gestion des eaux',text:'Un drainage périphérique sera mis en place en pied de fondation pour collecter les eaux d\'infiltration. Il sera constitué d\'un drain Ø 150 mm enrobé de géotextile, posé sur un lit de gravier et raccordé à un exutoire pérenne.'}
+  ],
+  dallage:[
+    {title:'Dallage sur terre-plein',text:'Le dallage pourra être de type dallage sur terre-plein, reposant sur une plate-forme convenablement compactée. La couche de forme sera constituée de [EPAISSEUR] cm de matériaux granulaires de type GNT 0/31.5, compactés à 95% de l\'OPM.'},
+    {title:'Module de réaction',text:'Le module de réaction du sol support (coefficient de Westergaard) est estimé à [K] MPa/m, valeur permettant le dimensionnement du dallage par les méthodes classiques (DTU 13.3).'}
+  ],
+  sismique:[
+    {title:'Contexte sismique',text:'Conformément à l\'arrêté du 22 octobre 2010 modifié, la commune de [COMMUNE] est classée en zone de sismicité [ZONE]. Pour les bâtiments de catégorie d\'importance [CAT], les règles parasismiques de l\'Eurocode 8 (NF EN 1998-1) sont applicables.'},
+    {title:'Classe de sol',text:'Au regard des résultats des investigations géotechniques (vitesse des ondes de cisaillement Vs30), le sol est classé en catégorie [CLASSE] au sens de l\'Eurocode 8. Les paramètres sismiques de calcul sont : agr = [AGR] m/s², S = [S], TB = [TB] s, TC = [TC] s, TD = [TD] s.'}
+  ]
+};
+
+function rptSwitchTab(tab){
+  document.getElementById('rpt-tab-sommaire').classList.toggle('active',tab==='sommaire');
+  document.getElementById('rpt-tab-textes').classList.toggle('active',tab==='textes');
+  document.getElementById('rpt-tab-content-sommaire').style.display=tab==='sommaire'?'':'none';
+  document.getElementById('rpt-tab-content-textes').style.display=tab==='textes'?'':'none';
+  if(tab==='textes')rptRenderTextLib();
+}
+function rptOpenTextLib(){rptSwitchTab('textes');}
+function rptCloseTextLib(){rptSwitchTab('sommaire');}
+function rptRenderTextLib(filter){
+  const $list=document.getElementById('text-lib-list');
+  if(!$list)return;
+  const catNames={cadre_normatif:'Cadre normatif',geologie:'Géologie / Hydrogéologie',fondations_superficielles:'Fondations superficielles',fondations_profondes:'Fondations profondes',terrassements:'Terrassements',dallage:'Dallage',sismique:'Sismique'};
+  const filterLc=(filter||'').toLowerCase();
+  let html='';
+  Object.entries(TEXTES_TYPES).forEach(([cat,items])=>{
+    const filtered=filterLc?items.filter(it=>it.title.toLowerCase().includes(filterLc)||it.text.toLowerCase().includes(filterLc)):items;
+    if(filtered.length===0)return;
+    html+='<div style="margin-bottom:16px"><h4 style="font-size:12px;color:#E67E22;text-transform:uppercase;margin:0 0 8px;letter-spacing:1px">'+(catNames[cat]||cat)+'</h4>';
+    filtered.forEach(it=>{
+      html+='<div style="background:#fff;border:1px solid #eee;border-radius:8px;padding:10px 12px;margin-bottom:8px;cursor:pointer;transition:all .15s" onclick="rptInsertText(\''+escapeHtml(it.text.replace(/'/g,"\\'"))+'\')" onmouseover="this.style.borderColor=\'#E67E22\'" onmouseout="this.style.borderColor=\'#eee\'">';
+      html+='<div style="font-weight:700;font-size:12px;color:#2C3E50;margin-bottom:4px">'+escapeHtml(it.title)+'</div>';
+      html+='<div style="font-size:11px;color:#666;line-height:1.5">'+escapeHtml(it.text.substring(0,150))+(it.text.length>150?'...':'')+'</div>';
+      html+='</div>';
+    });
+    html+='</div>';
+  });
+  $list.innerHTML=html||'<p style="color:#999;text-align:center;padding:20px">Aucun texte trouvé</p>';
+}
+function rptInsertText(text){
+  const ta=document.getElementById('rpt-editor-ta');
+  if(!ta){alert('Ouvrez d\'abord un chapitre dans le rapport.');return;}
+  const start=ta.selectionStart;
+  const before=ta.value.substring(0,start);
+  const after=ta.value.substring(ta.selectionEnd);
+  ta.value=before+(before.length>0&&!before.endsWith('\n')?'\n\n':'')+text+after;
+  ta.dispatchEvent(new Event('input'));
+  rptSwitchTab('sommaire');
+  ta.focus();
+}
+
+// ═══ DIMENSIONNEMENT FONDATIONS ═══
+function dimGetPle(D,B){
+  // Pl* équivalente dans la zone d'influence [D; D+1.5B] (Fascicule 62)
+  const pleInput=document.getElementById('dim-Ple').value;
+  if(pleInput)return +pleInput;
+  // Auto from pressio sondages
+  const plVals=[];
+  sondages.filter(s=>s.type==='pressio'&&s.data&&s.data.readings).forEach(s=>{
+    s.data.readings.forEach(r=>{
+      if(r.depth!=null&&r.pl!=null&&r.depth>=D&&r.depth<=D+1.5*B)plVals.push(r.pl);
+    });
+  });
+  // Also from modeleFormations
+  if(plVals.length===0){
+    modeleFormations.forEach(f=>{
+      if(f.plMoy!=null&&f.bottom>=D&&f.top<=D+1.5*B)plVals.push(f.plMoy);
+    });
+  }
+  if(plVals.length===0)return null;
+  // Geometric mean (Ple*)
+  const product=plVals.reduce((a,v)=>a*v,1);
+  return Math.pow(product,1/plVals.length);
+}
+
+function dimCalcSuperficielle(){
+  const B=+document.getElementById('dim-B').value||0.6;
+  const L=+document.getElementById('dim-L').value||1.0;
+  const D=+document.getElementById('dim-D').value||0.8;
+  const kp=+document.getElementById('dim-kp').value||0.8;
+  const gamma=+document.getElementById('dim-gamma').value||18;
+  const ple=dimGetPle(D,B);
+  const $r=document.getElementById('dim-result-sup');
+  if(!ple){$r.innerHTML='<span style="color:#C0392B">Aucune donnée pressiométrique disponible dans la zone [D; D+1.5B]. Renseignez Ple* manuellement.</span>';return;}
+  // q_u = kp × Ple* + q0 (Fascicule 62 / DTU 13.12)
+  const q0=gamma*D/1000; // MPa
+  const qu=kp*ple+q0;
+  const qadmELS=qu/3; // Facteur de sécurité 3
+  const qadmELU=qu/2; // Facteur de sécurité 2
+  const qELS_kPa=(qadmELS*1000).toFixed(0);
+  const qELU_kPa=(qadmELU*1000).toFixed(0);
+  // Charge admissible
+  const Qa_ELS=qadmELS*B*L*1000; // kN
+  let html='<strong>Résultats — Semelle '+B+'×'+L+' m, D='+D+' m</strong><br>';
+  html+='Ple* = '+ple.toFixed(2)+' MPa<br>';
+  html+='q₀ = γ×D = '+(q0*1000).toFixed(1)+' kPa<br>';
+  html+='<strong>q_u = kp×Ple* + q₀ = '+(qu*1000).toFixed(0)+' kPa ('+(qu).toFixed(2)+' MPa)</strong><br>';
+  html+='q_adm (ELS, FS=3) = <strong>'+qELS_kPa+' kPa</strong><br>';
+  html+='q_adm (ELU, FS=2) = <strong>'+qELU_kPa+' kPa</strong><br>';
+  html+='Q_adm (ELS) = <strong>'+Qa_ELS.toFixed(0)+' kN</strong> sur semelle '+B+'×'+L+' m';
+  $r.innerHTML=html;
+}
+
+function dimCalcProfonde(){
+  const Dpieu=+document.getElementById('dim-pieu-D').value||0.5;
+  const Lpieu=+document.getElementById('dim-pieu-L').value||8;
+  const type=document.getElementById('dim-pieu-type').value;
+  const $r=document.getElementById('dim-result-prof');
+  // Collect Pl values from pressio sondages along the shaft
+  const plByDepth=[];
+  sondages.filter(s=>s.type==='pressio'&&s.data&&s.data.readings).forEach(s=>{
+    s.data.readings.forEach(r=>{
+      if(r.depth!=null&&r.pl!=null)plByDepth.push({depth:r.depth,pl:r.pl});
+    });
+  });
+  // Fallback: from modeleFormations
+  if(plByDepth.length===0){
+    modeleFormations.forEach(f=>{
+      if(f.plMoy!=null){
+        for(let d=f.top;d<f.bottom;d+=0.5)plByDepth.push({depth:d,pl:f.plMoy});
+      }
+    });
+  }
+  if(plByDepth.length===0){$r.innerHTML='<span style="color:#C0392B">Aucune donnée pressiométrique. Ajoutez des sondages pressiomètre.</span>';return;}
+  // Pointe: Ple* in [Lpieu-0.5; Lpieu+0.5]
+  const tipPl=plByDepth.filter(r=>r.depth>=Lpieu-0.5&&r.depth<=Lpieu+0.5).map(r=>r.pl);
+  const ple=tipPl.length>0?Math.pow(tipPl.reduce((a,v)=>a*v,1),1/tipPl.length):plByDepth[plByDepth.length-1].pl;
+  // kp factor
+  const kpMap={fore:1.0,battu:1.4,visse:1.2};
+  const kp=kpMap[type]||1.0;
+  const Qp=kp*ple*(Math.PI*Dpieu*Dpieu/4)*1000; // kN
+  // Frottement latéral: qs = f(Pl) simplifié (argile: qs≈min(Pl/15, 0.08) MPa)
+  const shaftPl=plByDepth.filter(r=>r.depth>0&&r.depth<=Lpieu).sort((a,b)=>a.depth-b.depth);
+  let Qs=0;
+  const perim=Math.PI*Dpieu;
+  if(shaftPl.length>0){
+    for(let i=0;i<shaftPl.length;i++){
+      const dz=i===0?shaftPl[0].depth:(shaftPl[i].depth-(shaftPl[i-1]?.depth||0));
+      const qs=Math.min(shaftPl[i].pl/15,0.08); // MPa simplified
+      Qs+=qs*perim*dz*1000; // kN
+    }
+  }else{
+    const avgPl=plByDepth.reduce((a,r)=>a+r.pl,0)/plByDepth.length;
+    const qs=Math.min(avgPl/15,0.08);
+    Qs=qs*perim*Lpieu*1000;
+  }
+  const Qu=Qp+Qs;
+  const Qadm_ELS=Qu/3;
+  const Qadm_ELU=Qu/2;
+  let html='<strong>Résultats — Pieu '+type+' Ø'+Dpieu+' m, L='+Lpieu+' m</strong><br>';
+  html+='Ple* (pointe) = '+ple.toFixed(2)+' MPa, kp = '+kp+'<br>';
+  html+='<strong>Q_pointe = '+Qp.toFixed(0)+' kN</strong><br>';
+  html+='<strong>Q_frottement = '+Qs.toFixed(0)+' kN</strong><br>';
+  html+='<strong>Q_u = '+Qu.toFixed(0)+' kN</strong><br>';
+  html+='Q_adm (ELS, FS=3) = <strong>'+Qadm_ELS.toFixed(0)+' kN</strong><br>';
+  html+='Q_adm (ELU, FS=2) = <strong>'+Qadm_ELU.toFixed(0)+' kN</strong>';
+  $r.innerHTML=html;
+}
+
+// ═══ TASSEMENT PRESSIOMÉTRIQUE (MÉNARD) ═══
+let tassLayers=[];
+
+function tassRenderLayers(){
+  const $w=document.getElementById('tass-layers-wrap');
+  if(!$w)return;
+  if(tassLayers.length===0){$w.innerHTML='<p style="color:#999;font-size:11px">Aucune couche. Cliquez « Auto » ou « + Couche ».</p>';return;}
+  let h='<table style="width:100%;border-collapse:collapse;font-size:11px">';
+  h+='<thead><tr style="background:#34495E;color:#fff"><th style="padding:5px">Couche</th><th style="padding:5px">Toit (m)</th><th style="padding:5px">Mur (m)</th><th style="padding:5px">Em (MPa)</th><th style="padding:5px">alpha</th></tr></thead><tbody>';
+  tassLayers.forEach((l,i)=>{
+    h+='<tr style="border-bottom:1px solid #eee">';
+    h+='<td style="padding:3px;text-align:center;font-weight:700;color:#E67E22">'+(i+1)+'</td>';
+    h+='<td style="padding:3px"><input type="number" step="0.1" value="'+(l.top!=null?l.top:'')+'" onchange="tassLayers['+i+'].top=+this.value;tassRenderLayers()" style="width:55px;padding:2px;border:1px solid #ccc;border-radius:3px;text-align:center"></td>';
+    h+='<td style="padding:3px"><input type="number" step="0.1" value="'+(l.bottom!=null?l.bottom:'')+'" onchange="tassLayers['+i+'].bottom=+this.value;tassRenderLayers()" style="width:55px;padding:2px;border:1px solid #ccc;border-radius:3px;text-align:center"></td>';
+    h+='<td style="padding:3px"><input type="number" step="0.1" value="'+(l.em!=null?l.em:'')+'" onchange="tassLayers['+i+'].em=+this.value" style="width:60px;padding:2px;border:1px solid #ccc;border-radius:3px;text-align:center"></td>';
+    h+='<td style="padding:3px"><input type="number" step="0.01" value="'+(l.alpha!=null?l.alpha:'')+'" onchange="tassLayers['+i+'].alpha=+this.value" style="width:50px;padding:2px;border:1px solid #ccc;border-radius:3px;text-align:center"></td>';
+    h+='</tr>';
+  });
+  h+='</tbody></table>';
+  $w.innerHTML=h;
+}
+
+function tassAddLayer(){
+  const last=tassLayers.length?tassLayers[tassLayers.length-1]:null;
+  const top=last?last.bottom:0;
+  const alpha=+document.getElementById('tass-alpha').value||0.5;
+  tassLayers.push({top:top,bottom:+(top+1).toFixed(1),em:null,alpha:alpha});
+  tassRenderLayers();
+}
+function tassRemoveLayer(){
+  if(!tassLayers.length)return;
+  tassLayers.pop();
+  tassRenderLayers();
+}
+
+function tassAutoLayers(){
+  const alpha=+document.getElementById('tass-alpha').value||0.5;
+  tassLayers=[];
+  // From modeleFormations first
+  if(modeleFormations.length>0){
+    modeleFormations.forEach(f=>{
+      tassLayers.push({top:f.top,bottom:f.bottom,em:f.emMoy||null,alpha:alpha});
+    });
+  }
+  // Enrich/override with pressio sondage data
+  sondages.filter(s=>s.type==='pressio'&&s.data&&s.data.readings).forEach(s=>{
+    s.data.readings.forEach(r=>{
+      if(r.depth==null||r.em==null)return;
+      // Find matching layer
+      const layer=tassLayers.find(l=>r.depth>=l.top&&r.depth<=l.bottom);
+      if(layer){
+        if(layer.em==null)layer.em=r.em;
+        else layer.em=(layer.em+r.em)/2; // average
+      }
+    });
+  });
+  // If no modeleFormations, build from pressio data
+  if(tassLayers.length===0){
+    const emByDepth=[];
+    sondages.filter(s=>s.type==='pressio'&&s.data&&s.data.readings).forEach(s=>{
+      s.data.readings.forEach(r=>{
+        if(r.depth!=null&&r.em!=null)emByDepth.push({depth:r.depth,em:r.em});
+      });
+    });
+    if(emByDepth.length===0){alert('Aucune donnée Em disponible.');return;}
+    emByDepth.sort((a,b)=>a.depth-b.depth);
+    emByDepth.forEach((r,i)=>{
+      const top=i===0?0:emByDepth[i-1].depth;
+      tassLayers.push({top:top,bottom:r.depth,em:r.em,alpha:alpha});
+    });
+  }
+  tassRenderLayers();
+}
+
+function dimCalcTassement(){
+  const B=+document.getElementById('tass-B').value||0.6;
+  const L=+document.getElementById('tass-L').value||1.0;
+  const D=+document.getElementById('tass-D').value||0.8;
+  const q=+document.getElementById('tass-q').value||150; // kPa
+  const $r=document.getElementById('dim-result-tass');
+
+  if(tassLayers.length===0||tassLayers.every(l=>l.em==null)){
+    $r.innerHTML='<span style="color:#C0392B">Aucune couche avec Em défini. Cliquez « Auto depuis données » ou ajoutez manuellement.</span>';
+    return;
+  }
+
+  // Méthode pressiométrique de Ménard (NF P 94-261 / Fascicule 62)
+  // s = (q × B0 / 9 × Ec) × [2 × (B/B0)^alpha_shape × lambda_d + alpha_shape × lambda_c]
+  // Simplification : décomposition en sphérique (sc) + déviatorique (sd)
+  //
+  // Approche par couches:
+  // s_total = sd + sc
+  // sd = (q × alpha_global × B × lambda_d) / (9 × Ed)   (zone déviatorique: D à D+2B)
+  // sc = (q × B / 9) × somme_i [alpha_i × Hi / (Ec_i × B)]  (zone sphérique: D à D+8B)
+  //
+  // Avec Ed = Em moyen harmonique zone [D; D+2B], Ec = Em moyen harmonique zone [D+2B; D+8B]
+
+  const B0=0.6; // Référence Ménard
+  const qMPa=q/1000; // kPa → MPa
+
+  // Lambda coefficients de forme (L/B)
+  const lb=L/B;
+  const lambda_c=lb<=1?1.0:lb<=2?1.1:lb<=5?1.2:lb<=20?1.3:1.4;
+  const lambda_d=lb<=1?1.0:lb<=2?1.12:lb<=5?1.53:lb<=20?1.78:2.0;
+
+  // Collect Em values by depth range from layers
+  function getEmInRange(z1,z2){
+    const vals=[];
+    tassLayers.forEach(l=>{
+      if(l.em==null)return;
+      const overlap_top=Math.max(l.top,z1);
+      const overlap_bot=Math.min(l.bottom,z2);
+      if(overlap_bot>overlap_top)vals.push({em:l.em,h:overlap_bot-overlap_top,alpha:l.alpha||0.5});
+    });
+    return vals;
+  }
+
+  // Zone déviatorique: D → D+2B
+  const devLayers=getEmInRange(D,D+2*B);
+  if(devLayers.length===0){
+    $r.innerHTML='<span style="color:#C0392B">Pas de données Em dans la zone déviatorique ['+D.toFixed(1)+' ; '+(D+2*B).toFixed(1)+'] m.</span>';
+    return;
+  }
+  // Em harmonique pondéré par épaisseur
+  const Hdev=devLayers.reduce((s,l)=>s+l.h,0);
+  const Ed=Hdev/devLayers.reduce((s,l)=>s+l.h/l.em,0);
+  const alpha_dev=devLayers.reduce((s,l)=>s+l.alpha*l.h,0)/Hdev;
+
+  // Zone sphérique: D+2B → D+8B
+  const sphLayers=getEmInRange(D+2*B,D+8*B);
+  let Ec=Ed; // fallback if no sph data
+  let alpha_sph=alpha_dev;
+  if(sphLayers.length>0){
+    const Hsph=sphLayers.reduce((s,l)=>s+l.h,0);
+    Ec=Hsph/sphLayers.reduce((s,l)=>s+l.h/l.em,0);
+    alpha_sph=sphLayers.reduce((s,l)=>s+l.alpha*l.h,0)/Hsph;
+  }
+
+  // Tassement déviatorique
+  const sd=2*qMPa*(B/B0)*lambda_d/(9*Ed/alpha_dev);
+  // Tassement sphérique
+  const sc=qMPa*(B/B0)*lambda_c*alpha_sph/(9*Ec);
+  // Total en m → mm
+  const s_total=(sd+sc)*B0*1000;
+
+  let html='<strong>Tassement pressiométrique — Semelle '+B+'×'+L+' m, D='+D+' m, q='+q+' kPa</strong><br>';
+  html+='<div style="margin:6px 0;display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font-size:11px">';
+  html+='<span>lambda_c = '+lambda_c.toFixed(2)+'</span><span>lambda_d = '+lambda_d.toFixed(2)+'</span>';
+  html+='<span>Ed (harm. déviat.) = '+Ed.toFixed(2)+' MPa</span><span>Ec (harm. sphér.) = '+Ec.toFixed(2)+' MPa</span>';
+  html+='<span>alpha déviat. = '+alpha_dev.toFixed(2)+'</span><span>alpha sphér. = '+alpha_sph.toFixed(2)+'</span>';
+  html+='</div>';
+  html+='sd (déviat.) = '+(sd*B0*1000).toFixed(1)+' mm<br>';
+  html+='sc (sphér.) = '+(sc*B0*1000).toFixed(1)+' mm<br>';
+  html+='<strong style="font-size:14px;color:#E67E22">s_total = '+s_total.toFixed(1)+' mm</strong><br>';
+  // Tassement différentiel estimé
+  const s_diff=(s_total*0.3).toFixed(1);
+  html+='<span style="font-size:11px;color:#666">Tassement différentiel estimé (30% du total) : ~'+s_diff+' mm</span>';
+  $r.innerHTML=html;
+}
+
+// ═══ TASSEMENT PAR CORRÉLATION PÉNÉTROMÉTRIQUE ═══
+let tassPdLayers=[];
+
+function tassPdRenderLayers(){
+  const $w=document.getElementById('tass-pd-layers-wrap');
+  if(!$w)return;
+  if(tassPdLayers.length===0){$w.innerHTML='<p style="color:#999;font-size:11px">Aucune couche. Cliquez « Auto depuis pénétro ».</p>';return;}
+  let h='<table style="width:100%;border-collapse:collapse;font-size:11px">';
+  h+='<thead><tr style="background:#7B241C;color:#fff"><th style="padding:5px">Couche</th><th style="padding:5px">Toit (m)</th><th style="padding:5px">Mur (m)</th><th style="padding:5px">qd moy (MPa)</th><th style="padding:5px">E estimé (MPa)</th></tr></thead><tbody>';
+  const corr=tassPdGetCorrelation();
+  tassPdLayers.forEach((l,i)=>{
+    const E_est=(l.qd!=null)?+(l.qd*corr).toFixed(1):null;
+    h+='<tr style="border-bottom:1px solid #eee">';
+    h+='<td style="padding:3px;text-align:center;font-weight:700;color:#D94040">'+(i+1)+'</td>';
+    h+='<td style="padding:3px"><input type="number" step="0.1" value="'+(l.top!=null?l.top:'')+'" onchange="tassPdLayers['+i+'].top=+this.value;tassPdRenderLayers()" style="width:55px;padding:2px;border:1px solid #ccc;border-radius:3px;text-align:center"></td>';
+    h+='<td style="padding:3px"><input type="number" step="0.1" value="'+(l.bottom!=null?l.bottom:'')+'" onchange="tassPdLayers['+i+'].bottom=+this.value;tassPdRenderLayers()" style="width:55px;padding:2px;border:1px solid #ccc;border-radius:3px;text-align:center"></td>';
+    h+='<td style="padding:3px"><input type="number" step="0.01" value="'+(l.qd!=null?l.qd:'')+'" onchange="tassPdLayers['+i+'].qd=+this.value;tassPdRenderLayers()" style="width:60px;padding:2px;border:1px solid #ccc;border-radius:3px;text-align:center"></td>';
+    h+='<td style="padding:3px;text-align:center;font-weight:700;color:#2C3E50">'+(E_est!=null?E_est+' MPa':'—')+'</td>';
+    h+='</tr>';
+  });
+  h+='</tbody></table>';
+  $w.innerHTML=h;
+}
+
+function tassPdGetCorrelation(){
+  const sel=document.getElementById('tass-pd-corr').value;
+  const custom=+document.getElementById('tass-pd-coeff').value||3.0;
+  const map={cassan_argile:2.5,cassan_limon:3.5,cassan_sable:3.0,cassan_grave:4.0,menard_gen:custom,custom:custom};
+  return map[sel]||3.0;
+}
+
+function tassPdAddLayer(){
+  const last=tassPdLayers.length?tassPdLayers[tassPdLayers.length-1]:null;
+  const top=last?last.bottom:0;
+  tassPdLayers.push({top:top,bottom:+(top+1).toFixed(1),qd:null});
+  tassPdRenderLayers();
+}
+function tassPdRemoveLayer(){
+  if(!tassPdLayers.length)return;
+  tassPdLayers.pop();
+  tassPdRenderLayers();
+}
+
+function tassPdAutoLayers(){
+  tassPdLayers=[];
+  // Collect all penetro_dyn data
+  const allPts=[];
+  sondages.filter(s=>s.type==='penetro_dyn'&&s.data&&Array.isArray(s.data)).forEach(s=>{
+    s.data.forEach(r=>{
+      if(r.depth!=null&&r.blows!=null){
+        const qd=calcQd(r.blows,r.depth);
+        if(qd!=null)allPts.push({depth:r.depth,qd:qd});
+      }
+    });
+  });
+  if(allPts.length===0){alert('Aucun sondage pénétromètre dynamique avec données.');return;}
+  allPts.sort((a,b)=>a.depth-b.depth);
+  // Group by 1m intervals
+  const maxD=Math.ceil(allPts[allPts.length-1].depth);
+  for(let z=0;z<maxD;z++){
+    const pts=allPts.filter(p=>p.depth>=z&&p.depth<z+1);
+    if(pts.length===0)continue;
+    const qdMoy=+(pts.reduce((s,p)=>s+p.qd,0)/pts.length).toFixed(2);
+    // Merge with previous if similar qd (< 20% diff)
+    const prev=tassPdLayers.length?tassPdLayers[tassPdLayers.length-1]:null;
+    if(prev&&prev.qd!=null&&Math.abs(qdMoy-prev.qd)/prev.qd<0.20){
+      prev.bottom=z+1;
+      prev.qd=+((prev.qd+qdMoy)/2).toFixed(2);
+    }else{
+      tassPdLayers.push({top:z,bottom:z+1,qd:qdMoy});
+    }
+  }
+  tassPdRenderLayers();
+}
+
+function dimCalcTassPd(){
+  const B=+document.getElementById('tass-pd-B').value||0.6;
+  const L=+document.getElementById('tass-pd-L').value||1.0;
+  const D=+document.getElementById('tass-pd-D').value||0.8;
+  const q=+document.getElementById('tass-pd-q').value||150; // kPa
+  const nu=+document.getElementById('tass-pd-nu').value||0.30;
+  const corr=tassPdGetCorrelation();
+  const $r=document.getElementById('dim-result-tass-pd');
+
+  if(tassPdLayers.length===0||tassPdLayers.every(l=>l.qd==null)){
+    $r.innerHTML='<span style="color:#C0392B">Aucune couche avec qd. Cliquez « Auto depuis pénétro ».</span>';
+    return;
+  }
+
+  // Méthode élastique par couches (Boussinesq)
+  // s_i = (q × Delta_sigma_i × Hi) / Ei
+  // Delta_sigma = Iz (influence de Boussinesq à la profondeur z sous la semelle)
+  // Iz simplifié (Schmertmann 1970 modifié):
+  //   Peak à z = B/2 pour fondation carrée, z = B pour filante
+  //   Iz_peak = 0.5 + 0.1 × sqrt(q / sigma'_v0)
+  //   Zone d'influence : 0 → 2B (carrée) ou 0 → 4B (filante)
+
+  const lb=L/B;
+  const zInfl=lb<=2?2*B:4*B; // profondeur d'influence
+  const zPeak=lb<=2?B/2:B;   // profondeur du pic d'Iz
+
+  // Iz_peak simplifié (sans sigma'v0 détaillé)
+  const Iz_peak=0.6;
+
+  // Iz triangulaire simplifié : de 0.1 à Iz_peak à z_peak, puis linéaire à 0 à z_infl
+  function getIz(z){
+    if(z<=0||z>=zInfl)return 0;
+    if(z<=zPeak) return 0.1+(Iz_peak-0.1)*(z/zPeak);
+    return Iz_peak*(1-(z-zPeak)/(zInfl-zPeak));
+  }
+
+  let s_total=0;
+  let details=[];
+  const gamma_sol=18; // kN/m3 approximatif
+
+  tassPdLayers.forEach((l,i)=>{
+    if(l.qd==null)return;
+    const E=l.qd*corr; // MPa → E en MPa
+    if(E<=0)return;
+    const hi=l.bottom-l.top;
+    // Only consider layers below foundation depth and within influence zone
+    const z_top=Math.max(l.top-D,0);
+    const z_bot=Math.min(l.bottom-D,zInfl);
+    if(z_bot<=0||z_top>=zInfl)return;
+    const z_mid=(z_top+z_bot)/2;
+    const Iz=getIz(z_mid);
+    const dz=z_bot-z_top;
+    // Correction facteur temps C1 (encastrement) et C2 (fluage)
+    const sigma_v0=gamma_sol*D; // kPa
+    const C1=1-0.5*(sigma_v0/(q||1));
+    const C1_corr=Math.max(C1,0.5);
+    // s_i = C1 × (q - sigma_v0) × Iz × dz / (E × 1000) en m
+    const s_i=C1_corr*(q-sigma_v0)*Iz*dz/(E*1000);
+    s_total+=s_i;
+    details.push({i:i+1,top:l.top,bot:l.bottom,qd:l.qd,E:E.toFixed(1),Iz:Iz.toFixed(3),dz:dz.toFixed(2),s_mm:(s_i*1000).toFixed(2)});
+  });
+
+  const s_mm=s_total*1000;
+
+  let html='<strong>Tassement par corrélation pénétrométrique — Semelle '+B+'x'+L+' m, D='+D+' m, q='+q+' kPa</strong><br>';
+  html+='Corrélation : E = '+corr.toFixed(1)+' × qd | nu = '+nu+' | Zone d\'influence = '+zInfl.toFixed(1)+' m<br>';
+  if(details.length>0){
+    html+='<table style="width:100%;border-collapse:collapse;font-size:10px;margin:6px 0"><thead><tr style="background:#eee"><th style="padding:3px">#</th><th style="padding:3px">z (m)</th><th style="padding:3px">qd (MPa)</th><th style="padding:3px">E (MPa)</th><th style="padding:3px">Iz</th><th style="padding:3px">s_i (mm)</th></tr></thead><tbody>';
+    details.forEach(d=>{
+      html+='<tr><td style="padding:2px;text-align:center">'+d.i+'</td><td style="padding:2px;text-align:center">'+d.top.toFixed(1)+'-'+d.bot.toFixed(1)+'</td><td style="padding:2px;text-align:center">'+d.qd+'</td><td style="padding:2px;text-align:center">'+d.E+'</td><td style="padding:2px;text-align:center">'+d.Iz+'</td><td style="padding:2px;text-align:center">'+d.s_mm+'</td></tr>';
+    });
+    html+='</tbody></table>';
+  }
+  html+='<strong style="font-size:14px;color:#D94040">s_total = '+s_mm.toFixed(1)+' mm</strong><br>';
+  html+='<span style="font-size:11px;color:#666">Tassement différentiel estimé (~30%) : ~'+(s_mm*0.3).toFixed(1)+' mm</span>';
+  $r.innerHTML=html;
+}
+
+// ═══ OUTILS TERRAIN ═══
+
+// --- 1) DICTÉE VOCALE ---
+let dictationRecognition=null;
+let dictationTarget=null;
+
+function toggleDictation(btn){
+  if(!('webkitSpeechRecognition' in window)&&!('SpeechRecognition' in window)){
+    alert('La reconnaissance vocale n\'est pas supportée par ce navigateur. Utilisez Chrome ou Edge.');return;
+  }
+  // If already recording, stop
+  if(dictationRecognition){
+    dictationRecognition.stop();
+    return;
+  }
+  const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+  dictationRecognition=new SpeechRecognition();
+  dictationRecognition.lang='fr-FR';
+  dictationRecognition.continuous=true;
+  dictationRecognition.interimResults=true;
+  // Find the textarea sibling
+  const wrap=btn.closest('.sondage-notes-wrap');
+  const ta=wrap?wrap.querySelector('.sondage-notes'):null;
+  if(!ta){dictationRecognition=null;return;}
+  dictationTarget=ta;
+  let finalTranscript=ta.value;
+  btn.classList.add('recording');
+  btn.title='Arrêter la dictée';
+
+  dictationRecognition.onresult=function(e){
+    let interim='';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      if(e.results[i].isFinal){
+        const txt=e.results[i][0].transcript;
+        finalTranscript+=(finalTranscript&&!finalTranscript.endsWith(' ')?' ':'')+txt;
+      }else{
+        interim+=e.results[i][0].transcript;
+      }
+    }
+    ta.value=finalTranscript+(interim?' '+interim:'');
+    // Trigger oninput to save
+    ta.dispatchEvent(new Event('input',{bubbles:true}));
+  };
+  dictationRecognition.onerror=function(e){
+    console.warn('Dictation error:',e.error);
+    stopDictation(btn);
+    if(e.error==='not-allowed')alert('Accès au microphone refusé. Autorisez le micro dans les paramètres du navigateur.');
+  };
+  dictationRecognition.onend=function(){
+    // Save final value
+    if(dictationTarget){
+      const s=getCurrentSondage();
+      if(s)s.notes=dictationTarget.value;
+    }
+    stopDictation(btn);
+  };
+  dictationRecognition.start();
+}
+
+function stopDictation(btn){
+  if(dictationRecognition){try{dictationRecognition.abort();}catch(e){}}
+  dictationRecognition=null;
+  dictationTarget=null;
+  if(btn){btn.classList.remove('recording');btn.title='Dictée vocale';}
+  document.querySelectorAll('.btn-dictation.recording').forEach(b=>{b.classList.remove('recording');b.title='Dictée vocale';});
+}
+
+// --- 2) CALIBRATION GPS 2 POINTS + POSITIONNEMENT ---
+// gpsCalib stores the 2-point calibration data
+let gpsCalib={
+  pt1:{gps:null,plan:null}, // {lat,lng} and {x,y} in plan px
+  pt2:{gps:null,plan:null},
+  transform:null // {tx,ty,cos,sin,scale} computed affine transform
+};
+let gpsCalibPlanClickTarget=null; // 1 or 2 when waiting for plan click
+
+function gpsCalibUpdateUI(){
+  const $status=document.getElementById('gps-calib-status');
+  const $pt1=document.getElementById('gps-calib-pt1');
+  const $pt2=document.getElementById('gps-calib-pt2');
+  const $info1=document.getElementById('gps-calib-pt1-info');
+  const $info2=document.getElementById('gps-calib-pt2-info');
+  if(!$status)return;
+  // Point 1
+  const p1=gpsCalib.pt1;
+  if(p1.gps&&p1.plan){
+    $info1.textContent='GPS: '+p1.gps.lat.toFixed(6)+','+p1.gps.lng.toFixed(6)+' | Plan: ('+Math.round(p1.plan.x)+','+Math.round(p1.plan.y)+')';
+    $pt1.classList.add('done');
+  }else if(p1.gps){
+    $info1.textContent='GPS OK — cliquez sur le plan';
+    $pt1.classList.remove('done');
+  }else if(p1.plan){
+    $info1.textContent='Plan OK — capturez le GPS';
+    $pt1.classList.remove('done');
+  }else{
+    $info1.textContent='Non défini';
+    $pt1.classList.remove('done');
+  }
+  // Point 2
+  const p2=gpsCalib.pt2;
+  if(p2.gps&&p2.plan){
+    $info2.textContent='GPS: '+p2.gps.lat.toFixed(6)+','+p2.gps.lng.toFixed(6)+' | Plan: ('+Math.round(p2.plan.x)+','+Math.round(p2.plan.y)+')';
+    $pt2.classList.add('done');
+  }else if(p2.gps){
+    $info2.textContent='GPS OK — cliquez sur le plan';
+    $pt2.classList.remove('done');
+  }else if(p2.plan){
+    $info2.textContent='Plan OK — capturez le GPS';
+    $pt2.classList.remove('done');
+  }else{
+    $info2.textContent='Non défini';
+    $pt2.classList.remove('done');
+  }
+  // Status
+  if(gpsCalib.transform){
+    const angle=(Math.atan2(gpsCalib.transform.sin,gpsCalib.transform.cos)*180/Math.PI).toFixed(1);
+    const scale=gpsCalib.transform.scale.toFixed(4);
+    $status.className='gps-calib-status calibrated';
+    $status.textContent='Calibré — Rotation: '+angle+'° / Échelle: '+scale+' m/px';
+  }else if(p1.gps&&p1.plan&&p2.gps&&p2.plan){
+    $status.textContent='Calcul en cours...';
+    $status.className='gps-calib-status';
+  }else{
+    $status.className='gps-calib-status';
+    $status.textContent='Non calibré — définissez 2 points (GPS + plan)';
+  }
+}
+
+function gpsCalibCapture(ptNum){
+  if(!navigator.geolocation){alert('Géolocalisation non supportée.');return;}
+  const btnId='gps-calib-pt'+ptNum+'-gps';
+  const btn=document.getElementById(btnId);
+  if(btn){btn.classList.add('waiting');btn.textContent='📡...';}
+  navigator.geolocation.getCurrentPosition(
+    function(pos){
+      const pt=ptNum===1?gpsCalib.pt1:gpsCalib.pt2;
+      pt.gps={lat:pos.coords.latitude,lng:pos.coords.longitude,accuracy:pos.coords.accuracy};
+      if(btn){btn.classList.remove('waiting');btn.textContent='📡 GPS';}
+      gpsCalibTryCompute();
+      gpsCalibUpdateUI();
+      if(typeof showToast==='function')showToast('P'+ptNum+' GPS capturé (±'+Math.round(pos.coords.accuracy)+'m)');
+    },
+    function(err){
+      if(btn){btn.classList.remove('waiting');btn.textContent='📡 GPS';}
+      let msg='GPS indisponible.';
+      if(err.code===1)msg='Accès GPS refusé.';
+      else if(err.code===3)msg='Délai GPS dépassé.';
+      alert(msg);
+    },
+    {enableHighAccuracy:true,timeout:15000,maximumAge:0}
+  );
+}
+
+function gpsCalibPlanClick(ptNum){
+  // Activate plan click mode — next click on the canvas sets this point
+  gpsCalibPlanClickTarget=ptNum;
+  const btnId='gps-calib-pt'+ptNum+'-plan';
+  // Reset other buttons
+  document.querySelectorAll('.gps-calib-btn-plan').forEach(b=>{b.classList.remove('waiting');b.textContent='🎯 Plan';});
+  const btn=document.getElementById(btnId);
+  if(btn){btn.classList.add('waiting');btn.textContent='🎯 Cliquez...';}
+  if(typeof showToast==='function')showToast('Cliquez sur le plan à l\'emplacement du point P'+ptNum);
+}
+
+// This is called from the main canvas click handler
+function gpsCalibHandlePlanClick(canvasX,canvasY){
+  if(!gpsCalibPlanClickTarget)return false;
+  const ptNum=gpsCalibPlanClickTarget;
+  gpsCalibPlanClickTarget=null;
+  const pt=ptNum===1?gpsCalib.pt1:gpsCalib.pt2;
+  pt.plan={x:canvasX,y:canvasY};
+  // Reset button
+  const btn=document.getElementById('gps-calib-pt'+ptNum+'-plan');
+  if(btn){btn.classList.remove('waiting');btn.textContent='🎯 Plan';}
+  gpsCalibTryCompute();
+  gpsCalibUpdateUI();
+  if(typeof showToast==='function')showToast('P'+ptNum+' plan défini ('+Math.round(canvasX)+', '+Math.round(canvasY)+')');
+  return true; // consumed the click
+}
+
+function gpsCalibTryCompute(){
+  const p1=gpsCalib.pt1,p2=gpsCalib.pt2;
+  gpsCalib.transform=null;
+  if(!p1.gps||!p1.plan||!p2.gps||!p2.plan)return;
+  // Convert GPS to meters (relative to P1 GPS as origin)
+  const cosLat=Math.cos(p1.gps.lat*Math.PI/180);
+  const gps1x=0,gps1y=0;
+  const gps2x=(p2.gps.lng-p1.gps.lng)*111320*cosLat;
+  const gps2y=-(p2.gps.lat-p1.gps.lat)*111320; // Y inverted (canvas Y goes down)
+  // Plan coords in pixels
+  const plan1x=p1.plan.x,plan1y=p1.plan.y;
+  const plan2x=p2.plan.x,plan2y=p2.plan.y;
+  // Delta vectors
+  const dGpsX=gps2x-gps1x, dGpsY=gps2y-gps1y;
+  const dPlanX=plan2x-plan1x, dPlanY=plan2y-plan1y;
+  const gpsLen=Math.sqrt(dGpsX*dGpsX+dGpsY*dGpsY);
+  const planLen=Math.sqrt(dPlanX*dPlanX+dPlanY*dPlanY);
+  if(gpsLen<0.5||planLen<5){
+    // Points trop proches
+    if(typeof showToast==='function')showToast('Points trop proches — éloignez P1 et P2');
+    return;
+  }
+  // Scale: meters per pixel
+  const scale=gpsLen/planLen;
+  // Rotation angle: angle between GPS vector and plan vector
+  const angleGps=Math.atan2(dGpsY,dGpsX);
+  const anglePlan=Math.atan2(dPlanY,dPlanX);
+  const theta=angleGps-anglePlan; // rotation from plan to GPS
+  const cosT=Math.cos(theta),sinT=Math.sin(theta);
+  // Transform: GPS_meters = scale * R(theta) * (plan_px - plan1) + gps1_meters
+  // Inverse: plan_px = (1/scale) * R(-theta) * (GPS_meters - gps1_meters) + plan1
+  // Store both directions
+  gpsCalib.transform={
+    // Plan origin (P1)
+    plan1x:plan1x,plan1y:plan1y,
+    // GPS origin (P1) in meters (relative local frame)
+    gps1Lat:p1.gps.lat,gps1Lng:p1.gps.lng,
+    cosLat:cosLat,
+    // Rotation and scale
+    cos:cosT,sin:sinT,scale:scale,
+    // Distance between points for accuracy info
+    distMeters:gpsLen,distPixels:planLen
+  };
+}
+
+function gpsToplan(lat,lng){
+  // Convert GPS coords to plan pixel coords using calibration
+  const t=gpsCalib.transform;
+  if(!t)return null;
+  // GPS to meters relative to P1
+  const mx=(lng-t.gps1Lng)*111320*t.cosLat;
+  const my=-(lat-t.gps1Lat)*111320;
+  // Inverse transform: plan = R(-theta)/scale * meters + plan1
+  const cosNeg=t.cos, sinNeg=-t.sin; // R(-theta)
+  const invScale=1/t.scale;
+  const px=invScale*(cosNeg*mx-sinNeg*my)+t.plan1x;
+  const py=invScale*(sinNeg*mx+cosNeg*my)+t.plan1y;
+  return{x:Math.round(px),y:Math.round(py)};
+}
+
+function gpsCalibReset(){
+  gpsCalib.pt1={gps:null,plan:null};
+  gpsCalib.pt2={gps:null,plan:null};
+  gpsCalib.transform=null;
+  gpsCalibPlanClickTarget=null;
+  document.querySelectorAll('.gps-calib-btn-plan').forEach(b=>{b.classList.remove('waiting');b.textContent='🎯 Plan';});
+  document.querySelectorAll('.gps-calib-btn-gps').forEach(b=>{b.classList.remove('waiting');b.textContent='📡 GPS';});
+  gpsCalibUpdateUI();
+  if(typeof showToast==='function')showToast('Calibration GPS réinitialisée');
+}
+
+// --- GPS POSITIONNEMENT SONDAGE (utilise la calibration si disponible) ---
+function gpsSondagePosition(){
+  if(!navigator.geolocation){alert('Géolocalisation non supportée.');return;}
+  // Check prerequisites
+  if(!gpsCalib.transform){
+    // Fallback: need at least projectLat/Lng + measureScale
+    if(!projectLat||!projectLng){alert('Calibrez le GPS (2 points dans le panneau Sondages) ou définissez la localisation du projet.');return;}
+    if(!measureScale){alert('Calibrez le GPS (2 points) ou calibrez l\'échelle du plan (outil Mesurer).');return;}
+  }
+  const s=getCurrentSondage();
+  if(!s)return;
+  const btn=document.querySelector('.btn-gps-sondage');
+  if(btn){btn.classList.add('locating');btn.textContent='📡 Localisation...';}
+  navigator.geolocation.getCurrentPosition(
+    function(pos){
+      const lat=pos.coords.latitude,lng=pos.coords.longitude;
+      const accuracy=pos.coords.accuracy;
+      let finalX,finalY;
+      if(gpsCalib.transform){
+        // Use calibrated transform
+        const pt=gpsToplan(lat,lng);
+        if(pt){finalX=pt.x;finalY=pt.y;}
+        else{finalX=(planW||1200)/2;finalY=(planH||800)/2;}
+      }else{
+        // Fallback: old method (center-based)
+        const dLat=lat-projectLat;
+        const dLng=lng-projectLng;
+        const dxMeters=dLng*111320*Math.cos(projectLat*Math.PI/180);
+        const dyMeters=-dLat*111320;
+        const dxPx=dxMeters/measureScale;
+        const dyPx=dyMeters/measureScale;
+        const cx=(planW||1200)/2;
+        const cy=(planH||800)/2;
+        finalX=Math.round(cx+dxPx);
+        finalY=Math.round(cy+dyPx);
+      }
+      // Clamp to plan bounds
+      finalX=Math.max(20,Math.min((planW||1200)-20,finalX));
+      finalY=Math.max(20,Math.min((planH||800)-20,finalY));
+      // Move the sondage sticker
+      const sticker=elements.find(e=>e.sondageId===s.id);
+      if(sticker){
+        sticker.x=finalX;
+        sticker.y=finalY;
+        renderElements();
+      }
+      if(btn){btn.classList.remove('locating');btn.innerHTML='📍 GPS';}
+      const method=gpsCalib.transform?'calibré':'approx.';
+      if(typeof showToast==='function')showToast('Sondage positionné ('+method+', ±'+Math.round(accuracy)+'m)');
+    },
+    function(err){
+      if(btn){btn.classList.remove('locating');btn.innerHTML='📍 GPS';}
+      let msg='Position GPS indisponible.';
+      if(err.code===1)msg='Accès GPS refusé.';
+      else if(err.code===3)msg='Délai GPS dépassé.';
+      alert(msg);
+    },
+    {enableHighAccuracy:true,timeout:15000,maximumAge:0}
+  );
+}
+
+// --- 3) CHRONOMÈTRE INFILTRATION ---
+let chronoInterval=null;
+let chronoStartTime=null;
+let chronoPausedTime=0;
+let chronoRunning=false;
+
+function chronoStart(){
+  if(chronoRunning)return;
+  chronoRunning=true;
+  chronoStartTime=Date.now()-chronoPausedTime;
+  chronoInterval=setInterval(chronoUpdate,100);
+  const startBtn=document.getElementById('chrono-start-btn');
+  const pauseBtn=document.getElementById('chrono-pause-btn');
+  if(startBtn)startBtn.style.display='none';
+  if(pauseBtn)pauseBtn.style.display='';
+}
+
+function chronoPause(){
+  if(!chronoRunning)return;
+  chronoRunning=false;
+  chronoPausedTime=Date.now()-chronoStartTime;
+  clearInterval(chronoInterval);
+  const startBtn=document.getElementById('chrono-start-btn');
+  const pauseBtn=document.getElementById('chrono-pause-btn');
+  if(startBtn){startBtn.style.display='';startBtn.textContent='▶ Reprendre';}
+  if(pauseBtn)pauseBtn.style.display='none';
+}
+
+function chronoReset(){
+  chronoRunning=false;
+  clearInterval(chronoInterval);
+  chronoStartTime=null;
+  chronoPausedTime=0;
+  const display=document.getElementById('chrono-display');
+  if(display)display.textContent='00:00.0';
+  const startBtn=document.getElementById('chrono-start-btn');
+  const pauseBtn=document.getElementById('chrono-pause-btn');
+  if(startBtn){startBtn.style.display='';startBtn.textContent='▶ Démarrer';}
+  if(pauseBtn)pauseBtn.style.display='none';
+}
+
+function chronoUpdate(){
+  if(!chronoStartTime)return;
+  const elapsed=Date.now()-chronoStartTime;
+  const display=document.getElementById('chrono-display');
+  if(display)display.textContent=formatChrono(elapsed);
+}
+
+function formatChrono(ms){
+  const totalSec=ms/1000;
+  const min=Math.floor(totalSec/60);
+  const sec=Math.floor(totalSec%60);
+  const dec=Math.floor((totalSec%1)*10);
+  return String(min).padStart(2,'0')+':'+String(sec).padStart(2,'0')+'.'+dec;
+}
+
+function chronoLap(){
+  // Add current chrono time as a new infiltro reading
+  if(!chronoStartTime&&!chronoPausedTime)return;
+  const elapsed=chronoRunning?(Date.now()-chronoStartTime):chronoPausedTime;
+  const minutes=+(elapsed/60000).toFixed(1);
+  const s=getCurrentSondage();
+  if(!s||s.type!=='infiltro')return;
+  s.data.readings.push({time:minutes,volume:null,height:null});
+  renderSondageContent(s);
+  if(typeof showToast==='function')showToast('Mesure ajoutée : '+minutes+' min');
 }
 
 function openMiseEnPage(){
@@ -5013,8 +7217,8 @@ const SOIL_DESCRIPTIONS={
   loess:['Lœss','Lœss calcaire','Lœss brun'],
   argile_a_silex:['Argile à silex','Argile à silex brune','Argile à silex rougeâtre']
 };
-const SONDAGE_LABELS={'penetro_dyn':'Pénétromètre Dynamique','penetro_stat':'Pénétromètre Statique','tariere':'Sondage à la Tarière','pelle_meca':'Sondage Pelle Mécanique','fondation':'Reconnaissance de Fondation','piezometre':'Piézomètre','infiltro':'Infiltrométrie','forage_destr':'Forage Destructif','essai_labo':'Essais Laboratoire'};
-const SONDAGE_ICONS={'penetro_dyn':'🔴','penetro_stat':'🔵','tariere':'⚫','pelle_meca':'🟡','fondation':'🏗️','piezometre':'💧','infiltro':'💦','forage_destr':'🔶','essai_labo':'🧪'};
+const SONDAGE_LABELS={'penetro_dyn':'Pénétromètre Dynamique','penetro_stat':'Pénétromètre Statique','tariere':'Sondage à la Tarière','pelle_meca':'Sondage Pelle Mécanique','fondation':'Reconnaissance de Fondation','piezometre':'Piézomètre','infiltro':'Infiltrométrie','forage_destr':'Forage Destructif','essai_labo':'Essais Laboratoire','pressio':'Pressiomètre Ménard','spt':'Essai SPT'};
+const SONDAGE_ICONS={'penetro_dyn':'🔴','penetro_stat':'🔵','tariere':'⚫','pelle_meca':'🟡','fondation':'🏗️','piezometre':'💧','infiltro':'💦','forage_destr':'🔶','essai_labo':'🧪','pressio':'🔧','spt':'🔨'};
 const FONDATION_TYPES=[{v:'semelle_filante',l:'Semelle filante'},{v:'semelle_isolee',l:'Semelle isolée'},{v:'radier',l:'Radier'},{v:'puits',l:'Puits'},{v:'pieux',l:'Pieux'},{v:'micropieux',l:'Micropieux'},{v:'autre',l:'Autre'}];
 const FONDATION_STATES=[{v:'bon',l:'Bon état'},{v:'moyen',l:'État moyen'},{v:'degrade',l:'Dégradé'},{v:'tres_degrade',l:'Très dégradé'}];
 
@@ -5103,11 +7307,24 @@ function renderSondageList(){
     }).join('');
 }
 
-const SONDAGE_SVG_MAP={'penetro_dyn':'penetro_dyn','penetro_stat':'penetro_stat','tariere':'tariere','pelle_meca':'pelle_meca','fondation':'regard','piezometre':'piezo','infiltro':'infiltro','forage_destr':'forage_destr','essai_labo':'essai_plaque'};
-const SONDAGE_COLOR_MAP={'penetro_dyn':'#D94040','penetro_stat':'#3D7AB5','tariere':'#4A4A4A','pelle_meca':'#F2B705','fondation':'#7A7A7A','piezometre':'#2980B9','infiltro':'#16A085','forage_destr':'#E67E22','essai_labo':'#8E44AD'};
+const SONDAGE_SVG_MAP={'penetro_dyn':'penetro_dyn','penetro_stat':'penetro_stat','tariere':'tariere','pelle_meca':'pelle_meca','fondation':'regard','piezometre':'piezo','infiltro':'infiltro','forage_destr':'forage_destr','essai_labo':'essai_plaque','pressio':'penetro_stat','spt':'penetro_dyn'};
+const SONDAGE_COLOR_MAP={'penetro_dyn':'#D94040','penetro_stat':'#3D7AB5','tariere':'#4A4A4A','pelle_meca':'#F2B705','fondation':'#7A7A7A','piezometre':'#2980B9','infiltro':'#16A085','forage_destr':'#E67E22','essai_labo':'#8E44AD','pressio':'#5B2C6F','spt':'#C0392B'};
 
-const SONDAGE_PREFIX={'penetro_dyn':'D','penetro_stat':'PS','tariere':'T','pelle_meca':'PM','fondation':'RF','piezometre':'PZ','infiltro':'INF','forage_destr':'FD','essai_labo':'ECH'};
+const SONDAGE_PREFIX={'penetro_dyn':'D','penetro_stat':'PS','tariere':'T','pelle_meca':'PM','fondation':'RF','piezometre':'PZ','infiltro':'INF','forage_destr':'FD','essai_labo':'ECH','pressio':'PM','spt':'SPT'};
 const COMPARE_COLORS=['#E74C3C','#2980B9','#27AE60','#E67E22','#8E44AD','#16A085','#D35400','#2C3E50','#C0392B','#1ABC9C'];
+// Bridge for 3D module access
+window._geo3d={
+  get sondages(){return sondages;},
+  get elements(){return elements;},
+  get modeleFormations(){return modeleFormations;},
+  get photos(){return photos;},
+  get planW(){return planW;},
+  get planH(){return planH;},
+  get measureScale(){return measureScale;},
+  get SONDAGE_COLOR_MAP(){return SONDAGE_COLOR_MAP;},
+  get niveauRefs(){return niveauRefs;},
+  renderPhotos(){if(typeof renderPhotos==='function')renderPhotos();}
+};
 let compareType=null;
 function newSondage(type){
   closeSondageTypeModal();
@@ -5139,6 +7356,10 @@ function newSondage(type){
     s.data={layers:[{from:0.00,to:0.30,nature:'terre_vegetale',description:'Terre végétale'}],speeds:[]};
   }else if(type==='essai_labo'){
     s.data={sourceSondage:'',sampleDepth:0,essais:[]};
+  }else if(type==='pressio'){
+    s.data={readings:[{depth:1.0,pl:null,pf:null,em:null}]};
+  }else if(type==='spt'){
+    s.data={readings:[{depth:1.5,n1:null,n2:null,n3:null}]};
   }
   // Placer un repère (sticker) automatiquement sur le plan
   const stickerId=now+1;
@@ -5247,6 +7468,8 @@ function renderSondageContent(s){
   else if(s.type==='infiltro'){renderInfiltroForm(s,$table);renderInfiltroGraph(s);}
   else if(s.type==='forage_destr'){renderForageDestrForm(s,$table);renderForageDestrGraph(s);}
   else if(s.type==='essai_labo'){renderEssaiLaboForm(s,$table);renderEssaiLaboSummary(s);}
+  else if(s.type==='pressio'){renderPressioForm(s,$table);renderPressioGraph(s);}
+  else if(s.type==='spt'){renderSPTForm(s,$table);renderSPTGraph(s);}
   // Afficher la photo liée (panneau principal)
   const photoPanel=document.getElementById('sondage-photo-panel');
   const photoImg=document.getElementById('sondage-photo-img');
@@ -5364,7 +7587,7 @@ function renderPenetroDynTable(s,$wrap){
       <option value="Arrêt sur remblai probable"${s.stopCriterion==='Arrêt sur remblai probable'?' selected':''}>Arrêt sur remblai probable</option>
     </select>
   </div>`;
-  html+=`<textarea class="sondage-notes" placeholder="Observations...">${s.notes||''}</textarea>`;
+  html+=`<div class="sondage-notes-wrap"><textarea class="sondage-notes" placeholder="Observations — utilisez le micro pour dicter...">${s.notes||''}</textarea><button class="btn-dictation" onclick="toggleDictation(this)" title="Dictée vocale">🎤</button></div>`;
   $wrap.innerHTML=html;
 }
 
@@ -6557,7 +8780,7 @@ function renderPenetroStatTable(s,$wrap){
   });
   html+=`</tbody></table>`;
   html+=`<div class="sondage-add-row"><button onclick="addStatRow()">+ Ajouter une ligne</button></div>`;
-  html+=`<textarea class="sondage-notes" placeholder="Observations...">${s.notes||''}</textarea>`;
+  html+=`<div class="sondage-notes-wrap"><textarea class="sondage-notes" placeholder="Observations — utilisez le micro pour dicter...">${s.notes||''}</textarea><button class="btn-dictation" onclick="toggleDictation(this)" title="Dictée vocale">🎤</button></div>`;
   $wrap.innerHTML=html;
 }
 
@@ -6694,7 +8917,7 @@ function renderStratiTable(s,$wrap){
   });
   html+=`</tbody></table>`;
   html+=`<div class="sondage-add-row"><button onclick="addStratiRow()">+ Ajouter une couche</button><button onclick="removeStratiRow()">− Supprimer dernière</button></div>`;
-  html+=`<textarea class="sondage-notes" placeholder="Observations...">${s.notes||''}</textarea>`;
+  html+=`<div class="sondage-notes-wrap"><textarea class="sondage-notes" placeholder="Observations — utilisez le micro pour dicter...">${s.notes||''}</textarea><button class="btn-dictation" onclick="toggleDictation(this)" title="Dictée vocale">🎤</button></div>`;
   $wrap.innerHTML=html;
 }
 
@@ -6902,7 +9125,7 @@ function renderFondationForm(s,$wrap){
     <label>État<select onchange="fondationInput('state',this.value)">${stateOpts}</select></label>
     <label>Description<textarea rows="4" oninput="fondationInput('description',this.value)" style="resize:vertical">${d.description||''}</textarea></label>
   </div>
-  <textarea class="sondage-notes" placeholder="Observations générales...">${s.notes||''}</textarea>`;
+  <div class="sondage-notes-wrap"><textarea class="sondage-notes" placeholder="Observations générales — utilisez le micro pour dicter...">${s.notes||''}</textarea><button class="btn-dictation" onclick="toggleDictation(this)" title="Dictée vocale">🎤</button></div>`;
 }
 
 function fondationInput(field,val){
@@ -6985,7 +9208,7 @@ function renderPiezoForm(s,$wrap){
   });
   html+=`</tbody></table>`;
   html+=`<div class="sondage-add-row"><button onclick="addPiezoReading()">+ Ajouter un relevé</button><button onclick="removePiezoReading()">− Supprimer dernier</button></div>`;
-  html+=`<textarea class="sondage-notes" placeholder="Observations...">${s.notes||''}</textarea>`;
+  html+=`<div class="sondage-notes-wrap"><textarea class="sondage-notes" placeholder="Observations — utilisez le micro pour dicter...">${s.notes||''}</textarea><button class="btn-dictation" onclick="toggleDictation(this)" title="Dictée vocale">🎤</button></div>`;
   $wrap.innerHTML=html;
 }
 function addPiezoReading(){const s=getCurrentSondage();if(!s)return;s.data.readings.push({date:new Date().toISOString().slice(0,10),level:null,remark:''});renderSondageContent(s);}
@@ -7041,6 +9264,14 @@ function renderInfiltroForm(s,$wrap){
     <input type="number" step="1" min="0" value="${d.boreDiameter||''}" style="width:100px;padding:5px 8px;border:1px solid #ccc;border-radius:4px;font-size:13px;font-weight:600" oninput="const ss=getCurrentSondage();if(ss)ss.data.boreDiameter=parseFloat(this.value)||0">
   </div>`;
   html+=`<h4 style="font-size:12px;font-weight:800;margin:8px 0 4px">Mesures d'infiltration</h4>`;
+  html+=`<div class="chrono-bar">
+    <span style="font-size:12px;font-weight:800">⏱ Chrono</span>
+    <span class="chrono-display" id="chrono-display">00:00.0</span>
+    <button class="chrono-btn chrono-start" id="chrono-start-btn" onclick="chronoStart()">▶ Démarrer</button>
+    <button class="chrono-btn chrono-pause" id="chrono-pause-btn" onclick="chronoPause()" style="display:none">⏸ Pause</button>
+    <button class="chrono-btn chrono-lap" onclick="chronoLap()">📌 Mesure</button>
+    <button class="chrono-btn chrono-reset" onclick="chronoReset()">↺ RAZ</button>
+  </div>`;
   html+=`<table class="sondage-table"><thead><tr><th>Temps (min)</th><th>Volume (L)</th><th>Hauteur d'eau (cm)</th></tr></thead><tbody>`;
   (d.readings||[]).forEach((r,i)=>{
     html+=`<tr>
@@ -7052,7 +9283,7 @@ function renderInfiltroForm(s,$wrap){
   html+=`<div class="sondage-add-row"><button onclick="addInfiltroReading()">+ Ajouter une mesure</button><button onclick="removeInfiltroReading()">− Supprimer dernière</button></div>`;
   const kDisplay=d.permeability!=null?d.permeability.toExponential(2)+' m/s':'—';
   html+=`<div style="margin-top:8px;padding:8px 10px;background:#E8F8F5;border-radius:6px;font-size:13px;font-weight:700">Perméabilité K estimée : <span id="infiltro-k-display">${kDisplay}</span></div>`;
-  html+=`<textarea class="sondage-notes" placeholder="Observations...">${s.notes||''}</textarea>`;
+  html+=`<div class="sondage-notes-wrap"><textarea class="sondage-notes" placeholder="Observations — utilisez le micro pour dicter...">${s.notes||''}</textarea><button class="btn-dictation" onclick="toggleDictation(this)" title="Dictée vocale">🎤</button></div>`;
   $wrap.innerHTML=html;
 }
 function addInfiltroReading(){const s=getCurrentSondage();if(!s)return;s.data.readings.push({time:null,volume:null,height:null});renderSondageContent(s);}
@@ -7136,7 +9367,7 @@ function renderForageDestrForm(s,$wrap){
   });
   html+=`</tbody></table>`;
   html+=`<div class="sondage-add-row"><button onclick="addFdSpeed()">+ Ajouter</button><button onclick="removeFdSpeed()">− Supprimer</button></div>`;
-  html+=`<textarea class="sondage-notes" placeholder="Observations...">${s.notes||''}</textarea>`;
+  html+=`<div class="sondage-notes-wrap"><textarea class="sondage-notes" placeholder="Observations — utilisez le micro pour dicter...">${s.notes||''}</textarea><button class="btn-dictation" onclick="toggleDictation(this)" title="Dictée vocale">🎤</button></div>`;
   $wrap.innerHTML=html;
 }
 function fdLayerInput(idx,field,val){
@@ -7204,7 +9435,15 @@ function renderEssaiLaboForm(s,$wrap){
     html+=`<button onclick="addLaboEssai('${t.v}')" style="padding:4px 8px;border:1px solid #8E44AD;border-radius:4px;background:#F5EEF8;color:#8E44AD;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit">+ ${t.l}</button>`;
   });
   html+=`</div>`;
-  html+=`<textarea class="sondage-notes" placeholder="Observations...">${s.notes||''}</textarea>`;
+  // GTR classification auto
+  const gtr=getGTRForSondage(s);
+  if(gtr&&gtr.classe!=='?'){
+    html+=`<div style="margin:8px 0;padding:10px 12px;background:#E8F5E9;border-left:3px solid #27AE60;border-radius:6px;font-size:12px">
+      <strong style="color:#27AE60">Classification GTR :</strong> <span style="font-weight:800;font-size:14px;color:#2C3E50">${gtr.classe}</span>
+      <span style="color:#666;margin-left:8px">${gtr.desc}</span>
+    </div>`;
+  }
+  html+=`<div class="sondage-notes-wrap"><textarea class="sondage-notes" placeholder="Observations — utilisez le micro pour dicter...">${s.notes||''}</textarea><button class="btn-dictation" onclick="toggleDictation(this)" title="Dictée vocale">🎤</button></div>`;
   $wrap.innerHTML=html;
 }
 function addLaboEssai(type){
@@ -7239,6 +9478,213 @@ function renderEssaiLaboSummary(s){
     ctx.fillText(vals,30,y+36);
     y+=56;
   });
+}
+
+// ─── PRESSIOMÈTRE MÉNARD ───
+function renderPressioForm(s,$wrap){
+  const d=s.data||{};
+  const readings=d.readings||[];
+  const tnVal=s.tnAltitude!=null?s.tnAltitude:'';
+  const dpVal=s.sondageDepth!=null?s.sondageDepth:'';
+  let html='<div style="margin-bottom:12px;display:flex;gap:12px;flex-wrap:wrap;align-items:center">';
+  html+='<label style="font-size:12px">Alt. TN (m NGF) <input type="number" step="0.01" value="'+tnVal+'" onchange="getCurrentSondage().tnAltitude=+this.value;renderPressioGraph(getCurrentSondage())" style="width:80px;padding:4px;border:1px solid #ccc;border-radius:4px"></label>';
+  html+='<label style="font-size:12px">Prof. max (m) <input type="number" step="0.1" value="'+dpVal+'" onchange="getCurrentSondage().sondageDepth=+this.value" style="width:80px;padding:4px;border:1px solid #ccc;border-radius:4px"></label>';
+  html+='</div>';
+  html+='<table style="width:100%;border-collapse:collapse;font-size:12px">';
+  html+='<thead><tr style="background:#2C3E50;color:#fff"><th style="padding:6px">Prof. (m)</th><th style="padding:6px">Pl (MPa)</th><th style="padding:6px">Pf (MPa)</th><th style="padding:6px">Em (MPa)</th><th style="padding:6px">Em/Pl</th></tr></thead><tbody>';
+  readings.forEach((r,i)=>{
+    const emPl=(r.em!=null&&r.pl!=null&&r.pl>0)?(r.em/r.pl).toFixed(1):'—';
+    html+='<tr style="border-bottom:1px solid #eee">';
+    html+='<td style="padding:4px;text-align:center"><input type="number" step="0.5" value="'+(r.depth!=null?r.depth:'')+'" onchange="updatePressioReading('+i+',\'depth\',+this.value)" style="width:60px;padding:3px;border:1px solid #ccc;border-radius:4px;text-align:center"></td>';
+    html+='<td style="padding:4px;text-align:center"><input type="number" step="0.01" value="'+(r.pl!=null?r.pl:'')+'" onchange="updatePressioReading('+i+',\'pl\',+this.value)" style="width:60px;padding:3px;border:1px solid #ccc;border-radius:4px;text-align:center"></td>';
+    html+='<td style="padding:4px;text-align:center"><input type="number" step="0.01" value="'+(r.pf!=null?r.pf:'')+'" onchange="updatePressioReading('+i+',\'pf\',+this.value)" style="width:60px;padding:3px;border:1px solid #ccc;border-radius:4px;text-align:center"></td>';
+    html+='<td style="padding:4px;text-align:center"><input type="number" step="0.1" value="'+(r.em!=null?r.em:'')+'" onchange="updatePressioReading('+i+',\'em\',+this.value)" style="width:60px;padding:3px;border:1px solid #ccc;border-radius:4px;text-align:center"></td>';
+    html+='<td style="padding:4px;text-align:center;color:#7A7A7A">'+emPl+'</td>';
+    html+='</tr>';
+  });
+  html+='</tbody></table>';
+  html+='<div style="margin-top:8px;display:flex;gap:8px">';
+  html+='<button onclick="addPressioReading()" style="padding:6px 14px;background:#2980B9;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px">+ Mesure</button>';
+  html+='<button onclick="removePressioReading()" style="padding:6px 14px;background:#C0392B;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px">− Suppr.</button>';
+  html+='</div>';
+  $wrap.innerHTML=html;
+}
+function updatePressioReading(idx,field,val){
+  const s=getCurrentSondage();if(!s)return;
+  s.data.readings[idx][field]=val;
+  renderSondageContent(s);
+}
+function addPressioReading(){
+  const s=getCurrentSondage();if(!s)return;
+  const rd=s.data.readings;
+  const lastD=rd.length?rd[rd.length-1].depth:0;
+  rd.push({depth:+(lastD+1).toFixed(1),pl:null,pf:null,em:null});
+  renderSondageContent(s);
+}
+function removePressioReading(){
+  const s=getCurrentSondage();if(!s||!s.data.readings.length)return;
+  s.data.readings.pop();
+  renderSondageContent(s);
+}
+
+function renderPressioGraph(s){
+  const cvs=document.getElementById('sondage-canvas');
+  const ctx=cvs.getContext('2d');
+  const d=s.data||{};
+  const readings=(d.readings||[]).filter(r=>r.depth!=null&&(r.pl!=null||r.em!=null));
+  const cw=460,ch=Math.max(400,readings.length*40+120);
+  cvs.width=cw;cvs.height=ch;
+  ctx.fillStyle='#FFF';ctx.fillRect(0,0,cw,ch);
+  const ref=document.getElementById('project-ref')?.value||'';
+  ctx.fillStyle='#1A1A1A';ctx.font='bold 14px Arial';ctx.textAlign='center';
+  ctx.fillText('ESSAI PRESSIOMÉTRIQUE'+(s.name?' — '+s.name:''),cw/2,22);
+  ctx.font='11px Arial';ctx.fillStyle='#7A7A7A';
+  ctx.fillText((ref?'Projet: '+ref+'  ':'')+'Alt. TN: '+(s.tnAltitude!=null?s.tnAltitude.toFixed(2)+' m NGF':'?'),cw/2,40);
+  if(readings.length===0){ctx.fillStyle='#AAA';ctx.font='12px Arial';ctx.fillText('Aucune mesure',cw/2,ch/2);return;}
+  // Axes
+  const marginL=70,marginR=30,marginT=60,marginB=40;
+  const gw=cw-marginL-marginR,gh=ch-marginT-marginB;
+  const maxDepth=Math.max(...readings.map(r=>r.depth))*1.1||10;
+  const plVals=readings.filter(r=>r.pl!=null).map(r=>r.pl);
+  const emVals=readings.filter(r=>r.em!=null).map(r=>r.em);
+  const allVals=[...plVals,...emVals];
+  const maxVal=allVals.length>0?Math.max(...allVals)*1.2:5;
+  function xPos(v){return marginL+(v/maxVal)*gw;}
+  function yPos(d){return marginT+(d/maxDepth)*gh;}
+  // Grid
+  ctx.strokeStyle='#E0E0E0';ctx.lineWidth=0.5;
+  for(let i=0;i<=5;i++){const x=marginL+(gw/5)*i;ctx.beginPath();ctx.moveTo(x,marginT);ctx.lineTo(x,marginT+gh);ctx.stroke();ctx.fillStyle='#999';ctx.font='9px Arial';ctx.textAlign='center';ctx.fillText((maxVal/5*i).toFixed(1),x,marginT+gh+14);}
+  for(let i=0;i<=5;i++){const y=marginT+(gh/5)*i;ctx.beginPath();ctx.moveTo(marginL,y);ctx.lineTo(marginL+gw,y);ctx.stroke();ctx.fillStyle='#999';ctx.font='9px Arial';ctx.textAlign='right';ctx.fillText((maxDepth/5*i).toFixed(1)+' m',marginL-6,y+4);}
+  // Axes labels
+  ctx.fillStyle='#333';ctx.font='bold 10px Arial';ctx.textAlign='center';
+  ctx.fillText('Pression (MPa)',marginL+gw/2,ch-4);
+  ctx.save();ctx.translate(14,marginT+gh/2);ctx.rotate(-Math.PI/2);ctx.fillText('Profondeur (m)',0,0);ctx.restore();
+  // Pl curve (blue)
+  const plPts=readings.filter(r=>r.pl!=null).sort((a,b)=>a.depth-b.depth);
+  if(plPts.length>0){
+    ctx.strokeStyle='#2980B9';ctx.lineWidth=2.5;ctx.beginPath();
+    plPts.forEach((r,i)=>{const x=xPos(r.pl),y=yPos(r.depth);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+    ctx.stroke();
+    plPts.forEach(r=>{ctx.beginPath();ctx.arc(xPos(r.pl),yPos(r.depth),4,0,Math.PI*2);ctx.fillStyle='#2980B9';ctx.fill();});
+  }
+  // Em curve (orange)
+  const emPts=readings.filter(r=>r.em!=null).sort((a,b)=>a.depth-b.depth);
+  if(emPts.length>0){
+    ctx.strokeStyle='#E67E22';ctx.lineWidth=2.5;ctx.setLineDash([6,3]);ctx.beginPath();
+    emPts.forEach((r,i)=>{const x=xPos(r.em),y=yPos(r.depth);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+    ctx.stroke();ctx.setLineDash([]);
+    emPts.forEach(r=>{ctx.beginPath();ctx.arc(xPos(r.em),yPos(r.depth),4,0,Math.PI*2);ctx.fillStyle='#E67E22';ctx.fill();});
+  }
+  // Pf markers (green triangles)
+  const pfPts=readings.filter(r=>r.pf!=null).sort((a,b)=>a.depth-b.depth);
+  pfPts.forEach(r=>{
+    const x=xPos(r.pf),y=yPos(r.depth);
+    ctx.fillStyle='#27AE60';ctx.beginPath();ctx.moveTo(x,y-5);ctx.lineTo(x-4,y+4);ctx.lineTo(x+4,y+4);ctx.closePath();ctx.fill();
+  });
+  // Legend
+  const ly=ch-18;
+  ctx.fillStyle='#2980B9';ctx.fillRect(marginL,ly,14,3);ctx.fillStyle='#333';ctx.font='10px Arial';ctx.textAlign='left';ctx.fillText('Pl (pression limite)',marginL+18,ly+4);
+  ctx.fillStyle='#E67E22';ctx.fillRect(marginL+140,ly,14,3);ctx.fillStyle='#333';ctx.fillText('Em (module)',marginL+158,ly+4);
+  ctx.fillStyle='#27AE60';ctx.beginPath();ctx.moveTo(marginL+250,ly-2);ctx.lineTo(marginL+246,ly+4);ctx.lineTo(marginL+254,ly+4);ctx.closePath();ctx.fill();ctx.fillStyle='#333';ctx.fillText('Pf (fluage)',marginL+260,ly+4);
+}
+
+// ─── ESSAI SPT (Standard Penetration Test) ───
+function renderSPTForm(s,$wrap){
+  const d=s.data||{};
+  const readings=d.readings||[];
+  const tnVal=s.tnAltitude!=null?s.tnAltitude:'';
+  const dpVal=s.sondageDepth!=null?s.sondageDepth:'';
+  let html='<div style="margin-bottom:12px;display:flex;gap:12px;flex-wrap:wrap;align-items:center">';
+  html+='<label style="font-size:12px">Alt. TN (m NGF) <input type="number" step="0.01" value="'+tnVal+'" onchange="getCurrentSondage().tnAltitude=+this.value;renderSPTGraph(getCurrentSondage())" style="width:80px;padding:4px;border:1px solid #ccc;border-radius:4px"></label>';
+  html+='<label style="font-size:12px">Prof. max (m) <input type="number" step="0.1" value="'+dpVal+'" onchange="getCurrentSondage().sondageDepth=+this.value" style="width:80px;padding:4px;border:1px solid #ccc;border-radius:4px"></label>';
+  html+='</div>';
+  html+='<table style="width:100%;border-collapse:collapse;font-size:12px">';
+  html+='<thead><tr style="background:#2C3E50;color:#fff"><th style="padding:6px">Prof. (m)</th><th style="padding:6px">N1 (0-15cm)</th><th style="padding:6px">N2 (15-30cm)</th><th style="padding:6px">N3 (30-45cm)</th><th style="padding:6px">N (SPT)</th></tr></thead><tbody>';
+  readings.forEach((r,i)=>{
+    const nspt=(r.n2!=null&&r.n3!=null)?(r.n2+r.n3):'—';
+    html+='<tr style="border-bottom:1px solid #eee">';
+    html+='<td style="padding:4px;text-align:center"><input type="number" step="0.5" value="'+(r.depth!=null?r.depth:'')+'" onchange="updateSPTReading('+i+',\'depth\',+this.value)" style="width:60px;padding:3px;border:1px solid #ccc;border-radius:4px;text-align:center"></td>';
+    html+='<td style="padding:4px;text-align:center"><input type="number" step="1" value="'+(r.n1!=null?r.n1:'')+'" onchange="updateSPTReading('+i+',\'n1\',+this.value)" style="width:55px;padding:3px;border:1px solid #ccc;border-radius:4px;text-align:center"></td>';
+    html+='<td style="padding:4px;text-align:center"><input type="number" step="1" value="'+(r.n2!=null?r.n2:'')+'" onchange="updateSPTReading('+i+',\'n2\',+this.value)" style="width:55px;padding:3px;border:1px solid #ccc;border-radius:4px;text-align:center"></td>';
+    html+='<td style="padding:4px;text-align:center"><input type="number" step="1" value="'+(r.n3!=null?r.n3:'')+'" onchange="updateSPTReading('+i+',\'n3\',+this.value)" style="width:55px;padding:3px;border:1px solid #ccc;border-radius:4px;text-align:center"></td>';
+    html+='<td style="padding:4px;text-align:center;font-weight:700;color:'+(nspt!=='—'&&nspt>=30?'#C0392B':'#2C3E50')+'">'+nspt+'</td>';
+    html+='</tr>';
+  });
+  html+='</tbody></table>';
+  html+='<div style="margin-top:8px;display:flex;gap:8px">';
+  html+='<button onclick="addSPTReading()" style="padding:6px 14px;background:#2980B9;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px">+ Mesure</button>';
+  html+='<button onclick="removeSPTReading()" style="padding:6px 14px;background:#C0392B;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px">− Suppr.</button>';
+  html+='</div>';
+  $wrap.innerHTML=html;
+}
+function updateSPTReading(idx,field,val){
+  const s=getCurrentSondage();if(!s)return;
+  s.data.readings[idx][field]=val;
+  renderSondageContent(s);
+}
+function addSPTReading(){
+  const s=getCurrentSondage();if(!s)return;
+  const rd=s.data.readings;
+  const lastD=rd.length?rd[rd.length-1].depth:0;
+  rd.push({depth:+(lastD+1.5).toFixed(1),n1:null,n2:null,n3:null});
+  renderSondageContent(s);
+}
+function removeSPTReading(){
+  const s=getCurrentSondage();if(!s||!s.data.readings.length)return;
+  s.data.readings.pop();
+  renderSondageContent(s);
+}
+
+function renderSPTGraph(s){
+  const cvs=document.getElementById('sondage-canvas');
+  const ctx=cvs.getContext('2d');
+  const d=s.data||{};
+  const readings=(d.readings||[]).filter(r=>r.depth!=null&&(r.n2!=null||r.n3!=null));
+  const cw=420,ch=Math.max(400,readings.length*40+120);
+  cvs.width=cw;cvs.height=ch;
+  ctx.fillStyle='#FFF';ctx.fillRect(0,0,cw,ch);
+  const ref=document.getElementById('project-ref')?.value||'';
+  ctx.fillStyle='#1A1A1A';ctx.font='bold 14px Arial';ctx.textAlign='center';
+  ctx.fillText('ESSAI SPT'+(s.name?' — '+s.name:''),cw/2,22);
+  ctx.font='11px Arial';ctx.fillStyle='#7A7A7A';
+  ctx.fillText((ref?'Projet: '+ref+'  ':'')+'Alt. TN: '+(s.tnAltitude!=null?s.tnAltitude.toFixed(2)+' m NGF':'?'),cw/2,40);
+  if(readings.length===0){ctx.fillStyle='#AAA';ctx.font='12px Arial';ctx.fillText('Aucune mesure',cw/2,ch/2);return;}
+  // Calc N_SPT
+  const pts=readings.map(r=>({depth:r.depth,n:(r.n2||0)+(r.n3||0),n1:r.n1||0})).sort((a,b)=>a.depth-b.depth);
+  const marginL=70,marginR=30,marginT=60,marginB=40;
+  const gw=cw-marginL-marginR,gh=ch-marginT-marginB;
+  const maxDepth=Math.max(...pts.map(r=>r.depth))*1.1||10;
+  const maxN=Math.max(...pts.map(r=>r.n),...pts.map(r=>r.n1))*1.3||50;
+  function xPos(v){return marginL+(v/maxN)*gw;}
+  function yPos(d){return marginT+(d/maxDepth)*gh;}
+  // Grid
+  ctx.strokeStyle='#E0E0E0';ctx.lineWidth=0.5;
+  for(let i=0;i<=5;i++){const x=marginL+(gw/5)*i;ctx.beginPath();ctx.moveTo(x,marginT);ctx.lineTo(x,marginT+gh);ctx.stroke();ctx.fillStyle='#999';ctx.font='9px Arial';ctx.textAlign='center';ctx.fillText(Math.round(maxN/5*i),x,marginT+gh+14);}
+  for(let i=0;i<=5;i++){const y=marginT+(gh/5)*i;ctx.beginPath();ctx.moveTo(marginL,y);ctx.lineTo(marginL+gw,y);ctx.stroke();ctx.fillStyle='#999';ctx.font='9px Arial';ctx.textAlign='right';ctx.fillText((maxDepth/5*i).toFixed(1)+' m',marginL-6,y+4);}
+  ctx.fillStyle='#333';ctx.font='bold 10px Arial';ctx.textAlign='center';
+  ctx.fillText('Nombre de coups',marginL+gw/2,ch-4);
+  ctx.save();ctx.translate(14,marginT+gh/2);ctx.rotate(-Math.PI/2);ctx.fillText('Profondeur (m)',0,0);ctx.restore();
+  // N_SPT bars (horizontal)
+  pts.forEach(r=>{
+    const y=yPos(r.depth);
+    const barH=Math.max(gh/pts.length*0.6,12);
+    // N_SPT bar
+    const w=xPos(r.n)-marginL;
+    ctx.fillStyle='rgba(41,128,185,0.7)';ctx.fillRect(marginL,y-barH/2,w,barH);
+    ctx.fillStyle='#FFF';ctx.font='bold 10px Arial';ctx.textAlign='left';
+    if(w>25)ctx.fillText('N='+r.n,marginL+4,y+4);
+    else{ctx.fillStyle='#2980B9';ctx.fillText('N='+r.n,marginL+w+4,y+4);}
+  });
+  // Refusal line at N=50
+  if(maxN>=50){
+    const x50=xPos(50);
+    ctx.strokeStyle='#C0392B';ctx.lineWidth=1.5;ctx.setLineDash([5,3]);
+    ctx.beginPath();ctx.moveTo(x50,marginT);ctx.lineTo(x50,marginT+gh);ctx.stroke();
+    ctx.setLineDash([]);ctx.fillStyle='#C0392B';ctx.font='9px Arial';ctx.textAlign='center';
+    ctx.fillText('Refus (50)',x50,marginT-4);
+  }
+  // Legend
+  ctx.fillStyle='rgba(41,128,185,0.7)';ctx.fillRect(marginL,ch-18,14,8);ctx.fillStyle='#333';ctx.font='10px Arial';ctx.textAlign='left';ctx.fillText('N SPT = N2 + N3',marginL+18,ch-11);
 }
 
 // ─── EXPORT GRAPHE SUR LE PLAN ───
@@ -8319,6 +10765,416 @@ window.importScan3DProject=function(e){
   reader.readAsText(file);
   e.target.value='';
 };
+
+// ═══════════════════════════════════════════════════════════
+// 3D GÉOTECHNIQUE — Couches, Sondages, Nappe, Coupe, Capture
+// ═══════════════════════════════════════════════════════════
+
+let geoModelGroup=null, sondagesGroup=null, nappeGroup=null, coupeGroup=null;
+let sondage3DObjects=[]; // for raycasting click on sondage tubes
+const G=()=>window._geo3d||{};
+
+// --- Helper: convert plan pixel position to 3D scene coords ---
+function planPosTo3D(px, py){
+  const g=G();
+  const cx=(g.planW||1200)/2, cy=(g.planH||800)/2;
+  const mScale=g.measureScale||0.01;
+  const rx=(px-cx)*mScale, rz=(py-cy)*mScale;
+  return new THREE.Vector3(rx*scanScaleFactor, 0, rz*scanScaleFactor);
+}
+
+// --- Helper: get surface NGF altitude from plan niveauRef ---
+function getNivRefAlt(){
+  const g=G();
+  const refs=g.niveauRefs||[];
+  return refs.length>0&&refs[0].altitude!=null?refs[0].altitude:null;
+}
+
+// --- Helper: depth in meters to 3D Y coord ---
+// Uses the plan niveauRef as the 3D NGF reference (surface = ngfOffset or 0)
+function depthTo3DY(depthM){
+  const refAlt=getNivRefAlt();
+  if(refAlt!=null&&ngfOffset!=null){
+    // NGF altitude of this depth = refAlt - depthM
+    // 3D Y in raw coords = (NGF - ngfOffset) then scaled
+    const rawY=refAlt-depthM-ngfOffset;
+    return rawY*scanScaleFactor;
+  }
+  // Fallback: depth below origin
+  return -depthM*scanScaleFactor;
+}
+
+// --- Color string to Three.js color ---
+function colorToThree(c){
+  if(!c)return 0x888888;
+  if(typeof c==='string'&&c.startsWith('#'))return parseInt(c.slice(1),16);
+  return 0x888888;
+}
+
+// ═══ 1. COUCHES DE SOL (GeoModel) ═══
+
+window.toggle3DGeoModel=function(){
+  if(geoModelGroup){hide3DGeoModel();return;}
+  show3DGeoModel();
+};
+
+function show3DGeoModel(){
+  if(!scan3dScene)return;
+  if(geoModelGroup){scan3dScene.remove(geoModelGroup);}
+  geoModelGroup=new THREE.Group();
+  const g=G();const formations=g.modeleFormations||[];
+  if(formations.length===0){alert('Aucune formation dans le modèle géotechnique.');return;}
+  const mScale=g.measureScale||0.01;
+  const extentX=(g.planW||1200)*mScale;
+  const extentZ=(g.planH||800)*mScale;
+  const sX=extentX*scanScaleFactor;
+  const sZ=extentZ*scanScaleFactor;
+  formations.forEach(f=>{
+    const top=f.top!=null?f.top:0;
+    const bot=f.bottom!=null?f.bottom:top+2;
+    const thickness=Math.abs(bot-top);
+    if(thickness<=0)return;
+    const yTop=depthTo3DY(top);
+    const yBot=depthTo3DY(bot);
+    const yCenter=(yTop+yBot)/2;
+    const h=Math.abs(yTop-yBot);
+    const geom=new THREE.BoxGeometry(sX,h,sZ);
+    const col=colorToThree(f.color);
+    const mat=new THREE.MeshPhongMaterial({color:col,transparent:true,opacity:0.35,side:THREE.DoubleSide});
+    const mesh=new THREE.Mesh(geom,mat);
+    mesh.position.set(0,yCenter,0);
+    geoModelGroup.add(mesh);
+    // Wireframe edges
+    const edges=new THREE.EdgesGeometry(geom);
+    const lineMat=new THREE.LineBasicMaterial({color:col,linewidth:1});
+    const wireframe=new THREE.LineSegments(edges,lineMat);
+    wireframe.position.copy(mesh.position);
+    geoModelGroup.add(wireframe);
+    // Label
+    const refAlt=getNivRefAlt();
+    const layerLabel=refAlt!=null?(f.name||'?')+` (${(refAlt-top).toFixed(1)}→${(refAlt-bot).toFixed(1)} NGF)`:(f.name||'?')+` (${top.toFixed(1)}→${bot.toFixed(1)}m)`;
+    const label=createTextSprite(layerLabel,0xFFFFFF);
+    label.position.set(sX/2+0.15,yCenter,0);
+    label.scale.set(0.8,0.2,1);
+    geoModelGroup.add(label);
+  });
+  scan3dScene.add(geoModelGroup);
+  document.getElementById('btn-3d-geomodel').classList.add('active');
+}
+
+function hide3DGeoModel(){
+  if(geoModelGroup&&scan3dScene){scan3dScene.remove(geoModelGroup);geoModelGroup=null;}
+  document.getElementById('btn-3d-geomodel').classList.remove('active');
+}
+
+// ═══ 2. SONDAGES POSITIONNÉS ═══
+
+window.toggle3DSondages=function(){
+  if(sondagesGroup){hide3DSondages();return;}
+  show3DSondages();
+};
+
+function show3DSondages(){
+  if(!scan3dScene)return;
+  if(sondagesGroup){scan3dScene.remove(sondagesGroup);}
+  sondagesGroup=new THREE.Group();
+  sondage3DObjects=[];
+  const g=G();const allSondages=g.sondages||[];const allElements=g.elements||[];const colorMap=g.SONDAGE_COLOR_MAP||{};
+  if(allSondages.length===0){alert('Aucun sondage dans le projet.');return;}
+  allSondages.forEach(s=>{
+    const sticker=allElements.find(e=>e.sondageId===s.id);
+    if(!sticker)return;
+    const pos3d=planPosTo3D(sticker.x, sticker.y);
+    // Determine depth
+    let maxDepth=5; // default
+    if(s.readings&&s.readings.length>0) maxDepth=Math.max(...s.readings.map(r=>r.depth||0),5);
+    if(s.strati&&s.strati.length>0) maxDepth=Math.max(maxDepth,...s.strati.map(l=>l.to||0));
+    const tubeH=maxDepth*scanScaleFactor;
+    const tubeR=0.08;
+    // Tube cylinder
+    const col=colorToThree((colorMap[s.type])||'#D94040');
+    const geom=new THREE.CylinderGeometry(tubeR,tubeR,tubeH,12);
+    const mat=new THREE.MeshPhongMaterial({color:col,transparent:true,opacity:0.7});
+    const tube=new THREE.Mesh(geom,mat);
+    tube.position.set(pos3d.x, -tubeH/2, pos3d.z);
+    tube.userData={sondageId:s.id,type:'sondageTube'};
+    sondagesGroup.add(tube);
+    sondage3DObjects.push(tube);
+    // Top marker sphere
+    const sphere=new THREE.Mesh(new THREE.SphereGeometry(tubeR*1.5,12,12),new THREE.MeshPhongMaterial({color:col}));
+    sphere.position.set(pos3d.x, 0.05, pos3d.z);
+    sondagesGroup.add(sphere);
+    // Label
+    const label=createTextSprite(s.name||'S?', col);
+    label.position.set(pos3d.x, 0.3, pos3d.z);
+    label.scale.set(0.7, 0.18, 1);
+    sondagesGroup.add(label);
+    // Stratigraphy colored segments
+    if(s.strati&&s.strati.length>0){
+      s.strati.forEach(layer=>{
+        const from=layer.from||0, to=layer.to||from+1;
+        const layerH=(to-from)*scanScaleFactor;
+        if(layerH<=0)return;
+        const yCenter=depthTo3DY((from+to)/2);
+        const layerGeom=new THREE.CylinderGeometry(tubeR+0.01,tubeR+0.01,layerH,12);
+        const layerCol=colorToThree(layer.color||'#A0522D');
+        const layerMat=new THREE.MeshPhongMaterial({color:layerCol,transparent:true,opacity:0.85});
+        const layerMesh=new THREE.Mesh(layerGeom,layerMat);
+        layerMesh.position.set(pos3d.x, yCenter, pos3d.z);
+        sondagesGroup.add(layerMesh);
+      });
+    }
+  });
+  scan3dScene.add(sondagesGroup);
+  document.getElementById('btn-3d-sondages').classList.add('active');
+}
+
+function hide3DSondages(){
+  if(sondagesGroup&&scan3dScene){scan3dScene.remove(sondagesGroup);sondagesGroup=null;sondage3DObjects=[];}
+  document.getElementById('btn-3d-sondages').classList.remove('active');
+}
+
+// ═══ 3. CLICK SONDAGE → 3D LOG ═══
+
+let sondageLogGroup=null;
+
+function show3DSondageLog(sondageId){
+  if(sondageLogGroup&&scan3dScene){scan3dScene.remove(sondageLogGroup);}
+  sondageLogGroup=new THREE.Group();
+  const g=G();
+  const s=(g.sondages||[]).find(x=>x.id===sondageId);
+  if(!s)return;
+  const sticker=(g.elements||[]).find(e=>e.sondageId===s.id);
+  if(!sticker)return;
+  const pos3d=planPosTo3D(sticker.x, sticker.y);
+  const offsetX=0.4; // offset panel beside tube
+  // Draw readings as colored bars
+  if(s.type==='penetro_dyn'&&s.readings&&s.readings.length>0){
+    const maxVal=Math.max(...s.readings.map(r=>r.value||0),1);
+    s.readings.forEach(r=>{
+      const d=r.depth||0;
+      const val=r.value||0;
+      const barW=(val/maxVal)*0.8;
+      const barH=0.20*scanScaleFactor;
+      const geom=new THREE.BoxGeometry(barW,barH,0.05);
+      const ratio=val/maxVal;
+      const col=new THREE.Color().setHSL(0.33*(1-ratio),0.8,0.5);
+      const mat=new THREE.MeshPhongMaterial({color:col});
+      const bar=new THREE.Mesh(geom,mat);
+      bar.position.set(pos3d.x+offsetX+barW/2, depthTo3DY(d), pos3d.z);
+      sondageLogGroup.add(bar);
+    });
+  } else if(s.type==='pressio'&&s.readings&&s.readings.length>0){
+    const maxPl=Math.max(...s.readings.map(r=>r.pl||0),1);
+    s.readings.forEach(r=>{
+      const d=r.depth||0;
+      const pl=r.pl||0;
+      const barW=(pl/maxPl)*0.8;
+      const barH=0.25*scanScaleFactor;
+      const geom=new THREE.BoxGeometry(barW,barH,0.05);
+      const ratio=pl/maxPl;
+      const col=new THREE.Color().setHSL(0.6*(1-ratio),0.8,0.5);
+      const mat=new THREE.MeshPhongMaterial({color:col});
+      const bar=new THREE.Mesh(geom,mat);
+      bar.position.set(pos3d.x+offsetX+barW/2, depthTo3DY(d), pos3d.z);
+      sondageLogGroup.add(bar);
+    });
+  } else if(s.type==='spt'&&s.readings&&s.readings.length>0){
+    const maxN=Math.max(...s.readings.map(r=>(r.n2||0)+(r.n3||0)),1);
+    s.readings.forEach(r=>{
+      const d=r.depth||0;
+      const nSpt=(r.n2||0)+(r.n3||0);
+      const barW=(nSpt/maxN)*0.8;
+      const barH=0.25*scanScaleFactor;
+      const geom=new THREE.BoxGeometry(barW,barH,0.05);
+      const ratio=nSpt/maxN;
+      const col=new THREE.Color().setHSL(0.0,0.8,0.3+ratio*0.4);
+      const mat=new THREE.MeshPhongMaterial({color:col});
+      const bar=new THREE.Mesh(geom,mat);
+      bar.position.set(pos3d.x+offsetX+barW/2, depthTo3DY(d), pos3d.z);
+      sondageLogGroup.add(bar);
+    });
+  }
+  // Title label
+  const titleLabel=createTextSprite(s.name+' — Log', 0x00BFFF);
+  titleLabel.position.set(pos3d.x+offsetX+0.4, 0.3, pos3d.z);
+  titleLabel.scale.set(0.8,0.2,1);
+  sondageLogGroup.add(titleLabel);
+  scan3dScene.add(sondageLogGroup);
+}
+
+// Hook into 3D click event for sondage tubes
+function onSondage3DClick(event){
+  if(!sondage3DObjects.length)return;
+  const canvas=document.getElementById('scan3d-canvas');
+  const rect=canvas.getBoundingClientRect();
+  const mouse=new THREE.Vector2(
+    ((event.clientX-rect.left)/rect.width)*2-1,
+    -((event.clientY-rect.top)/rect.height)*2+1
+  );
+  const raycaster=new THREE.Raycaster();
+  raycaster.setFromCamera(mouse,scan3dCamera);
+  const intersects=raycaster.intersectObjects(sondage3DObjects);
+  if(intersects.length>0){
+    const obj=intersects[0].object;
+    if(obj.userData&&obj.userData.sondageId){
+      show3DSondageLog(obj.userData.sondageId);
+    }
+  }
+}
+
+// Attach dblclick listener for sondage tube interaction
+setTimeout(()=>{
+  const canvas=document.getElementById('scan3d-canvas');
+  if(canvas)canvas.addEventListener('dblclick',onSondage3DClick);
+},1000);
+
+// ═══ 4. NAPPE D'EAU ═══
+
+window.toggle3DNappe=function(){
+  if(nappeGroup){hide3DNappe();return;}
+  show3DNappe();
+};
+
+function show3DNappe(){
+  if(!scan3dScene)return;
+  if(nappeGroup){scan3dScene.remove(nappeGroup);}
+  nappeGroup=new THREE.Group();
+  const g=G();
+  const waterSondages=(g.sondages||[]).filter(s=>s.waterLevel!=null);
+  if(waterSondages.length===0){alert('Aucun niveau d\'eau enregistré dans les sondages.');return;}
+  const avgWater=waterSondages.reduce((a,s)=>a+s.waterLevel,0)/waterSondages.length;
+  const yWater=depthTo3DY(avgWater);
+  const mScale=g.measureScale||0.01;
+  const extentX=(g.planW||1200)*mScale*scanScaleFactor;
+  const extentZ=(g.planH||800)*mScale*scanScaleFactor;
+  const geom=new THREE.PlaneGeometry(extentX*1.2, extentZ*1.2);
+  const mat=new THREE.MeshPhongMaterial({color:0x2196F3,transparent:true,opacity:0.3,side:THREE.DoubleSide});
+  const plane=new THREE.Mesh(geom,mat);
+  plane.rotation.x=-Math.PI/2;
+  plane.position.y=yWater;
+  nappeGroup.add(plane);
+  // Grid on water surface
+  const gridHelper=new THREE.GridHelper(Math.max(extentX,extentZ)*1.2, 20, 0x1565C0, 0x1565C0);
+  gridHelper.position.y=yWater+0.001;
+  gridHelper.material.transparent=true;
+  gridHelper.material.opacity=0.15;
+  nappeGroup.add(gridHelper);
+  // Label
+  const refAlt=getNivRefAlt();
+  const nappeText=refAlt!=null?`Nappe: ${avgWater.toFixed(1)} m (${(refAlt-avgWater).toFixed(1)} m NGF)`:`Nappe: ${avgWater.toFixed(1)} m`;
+  const label=createTextSprite(nappeText, 0x2196F3);
+  label.position.set(extentX/2+0.2, yWater+0.15, 0);
+  label.scale.set(0.8,0.2,1);
+  nappeGroup.add(label);
+  scan3dScene.add(nappeGroup);
+  document.getElementById('btn-3d-nappe').classList.add('active');
+}
+
+function hide3DNappe(){
+  if(nappeGroup&&scan3dScene){scan3dScene.remove(nappeGroup);nappeGroup=null;}
+  document.getElementById('btn-3d-nappe').classList.remove('active');
+}
+
+// ═══ 5. COUPE GÉOTECHNIQUE INTERACTIVE ═══
+
+let coupePlaneY=0, coupeActive=false;
+
+window.toggle3DCoupe=function(){
+  if(coupeActive){hide3DCoupe();return;}
+  show3DCoupe();
+};
+
+function show3DCoupe(){
+  if(!scan3dScene)return;
+  coupeActive=true;
+  if(coupeGroup){scan3dScene.remove(coupeGroup);}
+  coupeGroup=new THREE.Group();
+  const g=G();const formations=g.modeleFormations||[];
+  const mScale=g.measureScale||0.01;
+  const extentX=(g.planW||1200)*mScale*scanScaleFactor;
+  const maxDepth=formations.length>0?Math.max(...formations.map(f=>f.bottom||5)):5;
+  const extentY=maxDepth*scanScaleFactor+1;
+  // Vertical cutting plane (XY, at Z=0)
+  const geom=new THREE.PlaneGeometry(extentX*1.2, extentY*1.5);
+  const mat=new THREE.MeshBasicMaterial({color:0xFF5722,transparent:true,opacity:0.15,side:THREE.DoubleSide});
+  const plane=new THREE.Mesh(geom,mat);
+  plane.position.set(0, -extentY*0.3, 0);
+  coupeGroup.add(plane);
+  // Outline
+  const edges=new THREE.EdgesGeometry(geom);
+  const lineMat=new THREE.LineBasicMaterial({color:0xFF5722,linewidth:2});
+  const outline=new THREE.LineSegments(edges,lineMat);
+  outline.position.copy(plane.position);
+  coupeGroup.add(outline);
+  // Label
+  const label=createTextSprite('Plan de coupe', 0xFF5722);
+  label.position.set(0, -extentY*0.3+extentY*0.8, 0);
+  label.scale.set(0.8,0.2,1);
+  coupeGroup.add(label);
+  // Draw formation layers on the coupe plane
+  if(formations.length>0){
+    formations.forEach(f=>{
+      const top=f.top!=null?f.top:0;
+      const bot=f.bottom!=null?f.bottom:top+2;
+      const thickness=Math.abs(bot-top);
+      if(thickness<=0)return;
+      const yTop=depthTo3DY(top);
+      const yBot=depthTo3DY(bot);
+      const yCenter=(yTop+yBot)/2;
+      const h=Math.abs(yTop-yBot);
+      const layerGeom=new THREE.PlaneGeometry(extentX*1.1, h);
+      const col=colorToThree(f.color);
+      const layerMat=new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:0.5,side:THREE.DoubleSide});
+      const layerMesh=new THREE.Mesh(layerGeom,layerMat);
+      layerMesh.position.set(0, yCenter, 0.01);
+      coupeGroup.add(layerMesh);
+      // Layer label
+      const lbl=createTextSprite((f.name||'')+' ('+top.toFixed(1)+'-'+bot.toFixed(1)+'m)', col);
+      lbl.position.set(-extentX*0.6-0.1, yCenter, 0);
+      lbl.scale.set(0.7,0.18,1);
+      coupeGroup.add(lbl);
+    });
+  }
+  coupeGroup.position.z=coupePlaneY;
+  scan3dScene.add(coupeGroup);
+  document.getElementById('btn-3d-coupe').classList.add('active');
+  // Add scroll handler to move coupe plane (Shift+scroll)
+  const canvas=document.getElementById('scan3d-canvas');
+  canvas._coupeWheelHandler=function(e){
+    if(!coupeActive||!e.shiftKey)return;
+    e.preventDefault();
+    const delta=(e.deltaY>0?0.2:-0.2);
+    coupePlaneY+=delta;
+    if(coupeGroup)coupeGroup.position.z=coupePlaneY;
+  };
+  canvas.addEventListener('wheel',canvas._coupeWheelHandler,{passive:false});
+}
+
+function hide3DCoupe(){
+  coupeActive=false;
+  if(coupeGroup&&scan3dScene){scan3dScene.remove(coupeGroup);coupeGroup=null;}
+  document.getElementById('btn-3d-coupe').classList.remove('active');
+  const canvas=document.getElementById('scan3d-canvas');
+  if(canvas&&canvas._coupeWheelHandler){
+    canvas.removeEventListener('wheel',canvas._coupeWheelHandler);
+    canvas._coupeWheelHandler=null;
+  }
+}
+
+// ═══ 6. CAPTURE SCREENSHOT POUR RAPPORT ═══
+
+window.captureScan3DToPhotos=function(){
+  if(!scan3dRenderer){alert('Pas de vue 3D active.');return;}
+  scan3dRenderer.render(scan3dScene,scan3dCamera);
+  const dataUrl=scan3dRenderer.domElement.toDataURL('image/png');
+  const name='Vue 3D — '+new Date().toLocaleString('fr-FR');
+  const g=G();
+  if(g.photos)g.photos.push({dataUrl:dataUrl,timestamp:new Date().toLocaleString('fr-FR'),name:name,checked:true});
+  if(g.renderPhotos)g.renderPhotos();
+  alert('Capture 3D ajoutée aux photos du projet.');
+};
+
 </script>
 <script src="pwa-register.js"></script>
 </body>
