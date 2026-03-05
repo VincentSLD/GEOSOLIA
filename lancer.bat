@@ -1,10 +1,10 @@
 @echo off
-title GeoTer - Serveur local
+title GeoSolia - Serveur local
 cd /d "%~dp0"
 
 echo.
 echo  ========================================
-echo    GeoTer - Serveur local
+echo    GeoSolia - Serveur local
 echo  ========================================
 echo.
 echo  Ouverture dans le navigateur...

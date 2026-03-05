@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>GéoTer'</title>
+<title>GéoSolia'</title>
 <!-- PWA Meta -->
 <meta name="theme-color" content="#F2B705">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="GéoTer'">
+<meta name="apple-mobile-web-app-title" content="GéoSolia'">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -341,9 +341,9 @@
   .sondage-type-header>span{font-weight:800;font-size:13px;color:var(--yellow);display:flex;align-items:center;gap:6px}
   #sondage-type-inner{padding:14px;overflow-y:auto;flex:1}
   #sondage-type-inner h2{display:none}
-  .sondage-type-btn{width:100%;padding:10px 12px;border:2px solid var(--gray-200);border-radius:var(--radius);background:var(--white);font-size:11px;font-weight:800;font-family:inherit;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px;margin-bottom:6px;color:var(--black)}
+  .sondage-type-btn{width:100%;padding:5px 10px;border:2px solid var(--gray-200);border-radius:var(--radius);background:var(--white);font-size:11px;font-weight:800;font-family:inherit;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px;margin-bottom:3px;color:var(--black)}
   .sondage-type-btn:hover,.sondage-type-btn:active{border-color:var(--yellow);background:var(--yellow-pale)}
-  .sondage-type-row{display:flex;align-items:stretch;gap:6px;margin-bottom:8px}
+  .sondage-type-row{display:flex;align-items:stretch;gap:4px;margin-bottom:3px}
   .sondage-type-row .sondage-type-btn{margin-bottom:0}
   .sondage-compare-btn{width:46px;flex-shrink:0;border:2px solid var(--gray-200);border-radius:var(--radius);background:var(--white);font-size:18px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center}
   .sondage-compare-btn:hover{border-color:var(--yellow);background:var(--yellow-pale)}
@@ -438,6 +438,30 @@
   .pdf-page-num{text-align:center;padding:4px 0;font-size:11px;font-weight:800;color:var(--gray-500);background:var(--gray-50)}
   .pdf-page-thumb:hover .pdf-page-num,.pdf-page-thumb.selected .pdf-page-num{color:var(--black);background:var(--yellow-pale)}
   #pdf-page-loading{text-align:center;padding:30px;color:var(--gray-500);font-weight:700;font-size:13px}
+
+  /* --- Plan choice popup --- */
+  #plan-choice-modal{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:960;backdrop-filter:blur(4px)}
+  #plan-choice-modal.open{display:flex}
+  #plan-choice-inner{background:var(--white);border-radius:var(--radius-lg);padding:24px;width:340px;max-width:90vw;box-shadow:var(--shadow-lg);border-top:4px solid var(--yellow);text-align:center}
+  #plan-choice-inner h3{font-size:16px;font-weight:900;color:var(--black);margin:0 0 16px}
+  .plan-choice-btns{display:flex;flex-direction:column;gap:10px}
+  .plan-choice-btn{padding:14px 18px;border:2px solid var(--gray-200);border-radius:var(--radius);background:var(--white);font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:10px;text-align:left}
+  .plan-choice-btn:hover{border-color:var(--yellow);background:var(--yellow-pale);transform:translateY(-1px)}
+  .plan-choice-btn .pci{font-size:20px;flex-shrink:0}
+  .plan-choice-btn span{font-size:10px;color:var(--gray-500);font-weight:600;display:block;margin-top:2px}
+  .plan-choice-cancel{margin-top:10px;padding:8px 18px;border:none;border-radius:var(--radius);background:var(--gray-100);color:var(--gray-500);font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;transition:all .2s}
+  .plan-choice-cancel:hover{background:var(--gray-200);color:var(--black)}
+  /* --- Scale confirm popup --- */
+  #scale-confirm-modal{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:970;backdrop-filter:blur(4px)}
+  #scale-confirm-modal.open{display:flex}
+  #scale-confirm-inner{background:var(--white);border-radius:var(--radius-lg);padding:24px;width:360px;max-width:90vw;box-shadow:var(--shadow-lg);border-top:4px solid var(--yellow);text-align:center}
+  #scale-confirm-inner p{font-size:14px;font-weight:700;color:var(--black);margin:0 0 18px;line-height:1.5}
+  .scale-confirm-btns{display:flex;gap:10px;justify-content:center}
+  .scale-confirm-btns button{padding:10px 28px;border:none;border-radius:var(--radius);font-size:13px;font-weight:800;font-family:inherit;cursor:pointer;transition:all .2s}
+  .btn-scale-yes{background:var(--yellow);color:var(--black);box-shadow:0 3px 12px var(--yellow-glow)}
+  .btn-scale-yes:hover{background:var(--yellow-light);transform:translateY(-1px)}
+  .btn-scale-no{background:var(--gray-100);color:var(--gray-500)}
+  .btn-scale-no:hover{background:var(--gray-200);color:var(--black)}
 
   #crop-modal{position:fixed;inset:0;background:rgba(0,0,0,0.9);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:700;padding:16px;backdrop-filter:blur(4px)}
   #crop-modal.open{display:flex}
@@ -535,6 +559,20 @@
   #btn-study-locate:disabled{opacity:0.4;cursor:wait}
   #new-study-map .leaflet-control-zoom a{background:var(--white);color:var(--black);border-color:var(--gray-200);font-weight:700}
   #new-study-map .leaflet-control-attribution{font-size:8px;background:rgba(255,255,255,0.7)}
+  /* --- Fullscreen map mode --- */
+  #btn-study-fullscreen{position:absolute;top:8px;right:8px;z-index:600;width:32px;height:32px;border:none;border-radius:6px;background:rgba(255,255,255,0.92);color:var(--black);font-size:16px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.25);display:flex;align-items:center;justify-content:center;transition:all .2s;line-height:1}
+  #btn-study-fullscreen:hover{background:var(--yellow);transform:scale(1.08)}
+  #new-study-modal.fullscreen-map #new-study-inner{width:100vw;max-width:100vw;height:100vh;max-height:100vh;border-radius:0;padding:0;display:flex;flex-direction:column;overflow:hidden}
+  #new-study-modal.fullscreen-map #new-study-map{width:100%!important;height:100%!important;flex:1;border-radius:0;border:none;position:relative}
+  #new-study-modal.fullscreen-map #new-study-map-section{flex:1;display:flex;flex-direction:column;margin-top:0!important;position:relative}
+  #new-study-modal.fullscreen-map #new-study-map+div{position:absolute;bottom:12px;right:12px;z-index:500;background:rgba(255,255,255,0.9);border-radius:var(--radius);padding:4px 6px;box-shadow:0 2px 8px rgba(0,0,0,0.2);display:flex;gap:6px;margin-top:0}
+  #new-study-modal.fullscreen-map .new-study-form-overlay{position:absolute;top:12px;left:12px;z-index:500;background:rgba(255,255,255,0.93);border-radius:var(--radius-lg);padding:16px 18px;box-shadow:0 4px 20px rgba(0,0,0,0.25);max-width:380px;width:90vw;max-height:calc(100vh - 80px);overflow-y:auto;backdrop-filter:blur(6px);border:2px solid var(--yellow)}
+  #new-study-modal.fullscreen-map .new-study-form-overlay label{font-size:11px;font-weight:800;color:var(--black);display:block;margin-bottom:4px}
+  #new-study-modal.fullscreen-map .new-study-form-overlay input[type="text"]{font-size:12px;padding:7px 10px}
+  #new-study-modal.fullscreen-map .new-study-form-overlay h2{font-size:15px;margin:0 0 4px}
+  #new-study-modal.fullscreen-map .new-study-form-overlay p{margin:0 0 6px}
+  #new-study-modal.fullscreen-map #new-study-coords{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);z-index:500;background:rgba(255,255,255,0.85);padding:3px 10px;border-radius:4px;font-size:10px;font-weight:600;color:var(--gray-500)}
+  #new-study-modal:not(.fullscreen-map) .new-study-form-overlay{display:contents}
   /* ═══ PHOTO NAME + CROP MODAL ═══ */
   #photo-name-modal{position:fixed;inset:0;background:rgba(0,0,0,0.85);display:none;align-items:center;justify-content:center;z-index:960;backdrop-filter:blur(4px);flex-direction:column;gap:14px;padding:16px}
   #photo-name-modal.open{display:flex}
@@ -743,7 +781,7 @@
 <div id="app">
   <div id="header">
     <div class="logo">
-      <div class="logo-text">Géo<span class="highlight">Ter'</span><span style="font-size:0.35em;font-weight:400;color:rgba(255,255,255,0.65);font-family:'Space Grotesk',sans-serif;letter-spacing:0.05em;margin-left:0.6em;vertical-align:baseline">by GPH</span></div>
+      <div class="logo-text">Géo<span class="highlight">Solia'</span><span style="font-size:0.35em;font-weight:400;color:rgba(255,255,255,0.65);font-family:'Space Grotesk',sans-serif;letter-spacing:0.05em;margin-left:0.6em;vertical-align:baseline">by GPH</span></div>
       <span id="net-dot" class="online"></span>
     </div>
     <div class="actions">
@@ -774,7 +812,7 @@
     <button class="tool-btn" onclick="exportProject()"><span class="icon">💾</span><span class="label">Enregistrer</span></button>
     <button class="tool-btn" onclick="exportProjectAs()"><span class="icon">📥</span><span class="label">Enreg. sous...</span></button>
     <button class="tool-btn" onclick="document.getElementById('projectInput').click()"><span class="icon">📂</span><span class="label">Ouvrir</span></button>
-    <input type="file" id="projectInput" accept=".geoter" style="display:none" onchange="importProject(event)">
+    <input type="file" id="projectInput" accept=".geosolia" style="display:none" onchange="importProject(event)">
     <button class="tool-btn" onclick="closeProject()"><span class="icon" style="font-style:normal;font-size:18px">✕</span><span class="label">Fermer</span></button>
     <div style="flex:1"></div>
     <div class="tool-sep"></div>
@@ -904,7 +942,7 @@
     <div id="eraser-cursor"></div>
     <div id="mrpropre-cursor"></div>
     <div id="empty-state">
-      <div id="welcome-screen"><div class="big-icon">📐</div><div class="welcome-title">Géo<span class="highlight">Ter'</span></div><p>Application de relevé terrain</p><div class="welcome-btns"><button class="btn-load-center" onclick="openNewStudyModal()">📝 Nouveau Projet</button><button class="btn-load-center btn-open-project" onclick="document.getElementById('projectInput').click()">📂 Ouvrir un projet</button></div><button onclick="openIDBRecovery()" style="background:none;border:none;color:var(--gray-500);font-size:11px;font-weight:700;cursor:pointer;margin-top:10px;text-decoration:underline">Sauvegardes locales</button></div>
+      <div id="welcome-screen"><div class="big-icon">📐</div><div class="welcome-title">Géo<span class="highlight">Solia'</span></div><p>Application de relevé terrain</p><div class="welcome-btns"><button class="btn-load-center" onclick="openNewStudyModal()">📝 Nouveau Projet</button><button class="btn-load-center btn-open-project" onclick="document.getElementById('projectInput').click()">📂 Ouvrir un projet</button></div><button onclick="openIDBRecovery()" style="background:none;border:none;color:var(--gray-500);font-size:11px;font-weight:700;cursor:pointer;margin-top:10px;text-decoration:underline">Sauvegardes locales</button></div>
       <div id="load-plan-screen" style="display:none"><div class="big-icon">📐</div><p>Chargez un plan PDF ou une image<br>pour commencer à annoter</p><button class="btn-load-center" onclick="openPlanPicker()">📄 Charger un plan</button><div class="hint">PDF, JPG, PNG</div></div>
     </div>
     <button id="btn-recadrer" onclick="resetView()" title="Recadrer">🎯</button>
@@ -946,6 +984,10 @@
       <div class="sondage-type-row"><button class="sondage-type-btn" onclick="newSondage('tariere')" style="flex:1;margin-bottom:0"><span class="sondage-type-icon">⚫</span> Tarière</button><button class="sondage-compare-btn" onclick="openCompareModal('tariere')" title="Comparer">📊</button></div>
       <div class="sondage-type-row"><button class="sondage-type-btn" onclick="newSondage('pelle_meca')" style="flex:1;margin-bottom:0"><span class="sondage-type-icon">🟡</span> Pelle Mécanique</button><button class="sondage-compare-btn" onclick="openCompareModal('pelle_meca')" title="Comparer">📊</button></div>
       <button class="sondage-type-btn" onclick="newSondage('fondation')"><span class="sondage-type-icon">🏗️</span> Reconnaissance de Fondation</button>
+      <div class="sondage-type-row"><button class="sondage-type-btn" onclick="newSondage('piezometre')" style="flex:1;margin-bottom:0"><span class="sondage-type-icon">💧</span> Piézomètre</button><button class="sondage-compare-btn" onclick="openCompareModal('piezometre')" title="Comparer">📊</button></div>
+      <div class="sondage-type-row"><button class="sondage-type-btn" onclick="newSondage('infiltro')" style="flex:1;margin-bottom:0"><span class="sondage-type-icon">💦</span> Infiltrométrie</button><button class="sondage-compare-btn" onclick="openCompareModal('infiltro')" title="Comparer">📊</button></div>
+      <div class="sondage-type-row"><button class="sondage-type-btn" onclick="newSondage('forage_destr')" style="flex:1;margin-bottom:0"><span class="sondage-type-icon">🔶</span> Forage Destructif</button><button class="sondage-compare-btn" onclick="openCompareModal('forage_destr')" title="Comparer">📊</button></div>
+      <button class="sondage-type-btn" onclick="newSondage('essai_labo')"><span class="sondage-type-icon">🧪</span> Essais Laboratoire</button>
       <div id="sondage-existing-list"></div>
     </div>
   </div>
@@ -970,34 +1012,38 @@
   </div>
   <div id="new-study-modal">
     <div id="new-study-inner">
-      <h2>Nouveau Projet</h2>
-      <p></p>
-      <label for="new-study-ref">Numéro de Dossier</label>
-      <input type="text" id="new-study-ref" placeholder="Ex : 2607011" spellcheck="false" autocomplete="off" onkeydown="if(event.key==='Enter')createNewStudy()">
-      <label for="new-study-name" style="margin-top:10px;font-size:11px;font-weight:800;color:var(--black);display:block;margin-bottom:5px">Nom du Projet</label>
-      <input type="text" id="new-study-name" placeholder="Ex : MAISON DUPONT" spellcheck="false" autocomplete="off" style="width:100%;padding:10px 12px;border:2px solid var(--gray-200);border-radius:var(--radius);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;transition:border-color .2s" onfocus="this.style.borderColor='var(--yellow)'" onblur="this.style.borderColor=''">
-      <label for="new-study-addr" style="margin-top:14px;font-size:11px;font-weight:800;color:var(--black);display:block;margin-bottom:5px">📍 Adresse du site</label>
-      <div style="position:relative">
-        <input type="text" id="new-study-addr" placeholder="Tapez l'adresse du chantier..." oninput="newStudyAutocomplete(this.value)" autocomplete="off" style="width:100%;padding:10px 12px;border:2px solid var(--gray-200);border-radius:var(--radius);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;transition:border-color .2s" onfocus="this.style.borderColor='var(--yellow)'" onblur="this.style.borderColor=''">
-        <div id="new-study-suggest" style="position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--gray-200);border-radius:6px;max-height:140px;overflow-y:auto;z-index:999;display:none;box-shadow:0 4px 12px rgba(0,0,0,0.15)"></div>
-      </div>
-      <div style="display:flex;gap:8px;margin-top:10px">
-        <div style="flex:0 0 120px">
-          <label for="new-study-cp" style="font-size:11px;font-weight:800;color:var(--black);display:block;margin-bottom:5px">Code postal</label>
-          <input type="text" id="new-study-cp" placeholder="Ex : 85000" spellcheck="false" autocomplete="off" style="width:100%;padding:10px 12px;border:2px solid var(--gray-200);border-radius:var(--radius);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;transition:border-color .2s" onfocus="this.style.borderColor='var(--yellow)'" onblur="this.style.borderColor=''">
+      <div class="new-study-form-overlay">
+        <h2>Nouveau Projet</h2>
+        <p></p>
+        <label for="new-study-ref">Numéro de Dossier</label>
+        <input type="text" id="new-study-ref" placeholder="Ex : 2607011" spellcheck="false" autocomplete="off" onkeydown="if(event.key==='Enter')createNewStudy()">
+        <label for="new-study-name" style="margin-top:10px;font-size:11px;font-weight:800;color:var(--black);display:block;margin-bottom:5px">Nom du Projet</label>
+        <input type="text" id="new-study-name" placeholder="Ex : MAISON DUPONT" spellcheck="false" autocomplete="off" style="width:100%;padding:10px 12px;border:2px solid var(--gray-200);border-radius:var(--radius);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;transition:border-color .2s" onfocus="this.style.borderColor='var(--yellow)'" onblur="this.style.borderColor=''">
+        <label for="new-study-addr" style="margin-top:14px;font-size:11px;font-weight:800;color:var(--black);display:block;margin-bottom:5px">📍 Adresse du site</label>
+        <div style="position:relative">
+          <input type="text" id="new-study-addr" placeholder="Tapez l'adresse du chantier..." oninput="newStudyAutocomplete(this.value)" autocomplete="off" style="width:100%;padding:10px 12px;border:2px solid var(--gray-200);border-radius:var(--radius);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;transition:border-color .2s" onfocus="this.style.borderColor='var(--yellow)'" onblur="this.style.borderColor=''">
+          <div id="new-study-suggest" style="position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--gray-200);border-radius:6px;max-height:140px;overflow-y:auto;z-index:999;display:none;box-shadow:0 4px 12px rgba(0,0,0,0.15)"></div>
         </div>
-        <div style="flex:1">
-          <label for="new-study-ville" style="font-size:11px;font-weight:800;color:var(--black);display:block;margin-bottom:5px">Ville</label>
-          <input type="text" id="new-study-ville" placeholder="Ex : LA ROCHE SUR YON" spellcheck="false" autocomplete="off" style="width:100%;padding:10px 12px;border:2px solid var(--gray-200);border-radius:var(--radius);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;transition:border-color .2s" onfocus="this.style.borderColor='var(--yellow)'" onblur="this.style.borderColor=''">
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <div style="flex:0 0 120px">
+            <label for="new-study-cp" style="font-size:11px;font-weight:800;color:var(--black);display:block;margin-bottom:5px">Code postal</label>
+            <input type="text" id="new-study-cp" placeholder="Ex : 85000" spellcheck="false" autocomplete="off" style="width:100%;padding:10px 12px;border:2px solid var(--gray-200);border-radius:var(--radius);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;transition:border-color .2s" onfocus="this.style.borderColor='var(--yellow)'" onblur="this.style.borderColor=''">
+          </div>
+          <div style="flex:1">
+            <label for="new-study-ville" style="font-size:11px;font-weight:800;color:var(--black);display:block;margin-bottom:5px">Ville</label>
+            <input type="text" id="new-study-ville" placeholder="Ex : LA ROCHE SUR YON" spellcheck="false" autocomplete="off" style="width:100%;padding:10px 12px;border:2px solid var(--gray-200);border-radius:var(--radius);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;transition:border-color .2s" onfocus="this.style.borderColor='var(--yellow)'" onblur="this.style.borderColor=''">
+          </div>
         </div>
       </div>
       <div id="new-study-map-section" style="margin-top:12px">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+        <div id="new-study-map" style="width:100%;height:200px;border-radius:var(--radius);border:2px solid var(--gray-200);overflow:hidden;cursor:crosshair;position:relative">
+          <button type="button" id="btn-study-fullscreen" onclick="toggleStudyMapFullscreen()" title="Plein écran">⛶</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
           <button type="button" id="btn-study-locate" onclick="newStudyLocateMe()" title="Me localiser (GPS)">🎯</button>
           <button type="button" id="btn-study-layer" onclick="newStudyToggleLayer()">🛰 Satellite</button>
           <button type="button" id="btn-study-cadastre" onclick="newStudyToggleCadastre()">📐 Cadastre</button>
         </div>
-        <div id="new-study-map" style="width:100%;height:200px;border-radius:var(--radius);border:2px solid var(--gray-200);overflow:hidden;cursor:crosshair"></div>
         <div id="new-study-coords" style="font-size:10px;color:var(--gray-500);margin-top:4px;font-weight:600"></div>
       </div>
       <input type="hidden" id="new-study-lat">
@@ -1053,8 +1099,27 @@
   </div>
   <div id="snapshot-modal" onclick="closeSnapshot()">
     <div id="snapshot-inner" onclick="event.stopPropagation()">
-      <div id="snapshot-header"><span>📸 Aperçu du plan de sondage seul</span><div style="display:flex;gap:8px;align-items:center"><a id="snapshot-download" class="btn-download" download="geoter-plan-annote.png">💾 Télécharger</a><button class="catalog-close" onclick="closeSnapshot()">✕</button></div></div>
+      <div id="snapshot-header"><span>📸 Aperçu du plan de sondage seul</span><div style="display:flex;gap:8px;align-items:center"><a id="snapshot-download" class="btn-download" download="geosolia-plan-annote.png">💾 Télécharger</a><button class="catalog-close" onclick="closeSnapshot()">✕</button></div></div>
       <img id="snapshot-img" alt="Snapshot">
+    </div>
+  </div>
+  <div id="scale-confirm-modal">
+    <div id="scale-confirm-inner">
+      <p>Confirmez-vous que ce plan est<br>à la même échelle que le premier ?</p>
+      <div class="scale-confirm-btns">
+        <button class="btn-scale-no" id="btn-scale-no">Non</button>
+        <button class="btn-scale-yes" id="btn-scale-yes">Oui</button>
+      </div>
+    </div>
+  </div>
+  <div id="plan-choice-modal" onclick="closePlanChoiceModal()">
+    <div id="plan-choice-inner" onclick="event.stopPropagation()">
+      <h3>Fond de plan</h3>
+      <div class="plan-choice-btns">
+        <button class="plan-choice-btn" onclick="closePlanChoiceModal();changePlanPicker()"><div class="pci">🔄</div><div><strong>Changer de fond de plan</strong><span>Remplacer le plan actuel par un nouveau</span></div></button>
+        <button class="plan-choice-btn" onclick="closePlanChoiceModal();addPlanToRight()"><div class="pci">➕</div><div><strong>Ajouter un fond de plan</strong><span>Ajouter un nouveau plan à droite du plan actuel</span></div></button>
+      </div>
+      <button class="plan-choice-cancel" onclick="closePlanChoiceModal()">Annuler</button>
     </div>
   </div>
   <div id="pdf-page-modal" onclick="closePdfPageModal()">
@@ -1158,7 +1223,7 @@
         <button class="btn-scan3d btn-scan3d-clear" onclick="clearMeasurements()">🗑️ Tout effacer</button>
         <button class="btn-scan3d btn-scan3d-reset" onclick="exportScan3DProject()">💾 Exporter</button>
         <button class="btn-scan3d btn-scan3d-import" onclick="document.getElementById('scan3dProjectInput').click()">📂 Charger projet</button>
-        <input type="file" id="scan3dProjectInput" accept=".geoter3d" style="display:none" onchange="importScan3DProject(event)">
+        <input type="file" id="scan3dProjectInput" accept=".geosolia3d" style="display:none" onchange="importScan3DProject(event)">
         <button class="btn-scan3d btn-scan3d-reset" onclick="captureScan3D()">📸 Capture</button>
         <button class="btn-scan3d btn-scan3d-reset" onclick="resetScan3DView()">🔄 Recentrer</button>
         <button class="btn-scan3d btn-scan3d-close" onclick="closeScan3D()">✕</button>
@@ -1319,14 +1384,14 @@ function generateShapeSVG(type,w,h,color,filled,opts){
 }
 
 // ═══ INDEXEDDB — SAUVEGARDE LOCALE & FILE D'ATTENTE HORS-LIGNE ═══
-const GEOTER_DB_NAME='geoter-db';
-const GEOTER_DB_VERSION=1;
-let geoterDB=null;
+const GEOSOLIA_DB_NAME='geosolia-db';
+const GEOSOLIA_DB_VERSION=1;
+let geosoliaDB=null;
 
 function openGeoterDB(){
   return new Promise((resolve,reject)=>{
-    if(geoterDB){resolve(geoterDB);return;}
-    const req=indexedDB.open(GEOTER_DB_NAME,GEOTER_DB_VERSION);
+    if(geosoliaDB){resolve(geosoliaDB);return;}
+    const req=indexedDB.open(GEOSOLIA_DB_NAME,GEOSOLIA_DB_VERSION);
     req.onupgradeneeded=(e)=>{
       const db=e.target.result;
       if(!db.objectStoreNames.contains('projects')){
@@ -1340,7 +1405,7 @@ function openGeoterDB(){
         qStore.createIndex('type','type',{unique:false});
       }
     };
-    req.onsuccess=(e)=>{geoterDB=e.target.result;resolve(geoterDB);};
+    req.onsuccess=(e)=>{geosoliaDB=e.target.result;resolve(geosoliaDB);};
     req.onerror=(e)=>{console.warn('IndexedDB open failed:',e);reject(e);};
   });
 }
@@ -1823,7 +1888,24 @@ function closeNotesCatalog(){document.getElementById('notes-catalog-overlay').cl
 
 let pendingPdf=null;
 async function openPlanPicker(){
-  if(planImgSrc&&!confirm('Voulez-vous changer de fond de plan ?'))return;
+  if(planImgSrc){
+    document.getElementById('plan-choice-modal').classList.add('open');
+    return;
+  }
+  await pickAndLoadPlan();
+}
+function closePlanChoiceModal(){document.getElementById('plan-choice-modal').classList.remove('open');}
+function showScaleConfirm(onYes,onNo){
+  const modal=document.getElementById('scale-confirm-modal');
+  const btnYes=document.getElementById('btn-scale-yes');
+  const btnNo=document.getElementById('btn-scale-no');
+  modal.classList.add('open');
+  function cleanup(){modal.classList.remove('open');btnYes.onclick=null;btnNo.onclick=null;}
+  btnYes.onclick=()=>{cleanup();onYes();};
+  btnNo.onclick=()=>{cleanup();onNo();};
+}
+async function changePlanPicker(){await pickAndLoadPlan();}
+async function pickAndLoadPlan(){
   if(window.showOpenFilePicker){
     try{
       const opts={types:[{description:'Plan (PDF, Image)',accept:{'application/pdf':['.pdf'],'image/*':['.jpg','.jpeg','.png','.bmp','.webp']}}],multiple:false};
@@ -1836,6 +1918,55 @@ async function openPlanPicker(){
   }else{
     document.getElementById('fileInput').click();
   }
+}
+// --- Ajout de plan à droite avec rognage ---
+let addRightBackup=null; // {imgSrc, w, h} sauvegarde du plan existant pendant le crop
+async function addPlanToRight(){
+  let newFile=null;
+  if(window.showOpenFilePicker){
+    try{
+      const opts={types:[{description:'Plan (PDF, Image)',accept:{'application/pdf':['.pdf'],'image/*':['.jpg','.jpeg','.png','.bmp','.webp']}}],multiple:false};
+      if(savedFileHandle) opts.startIn=savedFileHandle;
+      else opts.startIn='desktop';
+      const [handle]=await window.showOpenFilePicker(opts);
+      newFile=await handle.getFile();
+    }catch(e){if(e.name!=='AbortError')console.error(e);return;}
+  }else{
+    newFile=await new Promise(resolve=>{
+      const inp=document.createElement('input');inp.type='file';inp.accept='.pdf,image/*';
+      inp.onchange=()=>resolve(inp.files[0]||null);inp.click();
+    });
+  }
+  if(!newFile)return;
+  // Sauvegarder le plan actuel
+  addRightBackup={imgSrc:planImgSrc,w:planW,h:planH};
+  // Charger le nouveau fichier comme un plan normal (pour ouvrir le crop)
+  await loadPlanFromFile(newFile);
+}
+function mergeAddRightPlan(){
+  // Appelé depuis applyCrop quand addRightBackup est actif
+  const backup=addRightBackup;
+  addRightBackup=null;
+  // planImgSrc/planW/planH contiennent maintenant le nouveau plan rogné
+  const croppedSrc=planImgSrc,croppedW=planW,croppedH=planH;
+  const oldImg=new Image();
+  const newImg=new Image();
+  let loaded=0;
+  const onBothLoaded=()=>{
+    if(++loaded<2)return;
+    const mergedH=Math.max(backup.h,croppedH);
+    const mergedW=backup.w+croppedW;
+    const mc=document.createElement('canvas');mc.width=mergedW;mc.height=mergedH;
+    const mctx=mc.getContext('2d');
+    mctx.fillStyle='#FFFFFF';mctx.fillRect(0,0,mergedW,mergedH);
+    mctx.drawImage(oldImg,0,0,backup.w,backup.h);
+    mctx.drawImage(newImg,backup.w,0,croppedW,croppedH);
+    planImgSrc=mc.toDataURL('image/png');planW=mergedW;planH=mergedH;
+    $planImg.src=planImgSrc;$planImg.style.display='block';$empty.style.display='none';
+    resetView();
+  };
+  oldImg.onload=onBothLoaded;oldImg.src=backup.imgSrc;
+  newImg.onload=onBothLoaded;newImg.src=croppedSrc;
 }
 
 async function loadPlan(e){
@@ -2899,6 +3030,21 @@ function newStudyToggleLayer(){
   if(studyCadastreVisible&&studyCadastreLayer)studyCadastreLayer.bringToFront();
 }
 
+function toggleStudyMapFullscreen(){
+  const modal=document.getElementById('new-study-modal');
+  const btn=document.getElementById('btn-study-fullscreen');
+  const isFs=modal.classList.toggle('fullscreen-map');
+  btn.textContent=isFs?'✕':'⛶';
+  btn.title=isFs?'Quitter le plein écran':'Plein écran';
+  // Move form overlay inside map-section when fullscreen
+  const overlay=document.querySelector('.new-study-form-overlay');
+  const mapSection=document.getElementById('new-study-map-section');
+  const inner=document.getElementById('new-study-inner');
+  if(isFs){mapSection.appendChild(overlay);}
+  else{inner.insertBefore(overlay,mapSection);}
+  setTimeout(()=>{if(studyMap)studyMap.invalidateSize();},200);
+}
+
 function newStudyToggleCadastre(){
   if(!studyMap||!studyCadastreLayer)return;
   const btn=document.getElementById('btn-study-cadastre');
@@ -3283,7 +3429,7 @@ function clearIAChat(){
 
 function buildSondageContext(){
   if(sondages.length===0)return '';
-  const typeNames={penetro_dyn:'Pénétromètre dynamique',penetro_stat:'Pénétromètre statique',tariere:'Sondage à la tarière',pelle_meca:'Sondage pelle mécanique',fondation:'Reconnaissance de fondation'};
+  const typeNames={penetro_dyn:'Pénétromètre dynamique',penetro_stat:'Pénétromètre statique',tariere:'Sondage à la tarière',pelle_meca:'Sondage pelle mécanique',fondation:'Reconnaissance de fondation',piezometre:'Piézomètre',infiltro:'Infiltrométrie',forage_destr:'Forage destructif',essai_labo:'Essais laboratoire'};
   const soilNames=Object.fromEntries(Object.entries(SOIL_TYPES).map(([k,v])=>[k,v.label]));
   const fondTypeNames={semelle_filante:'Semelle filante',semelle_isolee:'Semelle isolée',radier:'Radier',puits:'Puits',pieux:'Pieux',micropieux:'Micropieux',autre:'Autre'};
   const fondStateNames={bon:'Bon état',moyen:'État moyen',degrade:'Dégradé',tres_degrade:'Très dégradé'};
@@ -3349,6 +3495,62 @@ function buildSondageContext(){
       if(d.dimensions) ctx+="    Dimensions : "+d.dimensions+"\n";
       if(d.state) ctx+="    État : "+(fondStateNames[d.state]||d.state)+"\n";
       if(d.description) ctx+="    Description : "+d.description+"\n";
+    }
+    // --- Piézomètre ---
+    if(s.type==='piezometre'&&s.data){
+      const d=s.data;
+      ctx+="  Piézomètre :\n";
+      if(d.installDepth) ctx+="    Profondeur installation : "+d.installDepth+" m\n";
+      if(d.tubeType) ctx+="    Type : "+d.tubeType+"\n";
+      if(d.crepineFrom||d.crepineTo) ctx+="    Crépine : "+d.crepineFrom+" à "+d.crepineTo+" m\n";
+      if(d.readings&&d.readings.length>0){
+        ctx+="    Relevés piézométriques :\n";
+        d.readings.forEach(r=>{ctx+="      "+(r.date||'?')+" : "+(r.level!=null?r.level+' m/TN':'?')+(r.remark?' — '+r.remark:'')+"\n";});
+      }
+    }
+    // --- Infiltrométrie ---
+    if(s.type==='infiltro'&&s.data){
+      const d=s.data;
+      ctx+="  Infiltrométrie :\n";
+      if(d.testDepth) ctx+="    Profondeur : "+d.testDepth+" m\n";
+      if(d.boreDiameter) ctx+="    Diamètre forage : "+d.boreDiameter+" mm\n";
+      if(d.permeability!=null) ctx+="    Perméabilité K : "+d.permeability.toExponential(2)+" m/s\n";
+      if(d.readings&&d.readings.length>0){
+        ctx+="    Mesures (temps → volume, hauteur) :\n";
+        d.readings.forEach(r=>{ctx+="      "+(r.time!=null?r.time+' min':'?')+" : "+(r.volume!=null?r.volume+' L':'?')+" / "+(r.height!=null?r.height+' cm':'?')+"\n";});
+      }
+    }
+    // --- Forage destructif ---
+    if(s.type==='forage_destr'&&s.data){
+      const d=s.data;
+      if(d.layers&&d.layers.length>0){
+        ctx+="  Coupe géologique (forage destructif) :\n";
+        d.layers.forEach(l=>{
+          const natureName=soilNames[l.nature]||l.nature||'';
+          ctx+="    "+l.from.toFixed(2)+" → "+l.to.toFixed(2)+" m : "+natureName;
+          if(l.description) ctx+=" — "+l.description;
+          ctx+="\n";
+        });
+      }
+      if(d.speeds&&d.speeds.length>0){
+        ctx+="  Vitesses d'avancement :\n";
+        d.speeds.forEach(sp=>{ctx+="    "+sp.from+" → "+sp.to+" m : "+(sp.speed||'?')+" m/h\n";});
+      }
+    }
+    // --- Essais laboratoire ---
+    if(s.type==='essai_labo'&&s.data){
+      const d=s.data;
+      ctx+="  Essais laboratoire :\n";
+      if(d.sourceSondage) ctx+="    Sondage d'origine : "+d.sourceSondage+"\n";
+      if(d.sampleDepth) ctx+="    Profondeur prélèvement : "+d.sampleDepth+" m\n";
+      if(d.essais&&d.essais.length>0){
+        d.essais.forEach(e=>{
+          const etype=ESSAI_LABO_TYPES.find(t=>t.v===e.type);
+          if(!etype)return;
+          const vals=etype.fields.map(f=>f.l+': '+(e.values[f.k]!=null?e.values[f.k]:'—')).join(', ');
+          ctx+="    "+etype.l+" : "+vals+"\n";
+        });
+      }
     }
     // --- Notes / observations ---
     if(s.notes&&s.notes.trim()) ctx+="  Observations : "+s.notes.trim()+"\n";
@@ -3619,7 +3821,18 @@ function openNewStudyModal(){
   },150);
 }
 function closeNewStudyModal(){
-  document.getElementById('new-study-modal').classList.remove('open');
+  const modal=document.getElementById('new-study-modal');
+  // Quitter le plein écran si actif
+  if(modal.classList.contains('fullscreen-map')){
+    modal.classList.remove('fullscreen-map');
+    const overlay=document.querySelector('.new-study-form-overlay');
+    const inner=document.getElementById('new-study-inner');
+    const mapSection=document.getElementById('new-study-map-section');
+    inner.insertBefore(overlay,mapSection);
+    const btn=document.getElementById('btn-study-fullscreen');
+    if(btn){btn.textContent='⛶';btn.title='Plein écran';}
+  }
+  modal.classList.remove('open');
   // Détruire la carte (Leaflet ne supporte pas bien display:none)
   if(studyMap){studyMap.remove();studyMap=null;studyMarker=null;studyOsmLayer=null;studySatLayer=null;studyCadastreLayer=null;studyCadastreVisible=false;studyCurrentLayer='osm';}
   // Remettre le titre original si on était en mode édition
@@ -3665,10 +3878,10 @@ async function createNewStudy(){
   projectInsee=document.getElementById('new-study-insee').value||null;
   projectCp=document.getElementById('new-study-cp').value.trim();
   projectVille=document.getElementById('new-study-ville').value.trim();
-  const fileName='GEO-'+(ref||'')+(projectName?'_'+projectName:'')+'.geoter';
+  const fileName='GEO-'+(ref||'')+(projectName?'_'+projectName:'')+'.geosolia';
   if(window.showSaveFilePicker){
     try{
-      const handle=await window.showSaveFilePicker({suggestedName:fileName,startIn:'desktop',types:[{description:'Projet GéoTer',accept:{'application/json':['.geoter']}}]});
+      const handle=await window.showSaveFilePicker({suggestedName:fileName,startIn:'desktop',types:[{description:'Projet GéoSolia',accept:{'application/json':['.geosolia']}}]});
       savedFileHandle=handle;
       const initProject=buildProjectJSON();
       const writable=await handle.createWritable();
@@ -3793,7 +4006,7 @@ function startAutoSave(){
 
 async function exportProject(){
   const refVal=document.getElementById('project-ref').value.trim();
-  const fileName='GEO-'+(refVal||'projet')+(projectName?'_'+projectName:'')+'.geoter';
+  const fileName='GEO-'+(refVal||'projet')+(projectName?'_'+projectName:'')+'.geosolia';
   const project=buildProjectJSON();
   const blob=new Blob([JSON.stringify(project)],{type:'application/json'});
   if(savedFileHandle){
@@ -3805,7 +4018,7 @@ async function exportProject(){
     }catch(e){console.error(e);}
   }else if(window.showSaveFilePicker){
     try{
-      const handle=await window.showSaveFilePicker({suggestedName:fileName,types:[{description:'Projet GéoTer',accept:{'application/json':['.geoter']}}]});
+      const handle=await window.showSaveFilePicker({suggestedName:fileName,types:[{description:'Projet GéoSolia',accept:{'application/json':['.geosolia']}}]});
       savedFileHandle=handle;
       const writable=await handle.createWritable();
       await writable.write(blob);
@@ -3818,12 +4031,12 @@ async function exportProject(){
 
 async function exportProjectAs(){
   const refVal=document.getElementById('project-ref').value.trim();
-  const fileName='GEO-'+(refVal||'projet')+(projectName?'_'+projectName:'')+'.geoter';
+  const fileName='GEO-'+(refVal||'projet')+(projectName?'_'+projectName:'')+'.geosolia';
   const project=buildProjectJSON();
   const blob=new Blob([JSON.stringify(project)],{type:'application/json'});
   if(window.showSaveFilePicker){
     try{
-      const handle=await window.showSaveFilePicker({suggestedName:fileName,startIn:savedFileHandle||'desktop',types:[{description:'Projet GéoTer',accept:{'application/json':['.geoter']}}]});
+      const handle=await window.showSaveFilePicker({suggestedName:fileName,startIn:savedFileHandle||'desktop',types:[{description:'Projet GéoSolia',accept:{'application/json':['.geosolia']}}]});
       savedFileHandle=handle;
       const writable=await handle.createWritable();
       await writable.write(blob);
@@ -4800,8 +5013,8 @@ const SOIL_DESCRIPTIONS={
   loess:['Lœss','Lœss calcaire','Lœss brun'],
   argile_a_silex:['Argile à silex','Argile à silex brune','Argile à silex rougeâtre']
 };
-const SONDAGE_LABELS={'penetro_dyn':'Pénétromètre Dynamique','penetro_stat':'Pénétromètre Statique','tariere':'Sondage à la Tarière','pelle_meca':'Sondage Pelle Mécanique','fondation':'Reconnaissance de Fondation'};
-const SONDAGE_ICONS={'penetro_dyn':'🔴','penetro_stat':'🔵','tariere':'⚫','pelle_meca':'🟡','fondation':'🏗️'};
+const SONDAGE_LABELS={'penetro_dyn':'Pénétromètre Dynamique','penetro_stat':'Pénétromètre Statique','tariere':'Sondage à la Tarière','pelle_meca':'Sondage Pelle Mécanique','fondation':'Reconnaissance de Fondation','piezometre':'Piézomètre','infiltro':'Infiltrométrie','forage_destr':'Forage Destructif','essai_labo':'Essais Laboratoire'};
+const SONDAGE_ICONS={'penetro_dyn':'🔴','penetro_stat':'🔵','tariere':'⚫','pelle_meca':'🟡','fondation':'🏗️','piezometre':'💧','infiltro':'💦','forage_destr':'🔶','essai_labo':'🧪'};
 const FONDATION_TYPES=[{v:'semelle_filante',l:'Semelle filante'},{v:'semelle_isolee',l:'Semelle isolée'},{v:'radier',l:'Radier'},{v:'puits',l:'Puits'},{v:'pieux',l:'Pieux'},{v:'micropieux',l:'Micropieux'},{v:'autre',l:'Autre'}];
 const FONDATION_STATES=[{v:'bon',l:'Bon état'},{v:'moyen',l:'État moyen'},{v:'degrade',l:'Dégradé'},{v:'tres_degrade',l:'Très dégradé'}];
 
@@ -4890,10 +5103,10 @@ function renderSondageList(){
     }).join('');
 }
 
-const SONDAGE_SVG_MAP={'penetro_dyn':'penetro_dyn','penetro_stat':'penetro_stat','tariere':'tariere','pelle_meca':'pelle_meca','fondation':'regard'};
-const SONDAGE_COLOR_MAP={'penetro_dyn':'#D94040','penetro_stat':'#3D7AB5','tariere':'#4A4A4A','pelle_meca':'#F2B705','fondation':'#7A7A7A'};
+const SONDAGE_SVG_MAP={'penetro_dyn':'penetro_dyn','penetro_stat':'penetro_stat','tariere':'tariere','pelle_meca':'pelle_meca','fondation':'regard','piezometre':'piezo','infiltro':'infiltro','forage_destr':'forage_destr','essai_labo':'essai_plaque'};
+const SONDAGE_COLOR_MAP={'penetro_dyn':'#D94040','penetro_stat':'#3D7AB5','tariere':'#4A4A4A','pelle_meca':'#F2B705','fondation':'#7A7A7A','piezometre':'#2980B9','infiltro':'#16A085','forage_destr':'#E67E22','essai_labo':'#8E44AD'};
 
-const SONDAGE_PREFIX={'penetro_dyn':'D','penetro_stat':'PS','tariere':'T','pelle_meca':'PM','fondation':'RF'};
+const SONDAGE_PREFIX={'penetro_dyn':'D','penetro_stat':'PS','tariere':'T','pelle_meca':'PM','fondation':'RF','piezometre':'PZ','infiltro':'INF','forage_destr':'FD','essai_labo':'ECH'};
 const COMPARE_COLORS=['#E74C3C','#2980B9','#27AE60','#E67E22','#8E44AD','#16A085','#D35400','#2C3E50','#C0392B','#1ABC9C'];
 let compareType=null;
 function newSondage(type){
@@ -4918,6 +5131,14 @@ function newSondage(type){
     s.data.push({from:0.00,to:0.30,nature:'terre_vegetale',description:'Terre végétale'});
   }else if(type==='fondation'){
     s.data={fondationType:'semelle_filante',depth:0,dimensions:'',state:'bon',description:''};
+  }else if(type==='piezometre'){
+    s.data={installDepth:0,tubeType:'ouvert',crepineFrom:0,crepineTo:0,readings:[]};
+  }else if(type==='infiltro'){
+    s.data={testDepth:0,boreDiameter:0,readings:[],permeability:null};
+  }else if(type==='forage_destr'){
+    s.data={layers:[{from:0.00,to:0.30,nature:'terre_vegetale',description:'Terre végétale'}],speeds:[]};
+  }else if(type==='essai_labo'){
+    s.data={sourceSondage:'',sampleDepth:0,essais:[]};
   }
   // Placer un repère (sticker) automatiquement sur le plan
   const stickerId=now+1;
@@ -4987,6 +5208,14 @@ function saveSondageFromUI(){
     s.depth=s.data.length>0?Math.max(...s.data.map(d=>d.to||0)):0;
   }else if(s.type==='fondation'){
     s.depth=s.data.depth||0;
+  }else if(s.type==='piezometre'){
+    s.depth=s.data.installDepth||0;
+  }else if(s.type==='infiltro'){
+    s.depth=s.data.testDepth||0;
+  }else if(s.type==='forage_destr'){
+    s.depth=s.data.layers&&s.data.layers.length>0?Math.max(...s.data.layers.map(l=>l.to||0)):0;
+  }else if(s.type==='essai_labo'){
+    s.depth=s.data.sampleDepth||0;
   }
   const notesEl=document.querySelector('.sondage-notes');
   if(notesEl)s.notes=notesEl.value;
@@ -5014,6 +5243,10 @@ function renderSondageContent(s){
   else if(s.type==='penetro_stat'){renderPenetroStatTable(s,$table);renderPenetroStatGraph(s);}
   else if(s.type==='tariere'||s.type==='pelle_meca'){renderStratiTable(s,$table);renderStratiGraph(s);}
   else if(s.type==='fondation'){renderFondationForm(s,$table);renderFondationSummary(s);}
+  else if(s.type==='piezometre'){renderPiezoForm(s,$table);renderPiezoGraph(s);}
+  else if(s.type==='infiltro'){renderInfiltroForm(s,$table);renderInfiltroGraph(s);}
+  else if(s.type==='forage_destr'){renderForageDestrForm(s,$table);renderForageDestrGraph(s);}
+  else if(s.type==='essai_labo'){renderEssaiLaboForm(s,$table);renderEssaiLaboSummary(s);}
   // Afficher la photo liée (panneau principal)
   const photoPanel=document.getElementById('sondage-photo-panel');
   const photoImg=document.getElementById('sondage-photo-img');
@@ -5043,14 +5276,14 @@ function renderSondageContent(s){
 
 // ─── PÉNÉTROMÈTRE DYNAMIQUE ───
 function calcQd(blows,depth){
-  // Formule des Hollandais — NF P 94-115 / Eurocode 7
-  // qd = M² × g × H / (A × e × (M + P))
-  // PDA: M=64kg, H=0.75m, A=16cm²=0.0016m², tiges≈7kg/m, tête≈18kg
+  // Formule des Hollandais — NF P 94-115
+  // Qd = (η × m × g × h) / (A × s) × m / (m + m')
+  // η=0.8, m=63.5kg, h=0.75m, A=20cm², s=0.20/N, m'=6.3×ENT(prof+1.6)
   if(!blows||blows<=0)return null;
-  const M=64,g=9.81,H=0.75,A=0.0016;
-  const e=0.20/blows; // enfoncement moyen par coup (m)
-  const P=18+7*depth;  // masse frappée = tête(18kg) + tiges(7kg/m × prof)
-  const qd=(M*M*g*H)/(A*e*(M+P));
+  const eta=0.8,m=63.5,g=9.81,h=0.75,A=0.0020;
+  const s=0.20/blows; // pénétration par coup (m)
+  const mPrime=6.3*Math.floor(depth+1.6); // masse tiges (kg)
+  const qd=(eta*m*g*h)/(A*s)*(m/(m+mPrime));
   return qd/1e6; // Pa → MPa
 }
 
@@ -5514,9 +5747,9 @@ function renderQdGraph(s){
   ctx.fillStyle='#C0392B';ctx.font='bold 9px Arial';ctx.textAlign='left';
   ctx.fillText('Formule des Hollandais — NF P 94-115',ml,fy);
   ctx.fillStyle='#333';ctx.font='9px Arial';
-  ctx.fillText('qd = M\u00b2 \u00d7 g \u00d7 H / ( A \u00d7 e \u00d7 ( M + P ) )',ml,fy+13);
+  ctx.fillText('Qd = (\u03b7 \u00d7 m \u00d7 g \u00d7 h) / (A \u00d7 s) \u00d7 m / (m + m\')',ml,fy+13);
   ctx.fillStyle='#555';ctx.font='8px Arial';
-  ctx.fillText('M = 64 kg (mouton)   |   H = 0.75 m (chute)   |   A = 16 cm\u00b2 (pointe)   |   e = 0.20 / N  m (enfoncement / coup)   |   P = 18 + 7\u00b7z  kg (t\u00eate + tiges)',ml,fy+25);
+  ctx.fillText('\u03b7 = 0.8   |   m = 63.5 kg   |   h = 0.75 m   |   A = 20 cm\u00b2   |   s = 0.20 / N  m   |   m\' = 6.3 \u00d7 ENT(z + 1.6)  kg',ml,fy+25);
 }
 
 function downloadQdGraph(){
@@ -5612,9 +5845,9 @@ function downloadQdGraph(){
   ctx.fillStyle='#C0392B';ctx.font='bold 9px Arial';ctx.textAlign='left';
   ctx.fillText('Formule des Hollandais — NF P 94-115',ml,fy);
   ctx.fillStyle='#333';ctx.font='9px Arial';
-  ctx.fillText('qd = M\u00b2 \u00d7 g \u00d7 H / ( A \u00d7 e \u00d7 ( M + P ) )',ml,fy+13);
+  ctx.fillText('Qd = (\u03b7 \u00d7 m \u00d7 g \u00d7 h) / (A \u00d7 s) \u00d7 m / (m + m\')',ml,fy+13);
   ctx.fillStyle='#555';ctx.font='8px Arial';
-  ctx.fillText('M = 64 kg (mouton)   |   H = 0.75 m (chute)   |   A = 16 cm\u00b2 (pointe)   |   e = 0.20 / N  m (enfoncement / coup)   |   P = 18 + 7\u00b7z  kg (t\u00eate + tiges)',ml,fy+25);
+  ctx.fillText('\u03b7 = 0.8   |   m = 63.5 kg   |   h = 0.75 m   |   A = 20 cm\u00b2   |   s = 0.20 / N  m   |   m\' = 6.3 \u00d7 ENT(z + 1.6)  kg',ml,fy+25);
   // Télécharger
   const link=document.createElement('a');
   link.download='Graphique_Qd'+(s.name?'_'+s.name:'')+'.png';
@@ -6723,6 +6956,291 @@ function renderFondationSummary(s){
   ctx.fillStyle=sc;ctx.beginPath();ctx.arc(cw-50,sy+3*rh+rh/2,8,0,Math.PI*2);ctx.fill();
 }
 
+// ─── PIÉZOMÈTRE ───
+const PIEZO_TUBE_TYPES=[{v:'ouvert',l:'Tube ouvert'},{v:'ferme',l:'Tube fermé'},{v:'crepine',l:'Crépine'}];
+function renderPiezoForm(s,$wrap){
+  const d=s.data||{};
+  const tnVal=s.tnAltitude!=null?s.tnAltitude:'';
+  let html=`<div style="display:grid;grid-template-columns:auto 1fr;align-items:center;gap:6px 10px;margin-bottom:8px;padding:8px 10px;background:#F5F5F5;border-radius:6px">
+    <label style="font-weight:600;font-size:12px">Nivellement TN :</label>
+    <input type="text" inputmode="decimal" value="${tnVal}" placeholder="Ex: 125.30" style="width:100%;max-width:260px;padding:5px 8px;border:1px solid #ccc;border-radius:4px;font-size:13px;font-weight:600;box-sizing:border-box" onchange="const ss=getCurrentSondage();if(ss)ss.tnAltitude=this.value===''?null:parseFloat(this.value)">
+    <label style="font-weight:600;font-size:12px">Profondeur installation (m) :</label>
+    <input type="number" step="0.01" min="0" value="${d.installDepth||''}" style="width:100px;padding:5px 8px;border:1px solid #ccc;border-radius:4px;font-size:13px;font-weight:600" oninput="const ss=getCurrentSondage();if(ss)ss.data.installDepth=parseFloat(this.value)||0">
+    <label style="font-weight:600;font-size:12px">Type de tube :</label>
+    <select style="padding:5px 8px;border:1px solid #ccc;border-radius:4px;font-size:13px;font-weight:600" onchange="const ss=getCurrentSondage();if(ss)ss.data.tubeType=this.value">
+      ${PIEZO_TUBE_TYPES.map(t=>`<option value="${t.v}"${d.tubeType===t.v?' selected':''}>${t.l}</option>`).join('')}
+    </select>
+    <label style="font-weight:600;font-size:12px">Crépine de (m) :</label>
+    <input type="number" step="0.01" min="0" value="${d.crepineFrom||''}" style="width:100px;padding:5px 8px;border:1px solid #ccc;border-radius:4px;font-size:13px;font-weight:600" oninput="const ss=getCurrentSondage();if(ss)ss.data.crepineFrom=parseFloat(this.value)||0">
+    <label style="font-weight:600;font-size:12px">Crépine à (m) :</label>
+    <input type="number" step="0.01" min="0" value="${d.crepineTo||''}" style="width:100px;padding:5px 8px;border:1px solid #ccc;border-radius:4px;font-size:13px;font-weight:600" oninput="const ss=getCurrentSondage();if(ss)ss.data.crepineTo=parseFloat(this.value)||0">
+  </div>`;
+  html+=`<h4 style="font-size:12px;font-weight:800;margin:8px 0 4px">Relevés piézométriques</h4>`;
+  html+=`<table class="sondage-table"><thead><tr><th>Date</th><th>Niveau d'eau (m/TN)</th><th>Remarques</th></tr></thead><tbody>`;
+  (d.readings||[]).forEach((r,i)=>{
+    html+=`<tr>
+    <td><input type="date" value="${r.date||''}" oninput="getCurrentSondage().data.readings[${i}].date=this.value" style="width:130px"></td>
+    <td><input type="number" step="0.01" value="${r.level!=null?r.level:''}" oninput="getCurrentSondage().data.readings[${i}].level=this.value===''?null:parseFloat(this.value)" style="width:80px"></td>
+    <td><input type="text" value="${r.remark||''}" oninput="getCurrentSondage().data.readings[${i}].remark=this.value"></td></tr>`;
+  });
+  html+=`</tbody></table>`;
+  html+=`<div class="sondage-add-row"><button onclick="addPiezoReading()">+ Ajouter un relevé</button><button onclick="removePiezoReading()">− Supprimer dernier</button></div>`;
+  html+=`<textarea class="sondage-notes" placeholder="Observations...">${s.notes||''}</textarea>`;
+  $wrap.innerHTML=html;
+}
+function addPiezoReading(){const s=getCurrentSondage();if(!s)return;s.data.readings.push({date:new Date().toISOString().slice(0,10),level:null,remark:''});renderSondageContent(s);}
+function removePiezoReading(){const s=getCurrentSondage();if(!s||!s.data.readings.length)return;s.data.readings.pop();renderSondageContent(s);}
+function renderPiezoGraph(s){
+  const cvs=document.getElementById('sondage-canvas');
+  const ctx=cvs.getContext('2d');
+  const d=s.data||{};
+  const readings=(d.readings||[]).filter(r=>r.level!=null);
+  const cw=420,ch=320;cvs.width=cw;cvs.height=ch;
+  ctx.fillStyle='#FFF';ctx.fillRect(0,0,cw,ch);
+  const ref=document.getElementById('project-ref')?.value||'';
+  ctx.fillStyle='#1A1A1A';ctx.font='bold 14px Arial';ctx.textAlign='center';
+  ctx.fillText('PIÉZOMÈTRE'+(s.name?' — '+s.name:''),cw/2,25);
+  ctx.font='11px Arial';ctx.fillStyle='#7A7A7A';
+  ctx.fillText((ref?'Projet: '+ref+'  ':'')+'Prof. install.: '+(d.installDepth||'?')+' m  |  Tube: '+(PIEZO_TUBE_TYPES.find(t=>t.v===d.tubeType)?.l||d.tubeType),cw/2,43);
+  if(readings.length===0){ctx.fillStyle='#AAA';ctx.font='12px Arial';ctx.fillText('Aucun relevé',cw/2,ch/2);return;}
+  // Graphique niveaux d'eau
+  const ml=60,mr=20,mt=60,mb=50,pw=cw-ml-mr,ph=ch-mt-mb;
+  const levels=readings.map(r=>r.level);
+  const minL=Math.min(...levels)-0.5,maxL=Math.max(...levels)+0.5;
+  const rangeL=maxL-minL||1;
+  ctx.strokeStyle='#2980B9';ctx.lineWidth=2;ctx.beginPath();
+  readings.forEach((r,i)=>{
+    const x=ml+(readings.length===1?pw/2:i*(pw/(readings.length-1)));
+    const y=mt+ph-(r.level-minL)/rangeL*ph;
+    if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+  });
+  ctx.stroke();
+  readings.forEach((r,i)=>{
+    const x=ml+(readings.length===1?pw/2:i*(pw/(readings.length-1)));
+    const y=mt+ph-(r.level-minL)/rangeL*ph;
+    ctx.fillStyle='#2980B9';ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#333';ctx.font='9px Arial';ctx.textAlign='center';
+    ctx.fillText(r.level.toFixed(2),x,y-8);
+    if(r.date){ctx.save();ctx.translate(x,mt+ph+12);ctx.rotate(-0.5);ctx.textAlign='left';ctx.font='8px Arial';ctx.fillStyle='#777';ctx.fillText(r.date,0,0);ctx.restore();}
+  });
+  ctx.strokeStyle='#DDD';ctx.lineWidth=0.5;
+  for(let i=0;i<=4;i++){const y=mt+i*ph/4;ctx.beginPath();ctx.moveTo(ml,y);ctx.lineTo(ml+pw,y);ctx.stroke();ctx.fillStyle='#777';ctx.font='9px Arial';ctx.textAlign='right';ctx.fillText((maxL-i*rangeL/4).toFixed(2),ml-6,y+3);}
+  ctx.fillStyle='#333';ctx.font='bold 10px Arial';ctx.textAlign='center';ctx.fillText('Niveau d\'eau (m/TN)',ml+pw/2,mt-10);
+}
+
+// ─── INFILTROMÉTRIE ───
+function renderInfiltroForm(s,$wrap){
+  const d=s.data||{};
+  const tnVal=s.tnAltitude!=null?s.tnAltitude:'';
+  let html=`<div style="display:grid;grid-template-columns:auto 1fr;align-items:center;gap:6px 10px;margin-bottom:8px;padding:8px 10px;background:#F5F5F5;border-radius:6px">
+    <label style="font-weight:600;font-size:12px">Nivellement TN :</label>
+    <input type="text" inputmode="decimal" value="${tnVal}" placeholder="Ex: 125.30" style="width:100%;max-width:260px;padding:5px 8px;border:1px solid #ccc;border-radius:4px;font-size:13px;font-weight:600;box-sizing:border-box" onchange="const ss=getCurrentSondage();if(ss)ss.tnAltitude=this.value===''?null:parseFloat(this.value)">
+    <label style="font-weight:600;font-size:12px">Profondeur de l'essai (m) :</label>
+    <input type="number" step="0.01" min="0" value="${d.testDepth||''}" style="width:100px;padding:5px 8px;border:1px solid #ccc;border-radius:4px;font-size:13px;font-weight:600" oninput="const ss=getCurrentSondage();if(ss)ss.data.testDepth=parseFloat(this.value)||0">
+    <label style="font-weight:600;font-size:12px">Diamètre du forage (mm) :</label>
+    <input type="number" step="1" min="0" value="${d.boreDiameter||''}" style="width:100px;padding:5px 8px;border:1px solid #ccc;border-radius:4px;font-size:13px;font-weight:600" oninput="const ss=getCurrentSondage();if(ss)ss.data.boreDiameter=parseFloat(this.value)||0">
+  </div>`;
+  html+=`<h4 style="font-size:12px;font-weight:800;margin:8px 0 4px">Mesures d'infiltration</h4>`;
+  html+=`<table class="sondage-table"><thead><tr><th>Temps (min)</th><th>Volume (L)</th><th>Hauteur d'eau (cm)</th></tr></thead><tbody>`;
+  (d.readings||[]).forEach((r,i)=>{
+    html+=`<tr>
+    <td><input type="number" step="0.1" min="0" value="${r.time!=null?r.time:''}" oninput="getCurrentSondage().data.readings[${i}].time=this.value===''?null:parseFloat(this.value);calcInfiltroK()" style="width:70px"></td>
+    <td><input type="number" step="0.01" min="0" value="${r.volume!=null?r.volume:''}" oninput="getCurrentSondage().data.readings[${i}].volume=this.value===''?null:parseFloat(this.value);calcInfiltroK()" style="width:70px"></td>
+    <td><input type="number" step="0.1" min="0" value="${r.height!=null?r.height:''}" oninput="getCurrentSondage().data.readings[${i}].height=this.value===''?null:parseFloat(this.value);calcInfiltroK()" style="width:70px"></td></tr>`;
+  });
+  html+=`</tbody></table>`;
+  html+=`<div class="sondage-add-row"><button onclick="addInfiltroReading()">+ Ajouter une mesure</button><button onclick="removeInfiltroReading()">− Supprimer dernière</button></div>`;
+  const kDisplay=d.permeability!=null?d.permeability.toExponential(2)+' m/s':'—';
+  html+=`<div style="margin-top:8px;padding:8px 10px;background:#E8F8F5;border-radius:6px;font-size:13px;font-weight:700">Perméabilité K estimée : <span id="infiltro-k-display">${kDisplay}</span></div>`;
+  html+=`<textarea class="sondage-notes" placeholder="Observations...">${s.notes||''}</textarea>`;
+  $wrap.innerHTML=html;
+}
+function addInfiltroReading(){const s=getCurrentSondage();if(!s)return;s.data.readings.push({time:null,volume:null,height:null});renderSondageContent(s);}
+function removeInfiltroReading(){const s=getCurrentSondage();if(!s||!s.data.readings.length)return;s.data.readings.pop();renderSondageContent(s);}
+function calcInfiltroK(){
+  const s=getCurrentSondage();if(!s||s.type!=='infiltro')return;
+  const d=s.data;
+  const readings=(d.readings||[]).filter(r=>r.time!=null&&r.volume!=null&&r.time>0);
+  if(readings.length<2||!d.boreDiameter){d.permeability=null;return;}
+  // K = Q / (A × i) simplifié — débit moyen / section
+  const last=readings[readings.length-1],first=readings[0];
+  const dt=(last.time-first.time)*60; // secondes
+  const dv=(last.volume-first.volume)/1000; // m³
+  if(dt<=0||dv<=0){d.permeability=null;return;}
+  const r=(d.boreDiameter/2)/1000; // rayon en m
+  const A=Math.PI*r*r;
+  const Q=dv/dt; // m³/s
+  d.permeability=Q/A;
+  const el=document.getElementById('infiltro-k-display');
+  if(el) el.textContent=d.permeability.toExponential(2)+' m/s';
+}
+function renderInfiltroGraph(s){
+  const cvs=document.getElementById('sondage-canvas');
+  const ctx=cvs.getContext('2d');
+  const d=s.data||{};
+  const readings=(d.readings||[]).filter(r=>r.time!=null&&r.volume!=null);
+  const cw=420,ch=320;cvs.width=cw;cvs.height=ch;
+  ctx.fillStyle='#FFF';ctx.fillRect(0,0,cw,ch);
+  const ref=document.getElementById('project-ref')?.value||'';
+  ctx.fillStyle='#1A1A1A';ctx.font='bold 14px Arial';ctx.textAlign='center';
+  ctx.fillText('INFILTROMÉTRIE'+(s.name?' — '+s.name:''),cw/2,25);
+  ctx.font='11px Arial';ctx.fillStyle='#7A7A7A';
+  ctx.fillText((ref?'Projet: '+ref+'  ':'')+'Prof.: '+(d.testDepth||'?')+' m  |  Ø '+(d.boreDiameter||'?')+' mm'+(d.permeability!=null?'  |  K = '+d.permeability.toExponential(2)+' m/s':''),cw/2,43);
+  if(readings.length===0){ctx.fillStyle='#AAA';ctx.font='12px Arial';ctx.fillText('Aucune mesure',cw/2,ch/2);return;}
+  const ml=60,mr=20,mt=60,mb=40,pw=cw-ml-mr,ph=ch-mt-mb;
+  const times=readings.map(r=>r.time),vols=readings.map(r=>r.volume);
+  const maxT=Math.max(...times)||1,maxV=Math.max(...vols)||1;
+  // Axes
+  ctx.strokeStyle='#333';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(ml,mt);ctx.lineTo(ml,mt+ph);ctx.lineTo(ml+pw,mt+ph);ctx.stroke();
+  // Courbe
+  ctx.strokeStyle='#16A085';ctx.lineWidth=2;ctx.beginPath();
+  readings.forEach((r,i)=>{const x=ml+r.time/maxT*pw,y=mt+ph-r.volume/maxV*ph;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});
+  ctx.stroke();
+  readings.forEach(r=>{const x=ml+r.time/maxT*pw,y=mt+ph-r.volume/maxV*ph;ctx.fillStyle='#16A085';ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fill();});
+  ctx.fillStyle='#333';ctx.font='bold 10px Arial';ctx.textAlign='center';
+  ctx.fillText('Temps (min)',ml+pw/2,mt+ph+30);
+  ctx.save();ctx.translate(15,mt+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText('Volume (L)',0,0);ctx.restore();
+}
+
+// ─── FORAGE DESTRUCTIF ───
+function renderForageDestrForm(s,$wrap){
+  const d=s.data||{};
+  const tnVal=s.tnAltitude!=null?s.tnAltitude:'';
+  let html=`<div style="display:grid;grid-template-columns:auto 1fr;align-items:center;gap:6px 10px;margin-bottom:8px;padding:8px 10px;background:#F5F5F5;border-radius:6px">
+    <label style="font-weight:600;font-size:12px">Nivellement TN :</label>
+    <input type="text" inputmode="decimal" value="${tnVal}" placeholder="Ex: 125.30" style="width:100%;max-width:260px;padding:5px 8px;border:1px solid #ccc;border-radius:4px;font-size:13px;font-weight:600;box-sizing:border-box" onchange="const ss=getCurrentSondage();if(ss)ss.tnAltitude=this.value===''?null:parseFloat(this.value)">
+    <label style="font-weight:600;font-size:12px">Niveau d'eau (m) :</label>
+    <input type="number" step="0.01" min="0" value="${s.waterLevel!=null?s.waterLevel:''}" placeholder="Non rencontré" style="width:100px;padding:5px 8px;border:1px solid #ccc;border-radius:4px;font-size:13px;font-weight:600" oninput="const ss=getCurrentSondage();if(ss)ss.waterLevel=this.value===''?null:parseFloat(this.value)">
+  </div>`;
+  // Couches géologiques
+  html+=`<h4 style="font-size:12px;font-weight:800;margin:8px 0 4px">Coupe géologique</h4>`;
+  html+=`<table class="sondage-table"><thead><tr><th>De (m)</th><th>À (m)</th><th>Nature</th><th>Description</th></tr></thead><tbody>`;
+  (d.layers||[]).forEach((l,i)=>{
+    const opts=Object.keys(SOIL_TYPES).map(k=>`<option value="${k}"${l.nature===k?' selected':''}>${SOIL_TYPES[k].label}</option>`).join('');
+    html+=`<tr>
+    <td><input type="number" step="0.01" min="0" value="${l.from}" oninput="fdLayerInput(${i},'from',this.value)" style="width:55px"></td>
+    <td><input type="number" step="0.01" min="0" value="${l.to}" oninput="fdLayerInput(${i},'to',this.value)" style="width:55px"></td>
+    <td><select onchange="fdLayerInput(${i},'nature',this.value)">${opts}</select></td>
+    <td><input type="text" value="${l.description||''}" oninput="fdLayerInput(${i},'description',this.value)"></td></tr>`;
+  });
+  html+=`</tbody></table>`;
+  html+=`<div class="sondage-add-row"><button onclick="addFdLayer()">+ Ajouter une couche</button><button onclick="removeFdLayer()">− Supprimer dernière</button></div>`;
+  // Vitesses d'avancement
+  html+=`<h4 style="font-size:12px;font-weight:800;margin:12px 0 4px">Vitesse d'avancement (optionnel)</h4>`;
+  html+=`<table class="sondage-table"><thead><tr><th>De (m)</th><th>À (m)</th><th>Vitesse (m/h)</th></tr></thead><tbody>`;
+  (d.speeds||[]).forEach((sp,i)=>{
+    html+=`<tr>
+    <td><input type="number" step="0.01" min="0" value="${sp.from!=null?sp.from:''}" oninput="getCurrentSondage().data.speeds[${i}].from=parseFloat(this.value)||0" style="width:55px"></td>
+    <td><input type="number" step="0.01" min="0" value="${sp.to!=null?sp.to:''}" oninput="getCurrentSondage().data.speeds[${i}].to=parseFloat(this.value)||0" style="width:55px"></td>
+    <td><input type="number" step="0.01" min="0" value="${sp.speed!=null?sp.speed:''}" oninput="getCurrentSondage().data.speeds[${i}].speed=parseFloat(this.value)||0" style="width:55px"></td></tr>`;
+  });
+  html+=`</tbody></table>`;
+  html+=`<div class="sondage-add-row"><button onclick="addFdSpeed()">+ Ajouter</button><button onclick="removeFdSpeed()">− Supprimer</button></div>`;
+  html+=`<textarea class="sondage-notes" placeholder="Observations...">${s.notes||''}</textarea>`;
+  $wrap.innerHTML=html;
+}
+function fdLayerInput(idx,field,val){
+  const s=getCurrentSondage();if(!s)return;
+  const layers=s.data.layers;
+  if(field==='from')layers[idx].from=parseFloat(val)||0;
+  else if(field==='to'){layers[idx].to=parseFloat(val)||0;if(idx+1<layers.length)layers[idx+1].from=layers[idx].to;}
+  else if(field==='nature')layers[idx].nature=val;
+  else if(field==='description')layers[idx].description=val;
+  if(field==='from'||field==='to')renderSondageContent(s);
+}
+function addFdLayer(){const s=getCurrentSondage();if(!s)return;const layers=s.data.layers;const lastTo=layers.length?layers[layers.length-1].to:0;layers.push({from:lastTo,to:+(lastTo+0.5).toFixed(2),nature:'argile',description:''});renderSondageContent(s);}
+function removeFdLayer(){const s=getCurrentSondage();if(!s||!s.data.layers.length)return;s.data.layers.pop();renderSondageContent(s);}
+function addFdSpeed(){const s=getCurrentSondage();if(!s)return;const speeds=s.data.speeds;const lastTo=speeds.length?speeds[speeds.length-1].to:0;speeds.push({from:lastTo,to:+(lastTo+1).toFixed(2),speed:null});renderSondageContent(s);}
+function removeFdSpeed(){const s=getCurrentSondage();if(!s||!s.data.speeds.length)return;s.data.speeds.pop();renderSondageContent(s);}
+function renderForageDestrGraph(s){
+  // Réutilise le rendu stratigraphique
+  const fakeSondage={...s,type:'tariere',data:s.data.layers||[]};
+  renderStratiGraph(fakeSondage);
+}
+
+// ─── ESSAIS LABORATOIRE ───
+const ESSAI_LABO_TYPES=[
+  {v:'teneur_eau',l:'Teneur en eau (w%)',fields:[{k:'w',l:'w (%)',type:'number'}]},
+  {v:'atterberg',l:'Limites d\'Atterberg',fields:[{k:'wl',l:'WL (%)',type:'number'},{k:'wp',l:'WP (%)',type:'number'},{k:'ip',l:'IP (%)',type:'number'}]},
+  {v:'granulo',l:'Granulométrie',fields:[{k:'p80um',l:'% < 80 µm',type:'number'},{k:'p2mm',l:'% < 2 mm',type:'number'},{k:'p20mm',l:'% < 20 mm',type:'number'},{k:'dmax',l:'Dmax (mm)',type:'number'}]},
+  {v:'vbs',l:'Valeur de bleu (VBS)',fields:[{k:'vbs',l:'VBS',type:'number'}]},
+  {v:'proctor',l:'Essai Proctor',fields:[{k:'gamma_d',l:'γd opt (kN/m³)',type:'number'},{k:'w_opt',l:'w opt (%)',type:'number'}]},
+  {v:'cbr',l:'CBR / IPI',fields:[{k:'ipi',l:'IPI (%)',type:'number'},{k:'cbr4',l:'CBR 4j (%)',type:'number'}]},
+  {v:'oedometrique',l:'Essai œdométrique',fields:[{k:'cc',l:'Cc',type:'number'},{k:'cs',l:'Cs',type:'number'},{k:'sigma_p',l:'σ\'p (kPa)',type:'number'}]},
+  {v:'triaxial',l:'Essai triaxial',fields:[{k:'c_prime',l:'c\' (kPa)',type:'number'},{k:'phi_prime',l:'φ\' (°)',type:'number'},{k:'cu',l:'Cu (kPa)',type:'number'}]}
+];
+function renderEssaiLaboForm(s,$wrap){
+  const d=s.data||{};
+  const sondageOpts=sondages.filter(x=>x.id!==s.id).map(x=>`<option value="${x.name}"${d.sourceSondage===x.name?' selected':''}>${x.name} — ${SONDAGE_LABELS[x.type]||x.type}</option>`).join('');
+  let html=`<div style="display:grid;grid-template-columns:auto 1fr;align-items:center;gap:6px 10px;margin-bottom:8px;padding:8px 10px;background:#F5F5F5;border-radius:6px">
+    <label style="font-weight:600;font-size:12px">Sondage d'origine :</label>
+    <select style="padding:5px 8px;border:1px solid #ccc;border-radius:4px;font-size:13px;font-weight:600" onchange="getCurrentSondage().data.sourceSondage=this.value">
+      <option value="">— Sélectionner —</option>${sondageOpts}
+    </select>
+    <label style="font-weight:600;font-size:12px">Profondeur prélèvement (m) :</label>
+    <input type="number" step="0.01" min="0" value="${d.sampleDepth||''}" style="width:100px;padding:5px 8px;border:1px solid #ccc;border-radius:4px;font-size:13px;font-weight:600" oninput="getCurrentSondage().data.sampleDepth=parseFloat(this.value)||0">
+  </div>`;
+  // Liste des essais ajoutés
+  html+=`<h4 style="font-size:12px;font-weight:800;margin:8px 0 4px">Essais réalisés</h4>`;
+  (d.essais||[]).forEach((essai,i)=>{
+    const etype=ESSAI_LABO_TYPES.find(t=>t.v===essai.type);
+    if(!etype)return;
+    html+=`<div style="margin-bottom:8px;padding:8px 10px;background:#F5F5F5;border-radius:6px;border-left:3px solid #8E44AD">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <strong style="font-size:12px">${etype.l}</strong>
+        <button onclick="removeLaboEssai(${i})" style="background:none;border:none;cursor:pointer;font-size:14px" title="Supprimer">🗑️</button>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">`;
+    etype.fields.forEach(f=>{
+      html+=`<div><label style="font-size:10px;font-weight:700;display:block">${f.l}</label>
+        <input type="number" step="0.01" value="${essai.values[f.k]!=null?essai.values[f.k]:''}" style="width:80px;padding:4px 6px;border:1px solid #ccc;border-radius:4px;font-size:12px;font-weight:700"
+        oninput="getCurrentSondage().data.essais[${i}].values['${f.k}']=this.value===''?null:parseFloat(this.value)"></div>`;
+    });
+    html+=`</div></div>`;
+  });
+  // Bouton ajouter essai
+  html+=`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px">`;
+  ESSAI_LABO_TYPES.forEach(t=>{
+    html+=`<button onclick="addLaboEssai('${t.v}')" style="padding:4px 8px;border:1px solid #8E44AD;border-radius:4px;background:#F5EEF8;color:#8E44AD;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit">+ ${t.l}</button>`;
+  });
+  html+=`</div>`;
+  html+=`<textarea class="sondage-notes" placeholder="Observations...">${s.notes||''}</textarea>`;
+  $wrap.innerHTML=html;
+}
+function addLaboEssai(type){
+  const s=getCurrentSondage();if(!s)return;
+  const etype=ESSAI_LABO_TYPES.find(t=>t.v===type);if(!etype)return;
+  const values={};etype.fields.forEach(f=>{values[f.k]=null;});
+  s.data.essais.push({type:type,values:values});
+  renderSondageContent(s);
+}
+function removeLaboEssai(idx){const s=getCurrentSondage();if(!s)return;s.data.essais.splice(idx,1);renderSondageContent(s);}
+function renderEssaiLaboSummary(s){
+  const cvs=document.getElementById('sondage-canvas');
+  const ctx=cvs.getContext('2d');
+  const d=s.data||{};
+  const essais=d.essais||[];
+  const cw=420,ch=Math.max(320,80+essais.length*60);cvs.width=cw;cvs.height=ch;
+  ctx.fillStyle='#FFF';ctx.fillRect(0,0,cw,ch);
+  const ref=document.getElementById('project-ref')?.value||'';
+  ctx.fillStyle='#1A1A1A';ctx.font='bold 14px Arial';ctx.textAlign='center';
+  ctx.fillText('ESSAIS LABORATOIRE'+(s.name?' — '+s.name:''),cw/2,25);
+  ctx.font='11px Arial';ctx.fillStyle='#7A7A7A';
+  ctx.fillText((ref?'Projet: '+ref+'  ':'')+(d.sourceSondage?'Sondage: '+d.sourceSondage+'  ':'')+'Prof.: '+(d.sampleDepth||'?')+' m',cw/2,43);
+  if(essais.length===0){ctx.fillStyle='#AAA';ctx.font='12px Arial';ctx.fillText('Aucun essai',cw/2,ch/2);return;}
+  let y=65;
+  essais.forEach(essai=>{
+    const etype=ESSAI_LABO_TYPES.find(t=>t.v===essai.type);if(!etype)return;
+    ctx.fillStyle='#F5F5F5';ctx.fillRect(20,y,cw-40,50);ctx.strokeStyle='#8E44AD';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(20,y);ctx.lineTo(20,y+50);ctx.stroke();
+    ctx.fillStyle='#1A1A1A';ctx.font='bold 11px Arial';ctx.textAlign='left';
+    ctx.fillText(etype.l,30,y+16);
+    ctx.font='10px Arial';ctx.fillStyle='#4A4A4A';
+    const vals=etype.fields.map(f=>f.l+': '+(essai.values[f.k]!=null?essai.values[f.k]:'—')).join('   |   ');
+    ctx.fillText(vals,30,y+36);
+    y+=56;
+  });
+}
+
 // ─── EXPORT GRAPHE SUR LE PLAN ───
 function exportSondageGraph(){
   saveSondageFromUI();
@@ -7025,17 +7543,40 @@ function applyCrop(){
     c.getContext('2d').drawImage(img,sx,sy,sw,sh,0,0,sw,sh);
     planImgSrc=c.toDataURL('image/png');planW=sw;planH=sh;
     $planImg.src=planImgSrc;$planImg.style.display='block';$empty.style.display='none';
-    // Décaler les éléments selon l'offset du rognage
-    elements.forEach(el=>{el.x-=sx;el.y-=sy;if(el.type==='arrow'){el.x2-=sx;el.y2-=sy;}});
-    drawPaths.forEach(p=>{p.points.forEach(pt=>{pt.x-=sx;pt.y-=sy;});});
-    cleanPaths.forEach(p=>{p.points.forEach(pt=>{pt.x-=sx;pt.y-=sy;});});
-    clearSelection();redrawCanvas();redrawCleanCanvas();resetView();
-    closeCropModal();
+    if(addRightBackup){
+      // Mode ajout à droite : demander confirmation d'échelle
+      const backup=addRightBackup;
+      addRightBackup=null; // désactiver avant closeCropModal pour éviter la restauration
+      closeCropModal();
+      showScaleConfirm(()=>{
+        // Oui : fusionner
+        addRightBackup=backup;
+        mergeAddRightPlan();
+      },()=>{
+        // Non : annuler, restaurer le plan d'origine
+        planImgSrc=backup.imgSrc;planW=backup.w;planH=backup.h;
+        $planImg.src=planImgSrc;resetView();
+      });
+    }else{
+      // Mode normal : décaler les éléments selon l'offset du rognage
+      elements.forEach(el=>{el.x-=sx;el.y-=sy;if(el.type==='arrow'){el.x2-=sx;el.y2-=sy;}});
+      drawPaths.forEach(p=>{p.points.forEach(pt=>{pt.x-=sx;pt.y-=sy;});});
+      cleanPaths.forEach(p=>{p.points.forEach(pt=>{pt.x-=sx;pt.y-=sy;});});
+      clearSelection();redrawCanvas();redrawCleanCanvas();resetView();
+      closeCropModal();
+    }
   };
   img.src=cropSrcDataUrl||planImgSrc;
 }
 
-function closeCropModal(){document.getElementById('crop-modal').classList.remove('open');}
+function closeCropModal(){
+  document.getElementById('crop-modal').classList.remove('open');
+  // Si on annule le crop en mode ajout à droite, restaurer le plan d'origine
+  if(addRightBackup){
+    planImgSrc=addRightBackup.imgSrc;planW=addRightBackup.w;planH=addRightBackup.h;
+    $planImg.src=planImgSrc;addRightBackup=null;resetView();
+  }
+}
 </script>
 <script type="module">
 import * as THREE from 'three';
@@ -7684,7 +8225,7 @@ window.exportScan3DProject=function(){
   const blob=new Blob([JSON.stringify(project)],{type:'application/json'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
-  a.download=(scanFileName.replace(/\.[^.]+$/,'')||'projet')+'.geoter3d';
+  a.download=(scanFileName.replace(/\.[^.]+$/,'')||'projet')+'.geosolia3d';
   a.click();URL.revokeObjectURL(a.href);
 };
 

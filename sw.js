@@ -1,8 +1,8 @@
-// ═══ GéoTer' Service Worker ═══
+// ═══ GéoSolia' Service Worker ═══
 const CACHE_VERSION = 'v1';
-const CACHE_STATIC = 'geoter-static-' + CACHE_VERSION;
-const CACHE_TILES  = 'geoter-tiles-' + CACHE_VERSION;
-const CACHE_API    = 'geoter-api-' + CACHE_VERSION;
+const CACHE_STATIC = 'geosolia-static-' + CACHE_VERSION;
+const CACHE_TILES  = 'geosolia-tiles-' + CACHE_VERSION;
+const CACHE_API    = 'geosolia-api-' + CACHE_VERSION;
 
 const MAX_TILES = 500;
 const API_TTL = 24 * 60 * 60 * 1000; // 24h
@@ -196,7 +196,7 @@ async function networkFirstApi(request) {
       const cache = await caches.open(CACHE_API);
       // Stocker avec timestamp dans un header custom
       const headers = new Headers(response.headers);
-      headers.set('x-geoter-cached-at', Date.now().toString());
+      headers.set('x-geosolia-cached-at', Date.now().toString());
       const timedResponse = new Response(await response.clone().blob(), {
         status: response.status,
         statusText: response.statusText,
@@ -209,7 +209,7 @@ async function networkFirstApi(request) {
     const cached = await caches.match(request);
     if (cached) {
       // Vérifier le TTL
-      const cachedAt = parseInt(cached.headers.get('x-geoter-cached-at') || '0');
+      const cachedAt = parseInt(cached.headers.get('x-geosolia-cached-at') || '0');
       if (Date.now() - cachedAt < API_TTL) {
         return cached;
       }

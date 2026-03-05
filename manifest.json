@@ -1,6 +1,6 @@
 {
-  "name": "GéoTer' — Annotateur de plans terrain",
-  "short_name": "GéoTer'",
+  "name": "GéoSolia' — Annotateur de plans terrain",
+  "short_name": "GéoSolia'",
   "description": "Application de relevé terrain géotechnique — annotation, sondages, photos",
   "start_url": "./index.html",
   "scope": "./",
@@ -38,7 +38,7 @@
     {
       "action": "./index.html",
       "accept": {
-        "application/json": [".geoter"]
+        "application/json": [".geosolia"]
       }
     }
   ],

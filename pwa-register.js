@@ -1,11 +1,11 @@
-// ═══ GéoTer' PWA — Inscription, Installation & Statut Réseau ═══
+// ═══ GéoSolia' PWA — Inscription, Installation & Statut Réseau ═══
 
 // ═══ SERVICE WORKER ═══
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js', { scope: './' })
       .then(reg => {
-        console.log('[GéoTer PWA] Service Worker enregistré:', reg.scope);
+        console.log('[GéoSolia PWA] Service Worker enregistré:', reg.scope);
         // Détection de mise à jour
         reg.addEventListener('updatefound', () => {
           const newWorker = reg.installing;
@@ -16,7 +16,7 @@ if ('serviceWorker' in navigator) {
           });
         });
       })
-      .catch(err => console.warn('[GéoTer PWA] Erreur SW:', err));
+      .catch(err => console.warn('[GéoSolia PWA] Erreur SW:', err));
   });
 }
 
@@ -44,7 +44,7 @@ function triggerInstall() {
   deferredInstallPrompt.prompt();
   deferredInstallPrompt.userChoice.then(result => {
     if (result.outcome === 'accepted') {
-      showToast("G\u00e9oTer' install\u00e9 !");
+      showToast("G\u00e9oSolia' install\u00e9 !");
     }
     deferredInstallPrompt = null;
     dismissInstallBanner();
@@ -54,7 +54,7 @@ function triggerInstall() {
 window.addEventListener('appinstalled', () => {
   deferredInstallPrompt = null;
   dismissInstallBanner();
-  showToast("G\u00e9oTer' a \u00e9t\u00e9 install\u00e9 sur cet appareil");
+  showToast("G\u00e9oSolia' a \u00e9t\u00e9 install\u00e9 sur cet appareil");
 });
 
 // ═══ STATUT RÉSEAU ═══
