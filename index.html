@@ -1797,8 +1797,8 @@ async function restoreFromIDB(id){
   // Simuler un import de projet
   activateApp();
   savedFileHandle=null;
-  document.getElementById('project-ref').value=project.projectRef||'';autoSizeRef();
   projectName=project.projectName||'';
+  document.getElementById('project-ref').value=((project.projectRef||'')+(projectName?' '+projectName:'')).trim();autoSizeRef();
   projectCp=project.projectCp||'';
   projectVille=project.projectVille||'';
   if(project.projectAddr){projectAddr=project.projectAddr;projectLat=project.projectLat||null;projectLng=project.projectLng||null;projectInsee=project.projectInsee||null;}
@@ -3680,6 +3680,26 @@ function renderGeocartoPanel(){
   html+='GPS : '+g.lat.toFixed(6)+', '+g.lng.toFixed(6);
   html+='</div>';
   html+='</div>';
+  // --- Programme de reconnaissance ---
+  const gcFld='width:52px;padding:3px 6px;border:1px solid #ccc;border-radius:4px;font-size:12px;font-weight:700;text-align:center';
+  const gcLbl='display:flex;align-items:center;justify-content:space-between;font-size:12px;color:#444';
+  const gcSel='padding:3px 8px;border:1px solid #ccc;border-radius:4px;font-size:12px;font-weight:700';
+  html+='<div style="margin:12px 0 16px;padding:10px 12px;background:#EFF6FF;border-radius:8px;border-left:4px solid #3D7AB5">';
+  html+='<div style="font-weight:700;font-size:12px;color:#2C3E50;margin-bottom:8px">Programme de reconnaissance</div>';
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 20px">';
+  html+='<label style="'+gcLbl+'"><span>Pénétromètres</span><input type="number" min="0" id="gc-nb-penetro" value="'+(g.nbPenetro||0)+'" style="'+gcFld+'" onchange="gcMissionField(\'nbPenetro\',+this.value)"></label>';
+  html+='<label style="'+gcLbl+'"><span>Tarières</span><input type="number" min="0" id="gc-nb-tariere" value="'+(g.nbTariere||0)+'" style="'+gcFld+'" onchange="gcMissionField(\'nbTariere\',+this.value)"></label>';
+  html+='<label style="'+gcLbl+'"><span>Reco fondation</span><input type="number" min="0" id="gc-nb-fondation" value="'+(g.nbFondation||0)+'" style="'+gcFld+'" onchange="gcMissionField(\'nbFondation\',+this.value)"></label>';
+  html+='<label style="'+gcLbl+'"><span>Pelle mécanique</span><input type="number" min="0" id="gc-nb-pelle" value="'+(g.nbPelle||0)+'" style="'+gcFld+'" onchange="gcMissionField(\'nbPelle\',+this.value);gcAutoCheckPelle()"></label>';
+  html+='</div>';
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 20px;margin-top:10px;padding-top:8px;border-top:1px solid #D6E4F0">';
+  html+='<label style="'+gcLbl+'"><span>Pelle nécessaire</span><select id="gc-pelle-oui" style="'+gcSel+'" onchange="gcMissionField(\'pelleOui\',this.value===\'oui\')"><option value="oui"'+((g.pelleOui!==false)?' selected':'')+'>Oui</option><option value="non"'+(g.pelleOui===false?' selected':'')+'>Non</option></select></label>';
+  html+='<label style="'+gcLbl+'"><span>Laboratoire</span><select id="gc-labo-oui" style="'+gcSel+'" onchange="gcMissionField(\'laboOui\',this.value===\'oui\')"><option value="oui"'+(g.laboOui?' selected':'')+'>Oui</option><option value="non"'+(!g.laboOui?' selected':'')+'>Non</option></select></label>';
+  html+='</div>';
+  html+='<div style="margin-top:10px;padding-top:8px;border-top:1px solid #D6E4F0">';
+  html+='<label style="'+gcLbl+'"><span>Temps estimé terrain</span><input type="text" id="gc-temps-terrain" value="'+(g.tempsTerrain||'')+'" placeholder="" style="width:120px;padding:3px 8px;border:1px solid #ccc;border-radius:4px;font-size:12px;font-weight:700;text-align:center" onchange="gcMissionField(\'tempsTerrain\',this.value)"></label>';
+  html+='</div>';
+  html+='</div>';
   // Zone sismique
   const sc=g.sismique?String(g.sismique):'?';
   const scColor=sismColors[g.sismique]||'gray';
@@ -3742,6 +3762,17 @@ function renderGeocartoPanel(){
   if(gcCheck)gcCheck.disabled=false;
 }
 
+function gcMissionField(field,val){
+  if(!geocartoData)return;
+  geocartoData[field]=val;
+}
+function gcAutoCheckPelle(){
+  if(!geocartoData)return;
+  const nb=geocartoData.nbPelle||0;
+  geocartoData.pelleOui=nb>=1;
+  const sel=document.getElementById('gc-pelle-oui');
+  if(sel)sel.value=nb>=1?'oui':'non';
+}
 function gcSection(title,badgeClass,badgeText,content){
   let badge=badgeText?'<span class="gc-badge '+badgeClass+'">'+badgeText+'</span>':'<span class="gc-badge '+badgeClass+'">&bull;</span>';
   return '<details class="gc-section"><summary><span class="gc-arrow">&#9654;</span><span class="gc-title">'+title+'</span>'+badge+'</summary><div class="gc-content">'+content+'</div></details>';
@@ -3997,6 +4028,16 @@ function buildGeocartoContext(){
   if(g.infosGeotech){
     ctx+="\nINFOS POUR LE GÉOTECHNICIEN :\n"+g.infosGeotech+"\n";
   }
+  // Programme de reconnaissance
+  if(g.nbPenetro||g.nbTariere||g.nbFondation||g.nbPelle){
+    ctx+="\nPROGRAMME DE RECONNAISSANCE :\n";
+    if(g.nbPenetro)ctx+="  Pénétromètres dynamiques : "+g.nbPenetro+"\n";
+    if(g.nbTariere)ctx+="  Tarières : "+g.nbTariere+"\n";
+    if(g.nbFondation)ctx+="  Reconnaissances de fondation : "+g.nbFondation+"\n";
+    if(g.nbPelle)ctx+="  Sondages pelle mécanique : "+g.nbPelle+"\n";
+    ctx+="  Pelle mécanique : "+(g.pelleOui!==false?"Oui":"Non")+"\n";
+    ctx+="  Laboratoire : "+(g.laboOui?"Oui":"Non")+"\n";
+  }
   ctx+="--- FIN DONN\u00c9ES G\u00c9OCARTO ---\n";
   return ctx;
 }
@@ -4224,8 +4265,8 @@ function closeNewStudyModal(){
 async function createNewStudy(){
   if(editSiteMode){
     // Mode édition : mettre à jour les variables sans créer de fichier
-    document.getElementById('project-ref').value=document.getElementById('new-study-ref').value.trim();autoSizeRef();
     projectName=document.getElementById('new-study-name').value.trim();
+    document.getElementById('project-ref').value=(document.getElementById('new-study-ref').value.trim()+(projectName?' '+projectName:'')).trim();autoSizeRef();
     projectAddr=document.getElementById('new-study-addr').value.trim();
     projectLat=parseFloat(document.getElementById('new-study-lat').value)||null;
     projectLng=parseFloat(document.getElementById('new-study-lng').value)||null;
@@ -4245,9 +4286,9 @@ async function createNewStudy(){
   const refInput=document.getElementById('new-study-ref');
   const ref=refInput.value.trim();
   // Remplir la référence projet
-  document.getElementById('project-ref').value=ref;autoSizeRef();
   // Stocker le nom du projet
   projectName=document.getElementById('new-study-name').value.trim();
+  document.getElementById('project-ref').value=(ref+(projectName?' '+projectName:'')).trim();autoSizeRef();
   // Stocker l'adresse du site
   projectAddr=document.getElementById('new-study-addr').value.trim();
   projectLat=parseFloat(document.getElementById('new-study-lat').value)||null;
@@ -4478,8 +4519,8 @@ function importProject(e){
     activateApp();
     savedFileHandle=null; // Pas de handle en lecture, le 1er "Enregistrer" demandera l'emplacement
     // Restore project ref
-    document.getElementById('project-ref').value=project.projectRef||'';autoSizeRef();
     projectName=project.projectName||'';
+    document.getElementById('project-ref').value=((project.projectRef||'')+(projectName?' '+projectName:'')).trim();autoSizeRef();
     projectCp=project.projectCp||'';
     projectVille=project.projectVille||'';
     // Restore données GéoCarto (avant le return pour projet sans plan)
