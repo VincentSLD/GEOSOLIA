@@ -267,7 +267,7 @@
   #ia-addr-suggest{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--gray-200);border-radius:6px;max-height:120px;overflow-y:auto;z-index:200;box-shadow:0 4px 12px rgba(0,0,0,0.15);display:none}
   #ia-addr-suggest div{padding:5px 8px;font-size:11px;cursor:pointer}
   #ia-addr-suggest div:hover{background:var(--yellow-pale)}
-  #geocarto-panel{position:fixed;top:0;left:0;bottom:0;width:380px;max-width:92vw;background:var(--white);box-shadow:4px 0 24px rgba(0,0,0,0.2);z-index:790;display:none;flex-direction:column;transform:translateX(-100%);transition:transform .3s cubic-bezier(.4,0,.2,1)}
+  #geocarto-panel{position:fixed;top:0;left:0;bottom:0;width:460px;max-width:92vw;background:var(--white);box-shadow:4px 0 24px rgba(0,0,0,0.2);z-index:790;display:none;flex-direction:column;transform:translateX(-100%);transition:transform .3s cubic-bezier(.4,0,.2,1)}
   #geocarto-panel.open{display:flex;transform:translateX(0)}
   .gc-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--black);border-bottom:2px solid var(--yellow);flex-shrink:0}
   .gc-header span{font-weight:800;font-size:14px;color:var(--yellow)}
@@ -990,6 +990,7 @@
       <div class="arr-opt-group"><label>Couleur</label><div id="meas-color-dots" class="color-dots-row"></div></div>
       <div class="arr-opt-group"><label style="display:flex;align-items:center;gap:3px;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap"><input type="checkbox" id="meas-approx" style="accent-color:var(--yellow);width:13px;height:13px;cursor:pointer" onchange="setMeasApprox(this.checked)"> ≈ Environ</label></div>
       <div class="arr-opt-group"><label style="font-size:10px;font-weight:700;display:flex;align-items:center;gap:3px;white-space:nowrap">Taille <input type="number" id="meas-font-size" value="11" min="7" max="24" step="1" style="width:38px;height:20px;border:1px solid #ddd;border-radius:4px;text-align:center;font-size:10px;font-weight:700;font-family:inherit;padding:0" onchange="setMeasFontSize(parseInt(this.value)||11)"> px</label></div>
+      <div class="arr-opt-group"><button class="arr-mode-btn" id="btn-snap" onclick="toggleSnap()" title="Accroche aux lignes du plan"><svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="#1A1A1A" stroke-width="1.5" stroke-linecap="round"><circle cx="10" cy="10" r="4" stroke="#4CAF50" stroke-width="2"/><line x1="10" y1="2" x2="10" y2="6"/><line x1="10" y1="14" x2="10" y2="18"/><line x1="2" y1="10" x2="6" y2="10"/><line x1="14" y1="10" x2="18" y2="10"/></svg></button></div>
       <div class="arr-opt-group"><button class="arr-mode-btn" id="btn-recalibrate" onclick="startCalibration()" title="Recalibrer l'échelle"><svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="#1A1A1A" stroke-width="1.5" stroke-linecap="round"><line x1="2" y1="16" x2="18" y2="16"/><line x1="4" y1="16" x2="4" y2="12"/><line x1="10" y1="16" x2="10" y2="12"/><line x1="7" y1="16" x2="7" y2="14"/><line x1="13" y1="16" x2="13" y2="14"/><line x1="16" y1="16" x2="16" y2="12"/><path d="M3 6l3-4h8l3 4" stroke="#F2B705" stroke-width="2"/><line x1="10" y1="6" x2="10" y2="9" stroke="#F2B705" stroke-width="1.5"/></svg></button></div>
       <div class="arr-opt-group"><span class="measure-scale-info" id="measure-scale-display">Non calibré</span></div>
     </div>
@@ -1946,6 +1947,7 @@ const ALL_STICKERS = STICKER_SECTIONS.flatMap(s => s.items).concat(SHAPE_ITEMS);
 
 let currentTool='select',planImgSrc=null,planW=1200,planH=800,scale=1,baseScale=1,offX=0,offY=0;
 let isPanning=false,panStartX=0,panStartY=0,panOX=0,panOY=0;
+let isMidPanning=false,midPanStartX=0,midPanStartY=0,midPanOX=0,midPanOY=0;
 let elements=[],selectedIds=new Set(),selectedStickerId=null;
 function getSelectedId(){return selectedIds.size>=1?selectedIds.values().next().value:null;}
 function isSelected(id){return selectedIds.has(id);}
@@ -1968,6 +1970,9 @@ let measureLineStyle='dashed'; // 'dashed','solid','double'
 let measureApprox=false;
 let measureFontSize=11;
 let calibDragPtIdx=-1; // index of calibration point being dragged (-1=none)
+// Snap-to-edge
+let snapEnabled=false, snapEdgeMap=null, snapRadius=15;
+let snapPreview=null; // {x,y} of current snap point for visual feedback
 const COLORS=['#1A1A1A','#555555','#D94040','#E88D00','#F2B705','#4CAF50','#2E7D32','#3D7AB5','#1565C0','#9B59B6','#E91E8C','#FFFFFF'];
 
 const $area=document.getElementById('canvas-area'),$planImg=document.getElementById('plan-img');
@@ -2071,6 +2076,99 @@ function switchMeasureMode(mode){
   document.getElementById('btn-meas-area').classList.toggle('active',mode==='measureArea');
   renderElements();
 }
+// ═══ SNAP-TO-EDGE (accroche aux lignes du plan) ═══
+function toggleSnap(){
+  snapEnabled=!snapEnabled;
+  document.getElementById('btn-snap').classList.toggle('active',snapEnabled);
+  if(snapEnabled&&!snapEdgeMap)computeSnapEdgeMap();
+  if(!snapEnabled){snapPreview=null;renderElements();}
+}
+
+function computeSnapEdgeMap(){
+  if(!planImgSrc)return;
+  const img=new Image();
+  img.onload=function(){
+    // Work at full resolution for precision (no downsampling)
+    const w=img.width,h=img.height;
+    const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+    const ctx=cv.getContext('2d');
+    ctx.drawImage(img,0,0,w,h);
+    const imageData=ctx.getImageData(0,0,w,h);
+    const gray=new Float32Array(w*h);
+    const d=imageData.data;
+    // Convert to grayscale
+    for(let i=0;i<w*h;i++){gray[i]=0.299*d[i*4]+0.587*d[i*4+1]+0.114*d[i*4+2];}
+    // Sobel gradient magnitude
+    const mag=new Float32Array(w*h);
+    for(let y=1;y<h-1;y++){
+      for(let x=1;x<w-1;x++){
+        const gx=-gray[(y-1)*w+(x-1)]-2*gray[y*w+(x-1)]-gray[(y+1)*w+(x-1)]
+                 +gray[(y-1)*w+(x+1)]+2*gray[y*w+(x+1)]+gray[(y+1)*w+(x+1)];
+        const gy=-gray[(y-1)*w+(x-1)]-2*gray[(y-1)*w+x]-gray[(y-1)*w+(x+1)]
+                 +gray[(y+1)*w+(x-1)]+2*gray[(y+1)*w+x]+gray[(y+1)*w+(x+1)];
+        mag[y*w+x]=Math.sqrt(gx*gx+gy*gy);
+      }
+    }
+    // Find threshold (adaptive: top 8% of gradient values)
+    const sorted=Array.from(mag).filter(v=>v>0).sort((a,b)=>b-a);
+    const threshold=sorted[Math.floor(sorted.length*0.08)]||30;
+    // Collect edge points at every pixel (no skipping for precision)
+    const edgePts=[];
+    for(let y=2;y<h-2;y++){
+      for(let x=2;x<w-2;x++){
+        if(mag[y*w+x]>=threshold){
+          edgePts.push({x:x, y:y});
+        }
+      }
+    }
+    // Build spatial grid for fast lookup
+    const cellSize=Math.max(20,snapRadius);
+    const gridW=Math.ceil(w/cellSize);
+    const gridH=Math.ceil(h/cellSize);
+    const grid=new Array(gridW*gridH);
+    for(let i=0;i<grid.length;i++)grid[i]=[];
+    edgePts.forEach(p=>{
+      const gx=Math.floor(p.x/cellSize),gy=Math.floor(p.y/cellSize);
+      if(gx>=0&&gx<gridW&&gy>=0&&gy<gridH)grid[gy*gridW+gx].push(p);
+    });
+    snapEdgeMap={grid,gridW,gridH,cellSize,totalPts:edgePts.length};
+    if(typeof showToast==='function')showToast('Accroche : '+edgePts.length+' points détectés','#4CAF50');
+  };
+  img.src=planImgSrc;
+}
+
+function findSnapPoint(px,py){
+  if(!snapEnabled||!snapEdgeMap)return null;
+  const{grid,gridW,gridH,cellSize}=snapEdgeMap;
+  // snapRadius is in screen pixels — convert to plan pixels for distance check
+  const planRadius=snapRadius/scale;
+  const planRadius2=planRadius*planRadius;
+  const gx=Math.floor(px/cellSize),gy=Math.floor(py/cellSize);
+  // Search enough grid cells to cover the planRadius
+  const cellReach=Math.max(1,Math.ceil(planRadius/cellSize));
+  let bestDist=planRadius2,bestPt=null;
+  for(let dy=-cellReach;dy<=cellReach;dy++){
+    for(let dx=-cellReach;dx<=cellReach;dx++){
+      const cx=gx+dx,cy=gy+dy;
+      if(cx<0||cx>=gridW||cy<0||cy>=gridH)continue;
+      const cell=grid[cy*gridW+cx];
+      for(let i=0;i<cell.length;i++){
+        const p=cell[i];
+        const d2=(p.x-px)*(p.x-px)+(p.y-py)*(p.y-py);
+        if(d2<bestDist){bestDist=d2;bestPt=p;}
+      }
+    }
+  }
+  return bestPt;
+}
+
+function applySnap(px,py){
+  const sp=findSnapPoint(px,py);
+  if(sp){snapPreview={x:sp.x,y:sp.y};return{x:sp.x,y:sp.y};}
+  snapPreview=null;
+  return{x:px,y:py};
+}
+
 function updateMeasureScaleDisplay(){
   const el=document.getElementById('measure-scale-display');
   if(!measureScale){el.textContent='⚠ Non calibré';el.classList.add('not-calibrated');el.style.color='';}
@@ -2274,7 +2372,7 @@ function mergeAddRightPlan(){
     mctx.fillStyle='#FFFFFF';mctx.fillRect(0,0,mergedW,mergedH);
     mctx.drawImage(oldImg,0,0,backup.w,backup.h);
     mctx.drawImage(newImg,backup.w,0,croppedW,croppedH);
-    planImgSrc=mc.toDataURL('image/png');planW=mergedW;planH=mergedH;
+    planImgSrc=mc.toDataURL('image/png');planW=mergedW;planH=mergedH;snapEdgeMap=null;
     $planImg.src=planImgSrc;$planImg.style.display='block';$empty.style.display='none';
     resetView();
   };
@@ -2290,7 +2388,7 @@ async function loadPlan(e){
 
 async function loadPlanFromFile(file){
   if(!file)return;
-  cleanPaths=[];redrawCleanCanvas();
+  cleanPaths=[];redrawCleanCanvas();snapEdgeMap=null;
   if(file.type==='application/pdf'){
     const buf=await file.arrayBuffer();
     const pdf=await pdfjsLib.getDocument({data:buf}).promise;
@@ -2307,7 +2405,7 @@ async function loadPdfPage(pdf,num){
   const page=await pdf.getPage(num);const vp=page.getViewport({scale:2});
   const c=document.createElement('canvas');c.width=vp.width;c.height=vp.height;
   await page.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;
-  planImgSrc=c.toDataURL('image/png');planW=vp.width;planH=vp.height;
+  planImgSrc=c.toDataURL('image/png');planW=vp.width;planH=vp.height;snapEdgeMap=null;
   $planImg.src=planImgSrc;$planImg.style.display='block';$empty.style.display='none';resetView();
 }
 async function showPdfPageModal(pdf){
@@ -2395,7 +2493,7 @@ $area.addEventListener('pointermove',function(e){const r=$area.getBoundingClient
 
 $area.addEventListener('pointerdown',onPD);$area.addEventListener('pointermove',onPM);$area.addEventListener('pointerup',onPU);$area.addEventListener('wheel',onW,{passive:false});
 let _midLastClick=0;
-$area.addEventListener('pointerdown',function(e){if(e.button===1){e.preventDefault();const now=Date.now();if(now-_midLastClick<400){resetView();_midLastClick=0;}else{_midLastClick=now;}}});
+$area.addEventListener('pointerdown',function(e){if(e.button===1){e.preventDefault();const now=Date.now();if(now-_midLastClick<400){resetView();_midLastClick=0;}else{_midLastClick=now;isMidPanning=true;midPanStartX=e.clientX;midPanStartY=e.clientY;midPanOX=offX;midPanOY=offY;$area.setPointerCapture(e.pointerId);}}});
 $area.addEventListener('auxclick',function(e){e.preventDefault();});
 // Pinch-to-zoom for touch
 let pinchStartDist=0,pinchStartScale=1,pinchMidX=0,pinchMidY=0;
@@ -2424,6 +2522,7 @@ $area.addEventListener('touchmove',function(e){
 },{passive:false});
 function gP(e){const r=$area.getBoundingClientRect();const cx=(e.clientX||0)-r.left,cy=(e.clientY||0)-r.top;return{sx:cx,sy:cy,px:(cx-offX)/scale,py:(cy-offY)/scale};}
 function onPD(e){
+  if(e.button===1)return; // middle button handled separately for panning only
   if(e.target.closest('#empty-state'))return;
   if(e.target.closest('#btn-recadrer'))return;
   // GPS calibration plan click intercept
@@ -2444,16 +2543,18 @@ function onPD(e){
   if(currentTool==='measureDist'){
     if(!measureScale){showToast('Veuillez d\'abord calibrer l\'échelle (bouton Calibrer)','#D94040');return;}
     let fx=pt.px,fy=pt.py;
-    if((e.shiftKey||constraintMode)&&measureDistStart){const adx=pt.px-measureDistStart.x,ady=pt.py-measureDistStart.y;const dist=Math.sqrt(adx*adx+ady*ady);const ang=Math.round(Math.atan2(ady,adx)/(Math.PI/12))*(Math.PI/12);fx=measureDistStart.x+dist*Math.cos(ang);fy=measureDistStart.y+dist*Math.sin(ang);}
+    const snp=applySnap(fx,fy);fx=snp.x;fy=snp.y;
+    if((e.shiftKey||constraintMode)&&measureDistStart){const adx=fx-measureDistStart.x,ady=fy-measureDistStart.y;const dist=Math.sqrt(adx*adx+ady*ady);const ang=Math.round(Math.atan2(ady,adx)/(Math.PI/12))*(Math.PI/12);fx=measureDistStart.x+dist*Math.cos(ang);fy=measureDistStart.y+dist*Math.sin(ang);}
     if(!measureDistStart){measureDistStart={x:fx,y:fy};measureDistPreviewEnd=null;renderElements();}
-    else{const dx=fx-measureDistStart.x,dy=fy-measureDistStart.y;const pxDist=Math.sqrt(dx*dx+dy*dy);const realDist=pxDist*measureScale;elements.push({id:Date.now(),type:'measure',x:measureDistStart.x,y:measureDistStart.y,x2:fx,y2:fy,distance:realDist,pxDist:pxDist,color:measureColor,lineStyle:measureLineStyle,approx:measureApprox,fontSize:measureFontSize});measureDistStart=null;measureDistPreviewEnd=null;renderElements();}
+    else{const dx=fx-measureDistStart.x,dy=fy-measureDistStart.y;const pxDist=Math.sqrt(dx*dx+dy*dy);const realDist=pxDist*measureScale;elements.push({id:Date.now(),type:'measure',x:measureDistStart.x,y:measureDistStart.y,x2:fx,y2:fy,distance:realDist,pxDist:pxDist,color:measureColor,lineStyle:measureLineStyle,approx:measureApprox,fontSize:measureFontSize});measureDistStart=null;measureDistPreviewEnd=null;snapPreview=null;renderElements();}
     return;
   }
   if(currentTool==='measureArea'){
     if(!measureScale){showToast('Veuillez d\'abord calibrer l\'échelle (bouton Calibrer)','#D94040');return;}
     let nx=pt.px,ny=pt.py;
-    if((e.shiftKey||constraintMode)&&measureAreaPts.length>0){const lp=measureAreaPts[measureAreaPts.length-1];const adx=pt.px-lp.x,ady=pt.py-lp.y;const dist=Math.sqrt(adx*adx+ady*ady);const ang=Math.round(Math.atan2(ady,adx)/(Math.PI/12))*(Math.PI/12);nx=lp.x+dist*Math.cos(ang);ny=lp.y+dist*Math.sin(ang);}
-    if(measureAreaPts.length>2){const dx2=(nx-measureAreaPts[0].x)*scale,dy2=(ny-measureAreaPts[0].y)*scale;if(Math.sqrt(dx2*dx2+dy2*dy2)<15){const pts=measureAreaPts;let area=0;for(let i=0;i<pts.length;i++){const j=(i+1)%pts.length;area+=pts[i].x*pts[j].y;area-=pts[j].x*pts[i].y;}area=Math.abs(area)/2;const realArea=area*measureScale*measureScale;let cx2=0,cy2=0;pts.forEach(p=>{cx2+=p.x;cy2+=p.y;});cx2/=pts.length;cy2/=pts.length;elements.push({id:Date.now(),type:'measureArea',points:[...pts],cx:cx2,cy:cy2,area:realArea,pxArea:area,color:measureColor,approx:measureApprox,fontSize:measureFontSize});measureAreaPts=[];measureAreaPreview=null;renderElements();return;}}
+    const snp=applySnap(nx,ny);nx=snp.x;ny=snp.y;
+    if((e.shiftKey||constraintMode)&&measureAreaPts.length>0){const lp=measureAreaPts[measureAreaPts.length-1];const adx=nx-lp.x,ady=ny-lp.y;const dist=Math.sqrt(adx*adx+ady*ady);const ang=Math.round(Math.atan2(ady,adx)/(Math.PI/12))*(Math.PI/12);nx=lp.x+dist*Math.cos(ang);ny=lp.y+dist*Math.sin(ang);}
+    if(measureAreaPts.length>2){const dx2=(nx-measureAreaPts[0].x)*scale,dy2=(ny-measureAreaPts[0].y)*scale;if(Math.sqrt(dx2*dx2+dy2*dy2)<15){const pts=measureAreaPts;let area=0;for(let i=0;i<pts.length;i++){const j=(i+1)%pts.length;area+=pts[i].x*pts[j].y;area-=pts[j].x*pts[i].y;}area=Math.abs(area)/2;const realArea=area*measureScale*measureScale;let cx2=0,cy2=0;pts.forEach(p=>{cx2+=p.x;cy2+=p.y;});cx2/=pts.length;cy2/=pts.length;elements.push({id:Date.now(),type:'measureArea',points:[...pts],cx:cx2,cy:cy2,area:realArea,pxArea:area,color:measureColor,approx:measureApprox,fontSize:measureFontSize});measureAreaPts=[];measureAreaPreview=null;snapPreview=null;renderElements();return;}}
     measureAreaPts.push({x:nx,y:ny});renderElements();return;
   }
   if(currentTool==='select'){clearSelection();document.getElementById('measure-options').style.display='none';renderElements();isPanning=true;panStartX=e.clientX;panStartY=e.clientY;panOX=offX;panOY=offY;$area.style.cursor='grabbing';$area.setPointerCapture(e.pointerId);return;}
@@ -2474,16 +2575,18 @@ function onPD(e){
   }
 }
 function onPM(e){
+  if(isMidPanning){offX=midPanOX+(e.clientX-midPanStartX);offY=midPanOY+(e.clientY-midPanStartY);updatePlanTransform();redrawCanvas();redrawCleanCanvas();renderElements();return;}
   if(calibDragPtIdx>=0&&isCalibrating){const pt=gP(e);measureCalibPts[calibDragPtIdx]={x:pt.px,y:pt.py};renderElements();return;}
   if(isPanning){offX=panOX+(e.clientX-panStartX);offY=panOY+(e.clientY-panStartY);updatePlanTransform();redrawCanvas();redrawCleanCanvas();renderElements();return;}
   if(arrowStartPt){const pt=gP(e);if((e.shiftKey||constraintMode)){const adx=pt.px-arrowStartPt.x,ady=pt.py-arrowStartPt.y;const dist=Math.sqrt(adx*adx+ady*ady);const ang=Math.round(Math.atan2(ady,adx)/(Math.PI/12))*(Math.PI/12);arrowPreviewEnd={x:arrowStartPt.x+dist*Math.cos(ang),y:arrowStartPt.y+dist*Math.sin(ang)};}else{arrowPreviewEnd={x:pt.px,y:pt.py};}renderElements();return;}
-  if(measureDistStart&&currentTool==='measureDist'){const pt=gP(e);if((e.shiftKey||constraintMode)){const adx=pt.px-measureDistStart.x,ady=pt.py-measureDistStart.y;const dist=Math.sqrt(adx*adx+ady*ady);const ang=Math.round(Math.atan2(ady,adx)/(Math.PI/12))*(Math.PI/12);measureDistPreviewEnd={x:measureDistStart.x+dist*Math.cos(ang),y:measureDistStart.y+dist*Math.sin(ang)};}else{measureDistPreviewEnd={x:pt.px,y:pt.py};}renderElements();return;}
-  if(measureAreaPts.length>0&&currentTool==='measureArea'){const pt=gP(e);const lp=measureAreaPts[measureAreaPts.length-1];if((e.shiftKey||constraintMode)){const adx=pt.px-lp.x,ady=pt.py-lp.y;const dist=Math.sqrt(adx*adx+ady*ady);const ang=Math.round(Math.atan2(ady,adx)/(Math.PI/12))*(Math.PI/12);measureAreaPreview={x:lp.x+dist*Math.cos(ang),y:lp.y+dist*Math.sin(ang)};}else{measureAreaPreview={x:pt.px,y:pt.py};}renderElements();return;}
+  if(measureDistStart&&currentTool==='measureDist'){const pt=gP(e);let mx=pt.px,my=pt.py;const snp=applySnap(mx,my);mx=snp.x;my=snp.y;if((e.shiftKey||constraintMode)){const adx=mx-measureDistStart.x,ady=my-measureDistStart.y;const dist=Math.sqrt(adx*adx+ady*ady);const ang=Math.round(Math.atan2(ady,adx)/(Math.PI/12))*(Math.PI/12);measureDistPreviewEnd={x:measureDistStart.x+dist*Math.cos(ang),y:measureDistStart.y+dist*Math.sin(ang)};}else{measureDistPreviewEnd={x:mx,y:my};}renderElements();return;}
+  if(measureAreaPts.length>0&&currentTool==='measureArea'){const pt=gP(e);let mx=pt.px,my=pt.py;const snp=applySnap(mx,my);mx=snp.x;my=snp.y;const lp=measureAreaPts[measureAreaPts.length-1];if((e.shiftKey||constraintMode)){const adx=mx-lp.x,ady=my-lp.y;const dist=Math.sqrt(adx*adx+ady*ady);const ang=Math.round(Math.atan2(ady,adx)/(Math.PI/12))*(Math.PI/12);measureAreaPreview={x:lp.x+dist*Math.cos(ang),y:lp.y+dist*Math.sin(ang)};}else{measureAreaPreview={x:mx,y:my};}renderElements();return;}
   if(isDrawing&&currentTool==='mrpropre'){const pt=gP(e);if((e.shiftKey||constraintMode)&&currentPathPts.length>0){const sp=currentPathPts[0];const adx=pt.px-sp.x,ady=pt.py-sp.y;const dist=Math.sqrt(adx*adx+ady*ady);const ang=Math.round(Math.atan2(ady,adx)/(Math.PI/12))*(Math.PI/12);currentPathPts=[sp,{x:sp.x+dist*Math.cos(ang),y:sp.y+dist*Math.sin(ang)}];}else{currentPathPts.push({x:pt.px,y:pt.py});}redrawCleanCanvas();return;}
   if(czPoints.length>0&&currentTool==='cleanzone'){const pt=gP(e);const lp=czPoints[czPoints.length-1];if((e.shiftKey||constraintMode)){const adx=pt.px-lp.x,ady=pt.py-lp.y;const dist=Math.sqrt(adx*adx+ady*ady);const ang=Math.round(Math.atan2(ady,adx)/(Math.PI/12))*(Math.PI/12);czPreview={x:lp.x+dist*Math.cos(ang),y:lp.y+dist*Math.sin(ang)};}else{czPreview={x:pt.px,y:pt.py};}redrawCleanCanvas();return;}
   if(isDrawing){const pt=gP(e);currentPathPts.push({x:pt.px,y:pt.py});redrawCanvas();}
 }
-function onPU(){
+function onPU(e){
+  if(isMidPanning){isMidPanning=false;return;}
   if(calibDragPtIdx>=0){calibDragPtIdx=-1;renderElements();return;}
   if(isPanning){isPanning=false;$area.style.cursor='grab';return;}
   if(arrowStartPt&&arrowPreviewEnd){
@@ -3001,6 +3104,13 @@ function renderElements(){
     if(measureAreaPreview&&measureAreaPts.length>2){const dx3=(measureAreaPreview.x-measureAreaPts[0].x)*scale,dy3=(measureAreaPreview.y-measureAreaPts[0].y)*scale;if(Math.sqrt(dx3*dx3+dy3*dy3)<15){sc2+=`<circle cx="${spts[0].sx}" cy="${spts[0].sy}" r="10" fill="rgba(76,175,80,0.5)" stroke="#fff" stroke-width="2"/>`;}}
     div.innerHTML=`<svg width="100%" height="100%" style="position:absolute;inset:0;overflow:visible;pointer-events:none" xmlns="http://www.w3.org/2000/svg">${sc2}</svg>`;
     $elemLayer.appendChild(div);
+  }
+  // Snap-to-edge visual indicator
+  if(snapPreview&&snapEnabled){
+    const sx=snapPreview.x*scale+offX, sy=snapPreview.y*scale+offY;
+    const snapDiv=document.createElement('div');snapDiv.style.cssText='position:absolute;inset:0;pointer-events:none;z-index:11';
+    snapDiv.innerHTML=`<svg width="100%" height="100%" style="position:absolute;inset:0;overflow:visible;pointer-events:none" xmlns="http://www.w3.org/2000/svg"><circle cx="${sx}" cy="${sy}" r="8" fill="rgba(76,175,80,0.35)" stroke="#4CAF50" stroke-width="2"/><line x1="${sx-5}" y1="${sy}" x2="${sx+5}" y2="${sy}" stroke="#4CAF50" stroke-width="1.5"/><line x1="${sx}" y1="${sy-5}" x2="${sx}" y2="${sy+5}" stroke="#4CAF50" stroke-width="1.5"/></svg>`;
+    $elemLayer.appendChild(snapDiv);
   }
   mepAutoRefresh();
   // Show arrow-options when an arrow is selected
@@ -3602,6 +3712,66 @@ async function iaFetchAltitude(lat,lng){
   return null;
 }
 
+// --- Cartes des risques (WMS → dataURL) ---
+async function fetchWmsMapDataUrl(url){
+  try{
+    const resp=await fetch(url,{signal:AbortSignal.timeout(15000)});
+    if(!resp.ok)return null;
+    const blob=await resp.blob();
+    return new Promise((res)=>{
+      const reader=new FileReader();
+      reader.onloadend=()=>res(reader.result);
+      reader.onerror=()=>res(null);
+      reader.readAsDataURL(blob);
+    });
+  }catch(e){return null;}
+}
+
+async function fetchRiskMaps(lat,lng){
+  const maps={};
+  const sz=400;
+  const d93=2000; // 2km autour en Lambert93
+  const {x,y}=wgs84ToLambert93(lat,lng);
+  const bbox93=(x-d93)+','+(y-d93)+','+(x+d93)+','+(y+d93);
+  const d4326=0.025; // ~2.5km en degrés
+  const bbox4326=(lng-d4326)+','+(lat-d4326)+','+(lng+d4326)+','+(lat+d4326);
+
+  const fetches=[
+    // 1. Zonage sismique
+    fetchWmsMapDataUrl('https://mapsref.brgm.fr/wxs/georisques/risques?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=ZONAGE_SISMIQUE&SRS=EPSG:4326&BBOX='+bbox4326+'&WIDTH='+sz+'&HEIGHT='+sz+'&FORMAT=image/png&TRANSPARENT=FALSE&STYLES=&BGCOLOR=0xFFFFFF')
+      .then(d=>{maps.sismique=d;}),
+    // 2. Aléa argiles (RGA)
+    fetchWmsMapDataUrl('https://mapsref.brgm.fr/wxs/georisques/risques?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=ALEARG&SRS=EPSG:4326&BBOX='+bbox4326+'&WIDTH='+sz+'&HEIGHT='+sz+'&FORMAT=image/png&TRANSPARENT=FALSE&STYLES=&BGCOLOR=0xFFFFFF')
+      .then(d=>{maps.argiles=d;}),
+    // 3. Remontée de nappes
+    fetchWmsMapDataUrl('https://mapsref.brgm.fr/wxs/georisques/risques?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=REMNAPPE_FIAB&SRS=EPSG:4326&BBOX='+bbox4326+'&WIDTH='+sz+'&HEIGHT='+sz+'&FORMAT=image/png&TRANSPARENT=FALSE&STYLES=&BGCOLOR=0xFFFFFF')
+      .then(d=>{maps.nappes=d;}),
+    // 4. Carte géologique 1/50000
+    fetchWmsMapDataUrl('https://geoservices.brgm.fr/geologie?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=SCAN_H_GEOL50&SRS=EPSG:2154&BBOX='+bbox93+'&WIDTH='+sz+'&HEIGHT='+sz+'&FORMAT=image/png&TRANSPARENT=FALSE&STYLES=')
+      .then(d=>{maps.geologie=d;}),
+    // 5. Localisation IGN (plan + ortho)
+    fetchWmsMapDataUrl('https://data.geopf.fr/wms-r?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&LAYERS=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&CRS=EPSG:4326&BBOX='+(lat-d4326)+','+(lng-d4326)+','+(lat+d4326)+','+(lng+d4326)+'&WIDTH='+sz+'&HEIGHT='+sz+'&FORMAT=image/png&STYLES=')
+      .then(d=>{maps.localisation=d;})
+  ];
+  await Promise.allSettled(fetches);
+  // Add crosshair marker on localisation map
+  if(maps.localisation){
+    try{
+      const img=new Image();
+      await new Promise((res,rej)=>{img.onload=res;img.onerror=rej;img.src=maps.localisation;});
+      const cv=document.createElement('canvas');cv.width=sz;cv.height=sz;
+      const ctx=cv.getContext('2d');ctx.drawImage(img,0,0);
+      // Red crosshair at center
+      const cx=sz/2,cy=sz/2;
+      ctx.strokeStyle='#E53935';ctx.lineWidth=3;
+      ctx.beginPath();ctx.moveTo(cx-12,cy);ctx.lineTo(cx+12,cy);ctx.moveTo(cx,cy-12);ctx.lineTo(cx,cy+12);ctx.stroke();
+      ctx.beginPath();ctx.arc(cx,cy,8,0,Math.PI*2);ctx.stroke();
+      maps.localisation=cv.toDataURL('image/png');
+    }catch(e){}
+  }
+  return maps;
+}
+
 // --- Enquête GéoCarto principale ---
 async function iaGeoInvestigate(){
   const lat=parseFloat(document.getElementById('ia-geo-lat').value);
@@ -3658,7 +3828,8 @@ async function iaGeoInvestigate(){
     iaFetchNappes(lat,lng).then(label=>{gd.nappes=label;}),
     iaFetchArgiles(lat,lng).then(label=>{gd.argiles=label;}),
     iaFetchGeologie(lat,lng).then(geo=>{gd.geologie=geo;}),
-    iaFetchAltitude(lat,lng).then(alt=>{gd.altitude=alt;})
+    iaFetchAltitude(lat,lng).then(alt=>{gd.altitude=alt;}),
+    fetchRiskMaps(lat,lng).then(maps=>{gd.riskMaps=maps;})
   ]);
   geocartoData=gd;
   document.getElementById('ia-ctx-geocarto').disabled=false;
@@ -3707,30 +3878,34 @@ function renderGeocartoPanel(){
   html+='<option value="G5"'+(projectMission==='G5'?' selected':'')+'>G5</option>';
   html+='</select></label></div>';
   // --- Programme de reconnaissance ---
-  const gcFld='width:52px;padding:3px 6px;border:1px solid #ccc;border-radius:4px;font-size:12px;font-weight:700;text-align:center';
-  const gcLbl='display:flex;align-items:center;justify-content:space-between;font-size:12px;color:#444';
-  const gcSel='padding:3px 8px;border:1px solid #ccc;border-radius:4px;font-size:12px;font-weight:700';
-  html+='<div style="margin:4px 0 16px;padding:10px 12px;background:#EFF6FF;border-radius:8px;border-left:4px solid #3D7AB5">';
-  html+='<div style="font-weight:700;font-size:12px;color:#2C3E50;margin-bottom:8px">Programme de reconnaissance</div>';
-  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 20px">';
-  html+='<label style="'+gcLbl+'"><span>Pénétromètres</span><input type="number" min="0" id="gc-nb-penetro" value="'+(g.nbPenetro||0)+'" style="'+gcFld+'" onchange="gcMissionField(\'nbPenetro\',+this.value)"></label>';
-  html+='<label style="'+gcLbl+'"><span>Tarières</span><input type="number" min="0" id="gc-nb-tariere" value="'+(g.nbTariere||0)+'" style="'+gcFld+'" onchange="gcMissionField(\'nbTariere\',+this.value)"></label>';
-  html+='<label style="'+gcLbl+'"><span>Reco fondation</span><input type="number" min="0" id="gc-nb-fondation" value="'+(g.nbFondation||0)+'" style="'+gcFld+'" onchange="gcMissionField(\'nbFondation\',+this.value)"></label>';
-  html+='<label style="'+gcLbl+'"><span>Sondage pelle</span><input type="number" min="0" id="gc-nb-pelle" value="'+(g.nbPelle||0)+'" style="'+gcFld+'" onchange="gcMissionField(\'nbPelle\',+this.value);gcAutoCheckPelle()"></label>';
-  html+='</div>';
-  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 20px;margin-top:10px;padding-top:8px;border-top:1px solid #D6E4F0">';
-  html+='<label style="'+gcLbl+'"><span>Pelle nécessaire</span><select id="gc-pelle-oui" style="'+gcSel+'" onchange="gcMissionField(\'pelleOui\',this.value===\'oui\')"><option value="oui"'+(g.pelleOui===true?' selected':'')+'>Oui</option><option value="non"'+(g.pelleOui!==true?' selected':'')+'>Non</option></select></label>';
-  html+='<label style="'+gcLbl+'"><span>A gérer par GPH</span><select id="gc-pelle-client" style="'+gcSel+'" onchange="gcMissionField(\'pelleClient\',this.value===\'oui\'?true:this.value===\'non\'?false:null)"><option value=""'+(g.pelleClient==null?' selected':'')+'>—</option><option value="oui"'+(g.pelleClient===true?' selected':'')+'>Oui</option><option value="non"'+(g.pelleClient===false?' selected':'')+'>Non</option></select></label>';
-  html+='<label style="'+gcLbl+'"><span>Laboratoire</span><select id="gc-labo-oui" style="'+gcSel+'" onchange="gcMissionField(\'laboOui\',this.value===\'oui\')"><option value="oui"'+(g.laboOui?' selected':'')+'>Oui</option><option value="non"'+(!g.laboOui?' selected':'')+'>Non</option></select></label>';
-  const liqAuto=g.liquefaction!=null?g.liquefaction:(g.geologie&&g.geologie.notation&&/^Mz/i.test(g.geologie.notation));
-  html+='<label style="'+gcLbl+'"><span>Liquéfaction</span><select id="gc-liquefaction" style="'+gcSel+'" onchange="gcMissionField(\'liquefaction\',this.value===\'oui\')"><option value="oui"'+(liqAuto?' selected':'')+'>Oui</option><option value="non"'+(!liqAuto?' selected':'')+'>Non</option></select></label>';
-  html+='</div>';
-  html+='<div style="margin-top:10px;padding-top:8px;border-top:1px solid #D6E4F0">';
-  const gcTps='width:120px;padding:3px 8px;border:1px solid #ccc;border-radius:4px;font-size:12px;font-weight:700;text-align:center';
-  html+='<label style="'+gcLbl+'"><span>Temps estimé terrain</span><input type="text" id="gc-temps-terrain" value="'+(g.tempsTerrain||'')+'" placeholder="" style="'+gcTps+'" onchange="gcMissionField(\'tempsTerrain\',this.value)"></label>';
-  html+='<label style="'+gcLbl+';margin-top:8px"><span>Temps estimé rapport</span><input type="text" id="gc-temps-rapport" value="'+(g.tempsRapport||'')+'" placeholder="" style="'+gcTps+'" onchange="gcMissionField(\'tempsRapport\',this.value)"></label>';
-  html+='<label style="'+gcLbl+';margin-top:8px"><span>Temps estimé relecture</span><input type="text" id="gc-temps-relecture" value="'+(g.tempsRelecture||'')+'" placeholder="" style="'+gcTps+'" onchange="gcMissionField(\'tempsRelecture\',this.value)"></label>';
-  html+='</div>';
+  const gcR='display:flex;align-items:center;font-size:12px;color:#444;height:28px';
+  const gcL='flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
+  const gcIn='width:54px;padding:3px 4px;border:1px solid #ccc;border-radius:4px;font-size:12px;font-weight:700;text-align:center';
+  const gcSl='width:120px;padding:3px 4px;border:1px solid #ccc;border-radius:4px;font-size:12px;font-weight:700;text-align:center';
+  const gcTx='width:120px;padding:3px 6px;border:1px solid #ccc;border-radius:4px;font-size:12px;font-weight:700;text-align:center';
+  html+='<div style="margin:4px 0 16px;padding:10px 14px;background:#EFF6FF;border-radius:8px;border-left:4px solid #3D7AB5">';
+  html+='<div style="font-weight:700;font-size:12px;color:#2C3E50;margin-bottom:10px">Programme de reconnaissance</div>';
+  html+='<table style="width:100%;border-collapse:separate;border-spacing:0 4px">';
+  html+='<tr><td style="font-size:12px;color:#444;padding-right:8px">Pénétromètres</td><td style="width:54px"><input type="number" min="0" id="gc-nb-penetro" value="'+(g.nbPenetro||0)+'" style="'+gcIn+'" onchange="gcMissionField(\'nbPenetro\',+this.value)"></td>';
+  html+='<td style="font-size:12px;color:#444;padding-left:20px;padding-right:8px">Tarières</td><td style="width:54px"><input type="number" min="0" id="gc-nb-tariere" value="'+(g.nbTariere||0)+'" style="'+gcIn+'" onchange="gcMissionField(\'nbTariere\',+this.value)"></td></tr>';
+  html+='<tr><td style="font-size:12px;color:#444;padding-right:8px">Reco fondation</td><td><input type="number" min="0" id="gc-nb-fondation" value="'+(g.nbFondation||0)+'" style="'+gcIn+'" onchange="gcMissionField(\'nbFondation\',+this.value)"></td>';
+  html+='<td style="font-size:12px;color:#444;padding-left:20px;padding-right:8px">Sondage pelle</td><td><input type="number" min="0" id="gc-nb-pelle" value="'+(g.nbPelle||0)+'" style="'+gcIn+'" onchange="gcMissionField(\'nbPelle\',+this.value);gcAutoCheckPelle()"></td></tr>';
+  html+='</table>';
+  html+='<div style="margin-top:8px;padding-top:8px;border-top:1px solid #D6E4F0">';
+  html+='<table style="width:100%;border-collapse:separate;border-spacing:0 4px">';
+  html+='<tr><td style="font-size:12px;color:#444;padding-right:8px">Pelle nécessaire</td><td style="width:120px"><select id="gc-pelle-oui" style="'+gcSl+'" onchange="gcMissionField(\'pelleOui\',this.value===\'oui\')"><option value="oui"'+(g.pelleOui===true?' selected':'')+'>Oui</option><option value="non"'+(g.pelleOui!==true?' selected':'')+'>Non</option></select></td></tr>';
+  html+='<tr><td style="font-size:12px;color:#444;padding-right:8px">Gérée par le client</td><td><select id="gc-pelle-client" style="'+gcSl+'" onchange="gcMissionField(\'pelleClient\',this.value===\'oui\'?true:this.value===\'non\'?false:null)"><option value=""'+(g.pelleClient==null?' selected':'')+'>—</option><option value="oui"'+(g.pelleClient===true?' selected':'')+'>Oui</option><option value="non"'+(g.pelleClient===false?' selected':'')+'>Non</option></select></td></tr>';
+  html+='<tr><td style="font-size:12px;color:#444;padding-right:8px">Laboratoire</td><td><select id="gc-labo-oui" style="'+gcSl+'" onchange="gcMissionField(\'laboOui\',this.value===\'oui\')"><option value="oui"'+(g.laboOui?' selected':'')+'>Oui</option><option value="non"'+(!g.laboOui?' selected':'')+'>Non</option></select></td></tr>';
+  const liqAuto=g.liquefaction!=null?g.liquefaction:(g.geologie&&g.geologie.notation&&/^Mz/i.test(g.geologie.notation)?'oui':'non');
+  const liqVal=typeof liqAuto==='boolean'?(liqAuto?'oui':'non'):(liqAuto||'non');
+  html+='<tr><td style="font-size:12px;color:#444;padding-right:8px">Liquéfaction</td><td><select id="gc-liquefaction" style="'+gcSl+'" onchange="gcMissionField(\'liquefaction\',this.value)"><option value="oui"'+(liqVal==='oui'?' selected':'')+'>Oui</option><option value="oui_sn"'+(liqVal==='oui_sn'?' selected':'')+'>Oui Si Ness.</option><option value="non"'+(liqVal==='non'?' selected':'')+'>Non</option></select></td></tr>';
+  html+='</table></div>';
+  html+='<div style="margin-top:8px;padding-top:8px;border-top:1px solid #D6E4F0">';
+  html+='<table style="width:100%;border-collapse:separate;border-spacing:0 4px">';
+  html+='<tr><td style="font-size:12px;color:#444;padding-right:8px">Temps estimé terrain</td><td style="width:120px"><input type="text" id="gc-temps-terrain" value="'+(g.tempsTerrain||'')+'" style="'+gcTx+'" onchange="gcMissionField(\'tempsTerrain\',this.value)"></td></tr>';
+  html+='<tr><td style="font-size:12px;color:#444;padding-right:8px">Temps estimé rapport</td><td><input type="text" id="gc-temps-rapport" value="'+(g.tempsRapport||'')+'" style="'+gcTx+'" onchange="gcMissionField(\'tempsRapport\',this.value)"></td></tr>';
+  html+='<tr><td style="font-size:12px;color:#444;padding-right:8px">Temps estimé relecture</td><td><input type="text" id="gc-temps-relecture" value="'+(g.tempsRelecture||'')+'" style="'+gcTx+'" onchange="gcMissionField(\'tempsRelecture\',this.value)"></td></tr>';
+  html+='</table></div>';
   html+='</div>';
   // Infos pour le géotechnicien
   html+='<div style="margin-bottom:14px;padding:10px 12px;background:#f8f8f8;border-radius:8px;border:1px solid #ddd">';
@@ -5534,6 +5709,33 @@ function rptExportPDF(){
       h+='</div>';
     });
     h+='</div></div>';
+  }
+
+  // --- Annexe : Cartes des risques ---
+  const riskMaps=geocartoData&&geocartoData.riskMaps?geocartoData.riskMaps:null;
+  if(riskMaps){
+    const mapEntries=[
+      {key:'localisation',title:'Localisation du site (Plan IGN)'},
+      {key:'geologie',title:'Carte géologique (BRGM 1/50 000)'},
+      {key:'sismique',title:'Zonage sismique'},
+      {key:'argiles',title:'Aléa retrait-gonflement des argiles'},
+      {key:'nappes',title:'Remontée de nappes'}
+    ].filter(m=>riskMaps[m.key]);
+    if(mapEntries.length>0){
+      const annexNum=1+(planImgSrc?1:0)+(sondages.length>0?1:0)+(modeleFormations.length>0?1:0)+(photos.length>0?1:0);
+      h+='<div class="chapter"><div class="chapter-header"><div class="chapter-num">Annexe '+annexNum+'</div><div class="chapter-title">Cartes des risques</div></div>';
+      h+='<div style="display:flex;flex-wrap:wrap;gap:20px;justify-content:center">';
+      mapEntries.forEach((m,i)=>{
+        if(i>0&&i%4===0)h+='</div><div style="page-break-before:always;display:flex;flex-wrap:wrap;gap:20px;justify-content:center;padding-top:20px">';
+        h+='<div style="width:46%;text-align:center">';
+        h+='<div style="font-size:10pt;font-weight:700;color:#2C3E50;margin-bottom:6px">'+m.title+'</div>';
+        h+='<img src="'+riskMaps[m.key]+'" style="max-width:100%;max-height:300px;border:1px solid #ccc;border-radius:4px" alt="'+m.title+'">';
+        h+='</div>';
+      });
+      h+='</div>';
+      if(geocartoData.addr)h+='<div style="margin-top:12px;font-size:9pt;color:#666;text-align:center">Site : '+escapeHtml(geocartoData.addr)+' — GPS : '+geocartoData.lat.toFixed(6)+', '+geocartoData.lng.toFixed(6)+'</div>';
+      h+='</div>';
+    }
   }
 
   h+='</body></html>';
