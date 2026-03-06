@@ -3636,7 +3636,19 @@ async function iaGeoInvestigate(){
     }catch(e){}
   }
   const results=await Promise.allSettled([
-    iaFetchJSON('https://georisques.gouv.fr/api/v1/gaspar/risques?'+(gd.insee?'code_insee='+gd.insee:'latlon='+lng+','+lat)+'&page=1&page_size=50').then(d=>{gd.risques=d.data||[];}),
+    (async()=>{
+      const byPoint=await iaFetchJSON('https://georisques.gouv.fr/api/v1/gaspar/risques?latlon='+lng+','+lat+'&page=1&page_size=50').then(d=>d.data||[]).catch(()=>[]);
+      byPoint.forEach(r=>{r._source='point';});
+      let byCommune=[];
+      if(gd.insee){
+        byCommune=await iaFetchJSON('https://georisques.gouv.fr/api/v1/gaspar/risques?code_insee='+gd.insee+'&page=1&page_size=50').then(d=>d.data||[]).catch(()=>[]);
+        byCommune.forEach(r=>{r._source='commune';});
+      }
+      const seen=new Set();const merged=[];
+      byPoint.forEach(r=>{const k=r.libelle_risque_long||r.libelle_risque_jo||'';if(!seen.has(k)){seen.add(k);merged.push(r);}});
+      byCommune.forEach(r=>{const k=r.libelle_risque_long||r.libelle_risque_jo||'';if(!seen.has(k)){seen.add(k);merged.push(r);}});
+      gd.risques=merged;
+    })(),
     iaFetchJSON('https://georisques.gouv.fr/api/v1/gaspar/catnat?'+(gd.insee?'code_insee='+gd.insee:'latlon='+lng+','+lat+'&rayon=1000')+'&page=1&page_size=100').then(d=>{gd.catnat=d.data||[];}),
     iaFetchJSON('https://georisques.gouv.fr/api/v1/zonage_sismique?latlon='+lng+','+lat+'&rayon=100').then(d=>{gd.sismique=(d.data&&d.data[0])?d.data[0].code_zone:null;}),
     iaFetchJSON('https://georisques.gouv.fr/api/v1/cavites?latlon='+lng+','+lat+'&rayon=2000&page=1&page_size=50').then(d=>{gd.cavites=d.data||[];}),
@@ -3693,12 +3705,17 @@ function renderGeocartoPanel(){
   html+='<label style="'+gcLbl+'"><span>Pelle mécanique</span><input type="number" min="0" id="gc-nb-pelle" value="'+(g.nbPelle||0)+'" style="'+gcFld+'" onchange="gcMissionField(\'nbPelle\',+this.value);gcAutoCheckPelle()"></label>';
   html+='</div>';
   html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 20px;margin-top:10px;padding-top:8px;border-top:1px solid #D6E4F0">';
-  html+='<label style="'+gcLbl+'"><span>Pelle nécessaire</span><select id="gc-pelle-oui" style="'+gcSel+'" onchange="gcMissionField(\'pelleOui\',this.value===\'oui\')"><option value="oui"'+((g.pelleOui!==false)?' selected':'')+'>Oui</option><option value="non"'+(g.pelleOui===false?' selected':'')+'>Non</option></select></label>';
+  html+='<label style="'+gcLbl+'"><span>Pelle nécessaire</span><select id="gc-pelle-oui" style="'+gcSel+'" onchange="gcMissionField(\'pelleOui\',this.value===\'oui\')"><option value="oui"'+(g.pelleOui===true?' selected':'')+'>Oui</option><option value="non"'+(g.pelleOui!==true?' selected':'')+'>Non</option></select></label>';
   html+='<label style="'+gcLbl+'"><span>Laboratoire</span><select id="gc-labo-oui" style="'+gcSel+'" onchange="gcMissionField(\'laboOui\',this.value===\'oui\')"><option value="oui"'+(g.laboOui?' selected':'')+'>Oui</option><option value="non"'+(!g.laboOui?' selected':'')+'>Non</option></select></label>';
   html+='</div>';
   html+='<div style="margin-top:10px;padding-top:8px;border-top:1px solid #D6E4F0">';
   html+='<label style="'+gcLbl+'"><span>Temps estimé terrain</span><input type="text" id="gc-temps-terrain" value="'+(g.tempsTerrain||'')+'" placeholder="" style="width:120px;padding:3px 8px;border:1px solid #ccc;border-radius:4px;font-size:12px;font-weight:700;text-align:center" onchange="gcMissionField(\'tempsTerrain\',this.value)"></label>';
   html+='</div>';
+  html+='</div>';
+  // Infos pour le géotechnicien
+  html+='<div style="margin-bottom:14px;padding:10px 12px;background:#f8f8f8;border-radius:8px;border:1px solid #ddd">';
+  html+='<label style="font-weight:700;font-size:12px;color:#333;display:block;margin-bottom:6px">Infos pour le géotechnicien :</label>';
+  html+='<textarea id="gc-infos-geotech" rows="4" style="width:100%;border:1px solid #ccc;border-radius:6px;padding:8px;font-size:12px;font-family:inherit;resize:vertical" placeholder="Notes, observations, consignes particulières…">'+(g.infosGeotech||'')+'</textarea>';
   html+='</div>';
   // Zone sismique
   const sc=g.sismique?String(g.sismique):'?';
@@ -3729,7 +3746,11 @@ function renderGeocartoPanel(){
   }
   html+=gcSection('Géologie / Lithologie','gc-badge-blue',geoBadge||'',geoHtml||'Donnée non disponible');
   // Risques
-  html+=gcListSection('Risques identifiés',g.risques,r=>r.libelle_risque_long||r.libelle_risque_jo||'?','red');
+  html+=gcListSection('Risques identifiés',g.risques,r=>{
+    const lbl=r.libelle_risque_long||r.libelle_risque_jo||'?';
+    const src=r._source==='commune'?' <span style="font-size:10px;color:#888;font-style:italic">(commune)</span>':' <span style="font-size:10px;color:#888;font-style:italic">(site)</span>';
+    return lbl+src;
+  },'red');
   // CatNat
   html+=gcListSection('Catastrophes naturelles',g.catnat,c=>(c.date_debut_evt||'')+' \u2014 '+(c.libelle_risque_jo||''),'orange');
   // Cavités
@@ -3748,11 +3769,6 @@ function renderGeocartoPanel(){
     if(b.lien)t+=' <a href="'+b.lien+'" target="_blank" rel="noopener" style="color:var(--accent-blue,#1976d2);font-size:0.85em">Fiche InfoTerre →</a>';
     return t;
   },'blue');
-  // Infos pour le géotechnicien
-  html+='<div style="margin-top:14px;padding:10px 12px;background:#f8f8f8;border-radius:8px;border:1px solid #ddd">';
-  html+='<label style="font-weight:700;font-size:12px;color:#333;display:block;margin-bottom:6px">Infos pour le géotechnicien :</label>';
-  html+='<textarea id="gc-infos-geotech" rows="4" style="width:100%;border:1px solid #ccc;border-radius:6px;padding:8px;font-size:12px;font-family:inherit;resize:vertical" placeholder="Notes, observations, consignes particulières…">'+(g.infosGeotech||'')+'</textarea>';
-  html+='</div>';
   $c.innerHTML=html;
   // Bind textarea change
   const gcTa=document.getElementById('gc-infos-geotech');
