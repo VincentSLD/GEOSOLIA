@@ -538,14 +538,14 @@
 
   #scan3d-modal{position:fixed;inset:0;background:#000;display:none;flex-direction:column;z-index:800}
   #scan3d-modal.open{display:flex}
-  #scan3d-header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--black);border-bottom:2px solid var(--yellow);flex-shrink:0;z-index:2}
-  #scan3d-header span{font-weight:800;font-size:14px;color:var(--yellow);display:flex;align-items:center;gap:6px}
-  #scan3d-header .scan3d-actions{display:flex;gap:8px;align-items:center}
-  .btn-scan3d{border:none;border-radius:8px;padding:8px 14px;font-size:11px;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:5px}
+  #scan3d-header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--black);border-bottom:2px solid var(--yellow);flex-shrink:0;z-index:2;gap:10px}
+  #scan3d-header>span{font-weight:800;font-size:14px;color:var(--yellow);display:flex;align-items:center;gap:6px;white-space:nowrap;flex-shrink:0}
+  #scan3d-header .scan3d-actions{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center}
+  .btn-scan3d{border:none;border-radius:6px;padding:5px 10px;font-size:10.5px;font-weight:700;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;height:28px;box-sizing:border-box}
   .btn-scan3d-import{background:var(--yellow);color:var(--black);font-weight:800}
   .btn-scan3d-import:hover{background:var(--yellow-light)}
   .btn-scan3d-reset{background:var(--black-mid);color:#fff;border:1px solid rgba(255,255,255,0.15)}.btn-scan3d-reset:hover{background:var(--gray-700)}
-  .btn-scan3d-close{background:transparent;color:var(--gray-300);border:none;padding:8px;font-size:18px;font-weight:800;line-height:1}
+  .btn-scan3d-close{background:transparent;color:var(--gray-300);border:none;padding:0 6px;font-size:18px;font-weight:800;line-height:1;height:28px;display:inline-flex;align-items:center;justify-content:center}
   #scan3d-canvas{flex:1;width:100%;cursor:grab}
   #scan3d-canvas:active{cursor:grabbing}
   #scan3d-info{position:absolute;bottom:12px;left:12px;background:rgba(0,0,0,0.7);color:var(--yellow);padding:6px 12px;border-radius:6px;font-size:11px;font-weight:700;z-index:2;backdrop-filter:blur(4px)}
@@ -570,16 +570,17 @@
   /* ═══ MODAL NOUVEAU PROJET ═══ */
   #new-study-modal{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;z-index:950;backdrop-filter:blur(4px)}
   #new-study-modal.open{display:flex}
-  #new-study-inner{background:var(--white);border-radius:var(--radius-lg);padding:22px;width:440px;max-width:92vw;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);border-top:4px solid var(--yellow)}
+  #new-study-inner{background:var(--white);border-radius:var(--radius-lg);padding:22px;width:540px;max-width:92vw;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);border-top:4px solid var(--yellow)}
   #new-study-inner h2{font-size:18px;font-weight:900;color:var(--black);margin:0 0 6px}
   #new-study-inner p{font-size:12px;color:var(--gray-500);margin:0 0 8px}
   #new-study-inner label{font-size:11px;font-weight:800;color:var(--black);display:block;margin-bottom:5px}
-  #new-study-ref{width:100%;padding:10px 12px;border:2px solid var(--gray-200);border-radius:var(--radius);font-size:14px;font-weight:700;font-family:inherit;outline:none;transition:border-color .2s;box-sizing:border-box}
+  #new-study-ref{padding:10px 12px;border:2px solid var(--gray-200);border-radius:var(--radius);font-size:14px;font-weight:700;font-family:inherit;outline:none;transition:border-color .2s;box-sizing:border-box}
   #new-study-ref:focus{border-color:var(--yellow)}
   #new-study-ref.error{border-color:var(--red);animation:shake .3s}
   @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}50%{transform:translateX(6px)}75%{transform:translateX(-4px)}}
+  @keyframes blink-red{0%,100%{color:#D94040}50%{color:transparent}}
   .new-study-error{font-size:11px;color:var(--red);font-weight:700;margin-top:5px;min-height:16px}
-  .new-study-actions{display:flex;gap:10px;margin-top:18px;justify-content:flex-end}
+  .new-study-actions{display:flex;gap:10px;margin-top:8px;justify-content:flex-end}
   .new-study-actions button{padding:10px 22px;border:none;border-radius:var(--radius);font-size:13px;font-weight:800;font-family:inherit;cursor:pointer;transition:all .2s}
   .btn-create-study{background:var(--yellow);color:var(--black);box-shadow:0 3px 12px var(--yellow-glow)}
   .btn-create-study:hover{background:var(--yellow-light);transform:translateY(-1px)}
@@ -590,7 +591,9 @@
   #new-study-map-section button:hover{background:var(--gray-200)}
   #btn-study-locate{font-size:14px;padding:6px 10px}
   #btn-study-locate:disabled{opacity:0.4;cursor:wait}
-  #new-study-map .leaflet-control-zoom a{background:var(--white);color:var(--black);border-color:var(--gray-200);font-weight:700}
+  #parcel-section::placeholder{text-transform:none}
+  #new-study-map .leaflet-control-zoom{display:none}
+  #new-study-modal.fullscreen-map #new-study-map-btns{position:absolute;bottom:12px;right:12px;z-index:500;background:rgba(255,255,255,0.9);border-radius:var(--radius);padding:4px 6px;box-shadow:0 2px 8px rgba(0,0,0,0.2);display:flex;gap:6px;margin-top:0}
   #new-study-map .leaflet-control-attribution{font-size:8px;background:rgba(255,255,255,0.7)}
   /* --- Fullscreen map mode --- */
   #btn-study-fullscreen{position:absolute;top:8px;right:8px;z-index:600;width:32px;height:32px;border:none;border-radius:6px;background:rgba(255,255,255,0.92);color:var(--black);font-size:16px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.25);display:flex;align-items:center;justify-content:center;transition:all .2s;line-height:1}
@@ -598,13 +601,18 @@
   #new-study-modal.fullscreen-map #new-study-inner{width:100vw;max-width:100vw;height:100vh;max-height:100vh;border-radius:0;padding:0;display:flex;flex-direction:column;overflow:hidden}
   #new-study-modal.fullscreen-map #new-study-map{width:100%!important;height:100%!important;flex:1;border-radius:0;border:none;position:relative}
   #new-study-modal.fullscreen-map #new-study-map-section{flex:1;display:flex;flex-direction:column;margin-top:0!important;position:relative}
-  #new-study-modal.fullscreen-map #new-study-map+div{position:absolute;bottom:12px;right:12px;z-index:500;background:rgba(255,255,255,0.9);border-radius:var(--radius);padding:4px 6px;box-shadow:0 2px 8px rgba(0,0,0,0.2);display:flex;gap:6px;margin-top:0}
   #new-study-modal.fullscreen-map .new-study-form-overlay{position:absolute;top:12px;left:12px;z-index:500;background:rgba(255,255,255,0.93);border-radius:var(--radius-lg);padding:16px 18px;box-shadow:0 4px 20px rgba(0,0,0,0.25);max-width:380px;width:90vw;max-height:calc(100vh - 80px);overflow-y:auto;backdrop-filter:blur(6px);border:2px solid var(--yellow)}
   #new-study-modal.fullscreen-map .new-study-form-overlay label{font-size:11px;font-weight:800;color:var(--black);display:block;margin-bottom:4px}
   #new-study-modal.fullscreen-map .new-study-form-overlay input[type="text"]{font-size:12px;padding:7px 10px}
   #new-study-modal.fullscreen-map .new-study-form-overlay h2{font-size:15px;margin:0 0 4px}
   #new-study-modal.fullscreen-map .new-study-form-overlay p{margin:0 0 6px}
-  #new-study-modal.fullscreen-map #new-study-coords{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);z-index:500;background:rgba(255,255,255,0.85);padding:3px 10px;border-radius:4px;font-size:10px;font-weight:600;color:var(--gray-500)}
+  #new-study-modal.fullscreen-map #new-study-coords{position:static;background:none;padding:0;margin-top:4px;font-size:10px;font-weight:600;color:var(--gray-500);transform:none;text-align:left}
+  #new-study-modal.fullscreen-map #new-study-parcel{margin-top:8px}
+  #new-study-modal.fullscreen-map #new-study-parcel-result{margin-top:3px}
+  #new-study-modal.fullscreen-map .new-study-actions{margin-top:12px;justify-content:stretch}
+  #new-study-modal.fullscreen-map .new-study-actions button{flex:1;box-shadow:0 2px 8px rgba(0,0,0,0.15);padding:14px 22px;font-size:14px}
+  #new-study-modal.fullscreen-map .btn-create-study{background:var(--yellow)!important;color:var(--black)!important}
+  #new-study-modal.fullscreen-map .new-study-error{margin-top:6px}
   #new-study-modal:not(.fullscreen-map) .new-study-form-overlay{display:contents}
   /* ═══ PHOTO NAME + CROP MODAL ═══ */
   #photo-name-modal{position:fixed;inset:0;background:rgba(0,0,0,0.85);display:none;align-items:center;justify-content:center;z-index:960;backdrop-filter:blur(4px);flex-direction:column;gap:14px;padding:16px}
@@ -734,21 +742,21 @@
   /* ═══ PANNEAU MODÈLE GÉOTECHNIQUE ═══ */
   #modele-panel{position:fixed;inset:0;display:none;flex-direction:column;background:var(--gray-50);z-index:9999;overflow:hidden}
   #modele-panel.open{display:flex}
-  .mdl-header{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:#2C3E50;border-bottom:3px solid #E67E22;flex-shrink:0}
-  .mdl-header>span{font-weight:800;font-size:16px;color:#E67E22;display:flex;align-items:center;gap:8px}
+  .mdl-header{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:var(--black);border-bottom:3px solid var(--yellow);flex-shrink:0}
+  .mdl-header>span{font-weight:800;font-size:16px;color:var(--yellow);display:flex;align-items:center;gap:8px}
   .mdl-header-close{background:none;border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:14px;cursor:pointer;padding:6px 14px;border-radius:6px;font-weight:700;font-family:inherit}
   .mdl-header-close:hover{background:rgba(255,255,255,0.15)}
   .mdl-body{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:20px}
-  .mdl-section-title{font-size:14px;font-weight:800;color:#2C3E50;border-bottom:2px solid #E67E22;padding-bottom:6px;margin-bottom:8px}
+  .mdl-section-title{font-size:14px;font-weight:800;color:var(--black);border-bottom:2px solid var(--yellow);padding-bottom:6px;margin-bottom:8px}
   .mdl-table{width:100%;border-collapse:collapse;font-size:12px;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08)}
-  .mdl-table th{background:#2C3E50;color:#fff;padding:8px 10px;text-align:center;font-weight:700;white-space:nowrap}
+  .mdl-table th{background:var(--black);color:var(--yellow);padding:8px 10px;text-align:center;font-weight:700;white-space:nowrap}
   .mdl-table td{padding:6px 8px;border-bottom:1px solid #eee;text-align:center}
   .mdl-table input,.mdl-table select{width:100%;padding:4px;border:1px solid #ddd;border-radius:4px;font-size:11px;text-align:center;box-sizing:border-box}
-  .mdl-table input:focus,.mdl-table select:focus{border-color:#E67E22;outline:none}
+  .mdl-table input:focus,.mdl-table select:focus{border-color:var(--yellow);outline:none}
   .mdl-btn{padding:8px 16px;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700;font-family:inherit;transition:all .15s}
-  .mdl-btn-add{background:#27AE60;color:#fff}.mdl-btn-add:hover{background:#219653}
-  .mdl-btn-del{background:#C0392B;color:#fff}.mdl-btn-del:hover{background:#A93226}
-  .mdl-btn-auto{background:#2980B9;color:#fff}.mdl-btn-auto:hover{background:#2471A3}
+  .mdl-btn-add{background:var(--black);color:var(--yellow)}.mdl-btn-add:hover{background:var(--black-soft)}
+  .mdl-btn-del{background:var(--gray-500);color:#fff}.mdl-btn-del:hover{background:var(--gray-700)}
+  .mdl-btn-auto{background:var(--yellow);color:var(--black)}.mdl-btn-auto:hover{background:var(--yellow-light)}
   .mdl-coupe-canvas{width:100%;max-width:800px;border:1px solid #ddd;border-radius:8px;background:#fff}
 
   /* ═══ TOUCH / TABLET IMPROVEMENTS ═══ */
@@ -1064,8 +1072,8 @@
       <span>⛏️ Modèle Géotechnique</span>
       <div style="display:flex;gap:10px;align-items:center">
         <button class="mdl-btn mdl-btn-auto" onclick="mdlAutoFromSondages()">⚡ Auto depuis sondages</button>
-        <button class="mdl-btn" onclick="gtrAutoClassify()" style="background:#8E44AD;color:#fff">🔬 GTR auto</button>
-        <button class="mdl-btn" onclick="mdlDrawCoupe()" style="background:#E67E22;color:#fff">📊 Coupe géotechnique</button>
+        <button class="mdl-btn" onclick="gtrAutoClassify()" style="background:var(--yellow);color:var(--black)">🔬 GTR auto</button>
+        <button class="mdl-btn" onclick="mdlDrawCoupe()" style="background:var(--yellow);color:var(--black)">📊 Coupe géotechnique</button>
         <button class="mdl-header-close" onclick="closeModeleGeotech()">✕ Fermer</button>
       </div>
     </div>
@@ -1076,6 +1084,7 @@
         <div style="margin-top:8px;display:flex;gap:8px">
           <button class="mdl-btn mdl-btn-add" onclick="mdlAddFormation()">+ Formation</button>
           <button class="mdl-btn mdl-btn-del" onclick="mdlRemoveFormation()">− Supprimer</button>
+          <button class="mdl-btn" onclick="mdlClearAll()" style="background:#D94040;color:#fff;margin-left:auto">🗑️ Tout vider</button>
         </div>
       </div>
       <div>
@@ -1086,7 +1095,7 @@
         <div class="mdl-section-title">Dimensionnement fondations</div>
         <div style="display:flex;gap:24px;flex-wrap:wrap">
           <div style="flex:1;min-width:340px;background:#fff;border-radius:8px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.08)">
-            <h4 style="margin:0 0 12px;font-size:13px;color:#2C3E50">Fondation superficielle (pressiomètre)</h4>
+            <h4 style="margin:0 0 12px;font-size:13px;color:var(--black)">Fondation superficielle (pressiomètre)</h4>
             <div style="display:flex;gap:8px;flex-wrap:wrap;font-size:12px;margin-bottom:8px">
               <label>B (m) <input type="number" step="0.1" value="0.6" id="dim-B" style="width:60px;padding:3px;border:1px solid #ccc;border-radius:4px"></label>
               <label>L (m) <input type="number" step="0.1" value="1.0" id="dim-L" style="width:60px;padding:3px;border:1px solid #ccc;border-radius:4px"></label>
@@ -1099,7 +1108,7 @@
             <div id="dim-result-sup" style="font-size:12px;color:#333;background:#f8f8f8;padding:10px;border-radius:6px;min-height:40px"></div>
           </div>
           <div style="flex:1;min-width:340px;background:#fff;border-radius:8px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.08)">
-            <h4 style="margin:0 0 12px;font-size:13px;color:#2C3E50">Fondation profonde (pieu, pressiomètre)</h4>
+            <h4 style="margin:0 0 12px;font-size:13px;color:var(--black)">Fondation profonde (pieu, pressiomètre)</h4>
             <div style="display:flex;gap:8px;flex-wrap:wrap;font-size:12px;margin-bottom:8px">
               <label>Diam. (m) <input type="number" step="0.05" value="0.5" id="dim-pieu-D" style="width:60px;padding:3px;border:1px solid #ccc;border-radius:4px"></label>
               <label>L pieu (m) <input type="number" step="0.5" value="8" id="dim-pieu-L" style="width:60px;padding:3px;border:1px solid #ccc;border-radius:4px"></label>
@@ -1137,7 +1146,7 @@
               <button class="mdl-btn mdl-btn-auto" onclick="tassAutoLayers()">⚡ Auto depuis données</button>
               <button class="mdl-btn mdl-btn-add" onclick="tassAddLayer()">+ Couche</button>
               <button class="mdl-btn mdl-btn-del" onclick="tassRemoveLayer()">− Suppr.</button>
-              <button class="mdl-btn" onclick="dimCalcTassement()" style="background:#E67E22;color:#fff">Calculer tassement</button>
+              <button class="mdl-btn" onclick="dimCalcTassement()" style="background:var(--yellow);color:var(--black)">Calculer tassement</button>
             </div>
             <div id="dim-result-tass" style="font-size:12px;color:#333;background:#f8f8f8;padding:10px;border-radius:6px;min-height:40px"></div>
           </div>
@@ -1317,10 +1326,16 @@
       <div class="new-study-form-overlay">
         <h2>Nouveau Projet</h2>
         <p></p>
-        <label for="new-study-ref">Numéro de Dossier</label>
-        <input type="text" id="new-study-ref" placeholder="Ex : 2607011" spellcheck="false" autocomplete="off" onkeydown="if(event.key==='Enter')createNewStudy()">
-        <label for="new-study-name" style="margin-top:10px;font-size:11px;font-weight:800;color:var(--black);display:block;margin-bottom:5px">Nom du Projet</label>
-        <input type="text" id="new-study-name" placeholder="Ex : MAISON DUPONT" spellcheck="false" autocomplete="off" style="width:100%;padding:10px 12px;border:2px solid var(--gray-200);border-radius:var(--radius);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;transition:border-color .2s" onfocus="this.style.borderColor='var(--yellow)'" onblur="this.style.borderColor=''">
+        <div style="display:flex;gap:10px">
+          <div style="flex:0 0 130px">
+            <label for="new-study-ref">N° Dossier</label>
+            <input type="text" id="new-study-ref" placeholder="Ex : 2607011" spellcheck="false" autocomplete="off" maxlength="10" onkeydown="if(event.key==='Enter')createNewStudy()" style="width:100%;padding:10px 12px;border:2px solid var(--gray-200);border-radius:var(--radius);font-size:14px;font-weight:700;font-family:inherit;outline:none;box-sizing:border-box;transition:border-color .2s" onfocus="this.style.borderColor='var(--yellow)'" onblur="this.style.borderColor=''">
+          </div>
+          <div style="flex:1">
+            <label for="new-study-name">Nom du Projet</label>
+            <input type="text" id="new-study-name" placeholder="Ex : MAISON DUPONT" spellcheck="false" autocomplete="off" style="width:100%;padding:10px 12px;border:2px solid var(--gray-200);border-radius:var(--radius);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;transition:border-color .2s" onfocus="this.style.borderColor='var(--yellow)'" onblur="this.style.borderColor=''">
+          </div>
+        </div>
         <label for="new-study-addr" style="margin-top:14px;font-size:11px;font-weight:800;color:var(--black);display:block;margin-bottom:5px">📍 Adresse du site</label>
         <div style="position:relative">
           <input type="text" id="new-study-addr" placeholder="Tapez l'adresse du chantier..." oninput="newStudyAutocomplete(this.value)" autocomplete="off" style="width:100%;padding:10px 12px;border:2px solid var(--gray-200);border-radius:var(--radius);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;transition:border-color .2s" onfocus="this.style.borderColor='var(--yellow)'" onblur="this.style.borderColor=''">
@@ -1341,11 +1356,21 @@
         <div id="new-study-map" style="width:100%;height:200px;border-radius:var(--radius);border:2px solid var(--gray-200);overflow:hidden;cursor:crosshair;position:relative">
           <button type="button" id="btn-study-fullscreen" onclick="toggleStudyMapFullscreen()" title="Plein écran">⛶</button>
         </div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
+        <div id="new-study-map-btns" style="display:flex;align-items:center;gap:6px;margin-top:6px;justify-content:flex-end">
           <button type="button" id="btn-study-locate" onclick="newStudyLocateMe()" title="Me localiser (GPS)">🎯</button>
           <button type="button" id="btn-study-layer" onclick="newStudyToggleLayer()">🛰 Satellite</button>
           <button type="button" id="btn-study-cadastre" onclick="newStudyToggleCadastre()">📐 Cadastre</button>
         </div>
+        <div id="new-study-parcel" style="margin-top:8px">
+          <div style="font-size:11px;font-weight:800;color:var(--black);margin-bottom:4px">Recherche à la parcelle :</div>
+          <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">
+          <input type="text" id="parcel-commune" placeholder="Commune" style="flex:1;min-width:100px;padding:5px 8px;border:1px solid #ccc;border-radius:4px;font-size:11px;font-family:inherit">
+          <input type="text" id="parcel-section" placeholder="Section" style="width:60px;padding:5px 8px;border:1px solid #ccc;border-radius:4px;font-size:11px;font-family:inherit;text-transform:uppercase">
+          <input type="text" id="parcel-numero" placeholder="N° parcelle" style="width:80px;padding:5px 8px;border:1px solid #ccc;border-radius:4px;font-size:11px;font-family:inherit">
+          <button type="button" onclick="searchParcel()" style="padding:5px 10px;background:#795548;color:#fff;border:none;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">🔍 Parcelle</button>
+          </div>
+        </div>
+        <div id="new-study-parcel-result" style="font-size:10px;color:#795548;margin-top:3px;font-weight:600"></div>
         <div id="new-study-coords" style="font-size:10px;color:var(--gray-500);margin-top:4px;font-weight:600"></div>
       </div>
       <input type="hidden" id="new-study-lat">
@@ -1387,9 +1412,9 @@
   </div>
   <div id="geocarto-panel">
     <div class="gc-header">
-      <span>📍 Données du site</span>
+      <span>📍 Enquête Sol</span>
       <div style="display:flex;align-items:center;gap:6px">
-        <button onclick="openEnqueteSolFromSite()" style="background:#4CAF50;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer">🔬 Enquête SOL</button>
+        <button onclick="openEnqueteSolFromSite()" style="background:#4CAF50;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer">🔬 GéoCarto</button>
         <button onclick="closeGeocartoPanel()" title="Fermer">✕</button>
       </div>
     </div>
@@ -1531,6 +1556,10 @@
         <button class="btn-scan3d btn-scan3d-measure" id="btn-3d-sondages" onclick="toggle3DSondages()">📍 Sondages</button>
         <button class="btn-scan3d btn-scan3d-measure" id="btn-3d-nappe" onclick="toggle3DNappe()">💧 Nappe</button>
         <button class="btn-scan3d btn-scan3d-measure" id="btn-3d-coupe" onclick="toggle3DCoupe()">✂️ Coupe</button>
+        <span style="width:1px;height:20px;background:rgba(255,255,255,.2);margin:0 2px"></span>
+        <button class="btn-scan3d btn-scan3d-import" onclick="document.getElementById('ifcInput').click()">📥 Import IFC</button>
+        <input type="file" id="ifcInput" accept=".ifc" style="display:none" onchange="importIFC(event)">
+        <button class="btn-scan3d btn-scan3d-reset" onclick="exportIFC()">📤 Export IFC</button>
         <span style="width:1px;height:20px;background:rgba(255,255,255,.2);margin:0 2px"></span>
         <button class="btn-scan3d btn-scan3d-reset" onclick="captureScan3DToPhotos()">📸 Photo rapport</button>
         <button class="btn-scan3d btn-scan3d-reset" onclick="captureScan3D()">📸 Capture</button>
@@ -3380,10 +3409,11 @@ function initStudyMap(){
   studySatLayer=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'&copy; Esri',maxZoom:19});
   studyCadastreLayer=L.tileLayer('https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=CADASTRALPARCELS.PARCELLAIRE_EXPRESS&STYLE=normal&FORMAT=image/png&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}',{attribution:'&copy; IGN Cadastre',maxZoom:20,maxNativeZoom:19,opacity:0.7});
   studyOsmLayer.addTo(studyMap);
-  studyCurrentLayer='osm';studyCadastreVisible=false;
+  studyCurrentLayer='osm';studyCadastreLayer.addTo(studyMap);studyCadastreVisible=true;document.getElementById('btn-study-cadastre').innerHTML='📐 Cadastre ✓';document.getElementById('btn-study-cadastre').style.background='rgba(26,26,26,0.12)';
   studyMap.on('click',function(e){
     updateStudyMarker(e.latlng.lat,e.latlng.lng,false);
     reverseGeocodeStudy(e.latlng.lat,e.latlng.lng);
+    reverseCadastreStudy(e.latlng.lat,e.latlng.lng);
   });
 }
 
@@ -3401,6 +3431,7 @@ function updateStudyMarker(lat,lng,flyTo){
       document.getElementById('new-study-lng').value=pos.lng.toFixed(6);
       reverseGeocodeStudy(pos.lat,pos.lng);
       updateStudyCoords(pos.lat,pos.lng);
+      reverseCadastreStudy(pos.lat,pos.lng);
     });
   }
   if(flyTo)studyMap.flyTo([lat,lng],Math.max(studyMap.getZoom(),16),{duration:0.8});
@@ -3465,8 +3496,14 @@ function toggleStudyMapFullscreen(){
   const overlay=document.querySelector('.new-study-form-overlay');
   const mapSection=document.getElementById('new-study-map-section');
   const inner=document.getElementById('new-study-inner');
-  if(isFs){mapSection.appendChild(overlay);}
-  else{inner.insertBefore(overlay,mapSection);}
+  const mapBtns=document.getElementById('new-study-map-btns');
+  const parcel=document.getElementById('new-study-parcel');
+  const parcelResult=document.getElementById('new-study-parcel-result');
+  const coords=document.getElementById('new-study-coords');
+  const errDiv=document.getElementById('new-study-error');
+  const actions=document.querySelector('.new-study-actions');
+  if(isFs){mapSection.appendChild(overlay);mapSection.appendChild(mapBtns);overlay.appendChild(parcel);overlay.appendChild(parcelResult);overlay.appendChild(coords);overlay.appendChild(errDiv);overlay.appendChild(actions);}
+  else{inner.insertBefore(overlay,mapSection);const map=mapSection.querySelector('#new-study-map');map.after(mapBtns);mapBtns.after(parcel);parcel.after(parcelResult);parcelResult.after(coords);inner.appendChild(errDiv);inner.appendChild(actions);}
   setTimeout(()=>{if(studyMap)studyMap.invalidateSize();},200);
 }
 
@@ -3475,6 +3512,118 @@ function newStudyToggleCadastre(){
   const btn=document.getElementById('btn-study-cadastre');
   if(studyCadastreVisible){studyMap.removeLayer(studyCadastreLayer);studyCadastreVisible=false;btn.innerHTML='📐 Cadastre';btn.style.background='';}
   else{studyCadastreLayer.addTo(studyMap);studyCadastreVisible=true;btn.innerHTML='📐 Cadastre ✓';btn.style.background='rgba(26,26,26,0.12)';}
+}
+
+// --- Recherche parcelle cadastrale ---
+let _parcelLayer=null;
+async function searchParcel(){
+  const communeInput=document.getElementById('parcel-commune').value.trim();
+  const section=document.getElementById('parcel-section').value.trim().toUpperCase();
+  const numero=document.getElementById('parcel-numero').value.trim();
+  const $res=document.getElementById('new-study-parcel-result');
+  if(!communeInput||!numero){$res.innerHTML='<span style="color:#E88D00">Renseignez la commune et le numéro de parcelle.</span>';return;}
+  const numPadded=numero.padStart(4,'0');
+  $res.innerHTML='<span style="color:#888">⏳ Recherche de la parcelle…</span>';
+  try{
+    // 1. Trouver le code INSEE
+    const geoResp=await fetch('https://geo.api.gouv.fr/communes?nom='+encodeURIComponent(communeInput)+'&fields=nom,code&limit=5');
+    const communes=await geoResp.json();
+    if(!communes.length){$res.innerHTML='<span style="color:#E88D00">Commune "'+communeInput+'" non trouvée.</span>';return;}
+    const commune=communes.find(c=>c.nom.toLowerCase()===communeInput.toLowerCase())||communes[0];
+    const codeInsee=commune.code;
+    // 2. Rechercher la parcelle
+    const url=section
+      ?'https://apicarto.ign.fr/api/cadastre/parcelle?code_insee='+codeInsee+'&section='+section+'&numero='+numPadded
+      :'https://apicarto.ign.fr/api/cadastre/parcelle?code_insee='+codeInsee+'&numero='+numPadded;
+    const parcResp=await fetch(url,{signal:AbortSignal.timeout(15000)});
+    const parcData=await parcResp.json();
+    const features=parcData.features||[];
+    if(!features.length){$res.innerHTML='<span style="color:#E88D00">Parcelle '+(section?section+' ':'')+numPadded+' non trouvée sur '+commune.nom+'.</span>';return;}
+    // Si pas de section et plusieurs résultats → afficher les suggestions
+    if(!section&&features.length>1){
+      showParcelSuggestions(features,commune,numPadded);
+      return;
+    }
+    selectParcelResult(features[0],commune,section||features[0].properties.section||'',numPadded);
+  }catch(e){
+    console.error('Parcel search error:',e);
+    $res.innerHTML='<span style="color:#D94040">Erreur : '+e.message+'</span>';
+  }
+}
+function showParcelSuggestions(features,commune,numero){
+  const $res=document.getElementById('new-study-parcel-result');
+  window._parcelSuggestions=features;
+  window._parcelCommune=commune;
+  window._parcelNumero=numero;
+  // Afficher toutes les parcelles sur la carte avec contour + tooltip section
+  if(_parcelLayer&&studyMap){studyMap.removeLayer(_parcelLayer);}
+  const group=L.featureGroup();
+  features.forEach((f,i)=>{
+    const p=f.properties||{};
+    const layer=L.geoJSON(f.geometry,{style:{color:'#e67e22',weight:2,fillColor:'#e67e22',fillOpacity:0.1,dashArray:'4 3'}});
+    layer.bindTooltip('<strong>'+p.section+' '+p.numero+'</strong><br>'+(p.contenance||'?')+' m²',{permanent:true,direction:'center',className:'',offset:[0,0]});
+    layer.on('click',()=>selectParcelSuggestion(i));
+    layer.addTo(group);
+  });
+  group.addTo(studyMap);
+  _parcelLayer=group;
+  studyMap.fitBounds(group.getBounds(),{padding:[30,30]});
+  // Afficher la liste cliquable
+  let listHtml='<div style="margin-top:4px;font-size:11px;color:#795548;font-weight:600">'+features.length+' parcelles n°'+numero+' sur <strong>'+commune.nom+'</strong> — choisissez :</div>';
+  listHtml+='<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">';
+  features.forEach((f,i)=>{
+    const p=f.properties||{};
+    listHtml+='<button onclick="selectParcelSuggestion('+i+')" style="padding:4px 10px;border:1px solid #e67e22;background:#FFF8F0;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;color:#e67e22">Section '+p.section+'<span style="font-weight:400;color:#888;margin-left:3px">'+(p.contenance||'?')+' m²</span></button>';
+  });
+  listHtml+='</div>';
+  $res.innerHTML=listHtml;
+}
+function selectParcelSuggestion(index){
+  const feat=window._parcelSuggestions[index];
+  const commune=window._parcelCommune;
+  const numero=window._parcelNumero;
+  const section=feat.properties.section;
+  document.getElementById('parcel-section').value=section;
+  selectParcelResult(feat,commune,section,numero);
+}
+function selectParcelResult(feat,commune,section,numero){
+  const $res=document.getElementById('new-study-parcel-result');
+  const coords=feat.geometry.coordinates;
+  let ring=feat.geometry.type==='MultiPolygon'?coords[0][0]:coords[0];
+  let sumLng=0,sumLat=0;
+  for(const pt of ring){sumLng+=pt[0];sumLat+=pt[1];}
+  const cLat=sumLat/ring.length,cLng=sumLng/ring.length;
+  document.getElementById('new-study-lat').value=cLat.toFixed(6);
+  document.getElementById('new-study-lng').value=cLng.toFixed(6);
+  updateStudyMarker(cLat,cLng,true);
+  if(_parcelLayer&&studyMap){studyMap.removeLayer(_parcelLayer);}
+  _parcelLayer=L.geoJSON(feat.geometry,{style:{color:'#e67e22',weight:3,fillColor:'#e67e22',fillOpacity:0.15}}).addTo(studyMap);
+  studyMap.fitBounds(_parcelLayer.getBounds(),{padding:[30,30],maxZoom:19});
+  const p=feat.properties||{};
+  const sec=p.section||section;
+  document.getElementById('parcel-section').value=sec;
+  const cInsee=typeof commune==='object'?commune.code:(p.code_insee||'');
+  const cNom=typeof commune==='object'?commune.nom:(p.nom_com||'');
+  $res.innerHTML='<span style="color:#2E7D32">Parcelle <strong>'+sec+' '+numero+'</strong> — '+cNom+(cInsee?' ('+cInsee+')':'')+(p.contenance?' — '+p.contenance+' m²':'')+'</span>';
+  reverseGeocodeStudy(cLat,cLng);
+}
+// Reverse cadastre auto quand on clique sur la carte
+async function reverseCadastreStudy(lat,lng){
+  try{
+    const url='https://apicarto.ign.fr/api/cadastre/parcelle?geom=%7B%22type%22%3A%22Point%22%2C%22coordinates%22%3A%5B'+lng+'%2C'+lat+'%5D%7D';
+    const resp=await fetch(url,{signal:AbortSignal.timeout(8000)});
+    if(!resp.ok)return;
+    const data=await resp.json();
+    const feat=(data.features||[])[0];
+    if(feat){
+      const p=feat.properties||{};
+      document.getElementById('parcel-commune').value=p.nom_com||'';
+      document.getElementById('parcel-section').value=p.section||'';
+      document.getElementById('parcel-numero').value=p.numero||'';
+      const $res=document.getElementById('new-study-parcel-result');
+      if($res)$res.innerHTML='<span style="color:#795548">Parcelle '+p.section+' '+p.numero+(p.nom_com?' — '+p.nom_com:'')+(p.contenance?' — '+p.contenance+' m²':'')+'</span>';
+    }
+  }catch(e){}
 }
 
 // --- Auto-complétion Nouveau Projet ---
@@ -3547,27 +3696,64 @@ function iaGeoAutocomplete(val){
 }
 
 // --- Fonctions API spécialisées ---
-async function iaFetchBSS(lat,lng){
-  const dLat=0.018,dLng=0.025;
-  const url='https://geoservices.brgm.fr/geologie?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=ms:BSS_EAU_POINT&COUNT=100&BBOX='+(lat-dLat)+','+(lng-dLng)+','+(lat+dLat)+','+(lng+dLng)+',urn:ogc:def:crs:EPSG::4326';
-  const resp=await fetch(url,{signal:AbortSignal.timeout(15000)});
-  const text=await resp.text();
-  const parser=new DOMParser();
-  const doc=parser.parseFromString(text,'text/xml');
-  const members=doc.querySelectorAll('featureMember, member');
-  const results=[];
+function haversineKm(lat1,lng1,lat2,lng2){
+  const R=6371,dLat=(lat2-lat1)*Math.PI/180,dLng=(lng2-lng1)*Math.PI/180;
+  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+function parseBSSGml(xmlText,centerLat,centerLng){
+  const parser=new DOMParser();const doc=parser.parseFromString(xmlText,'text/xml');
+  const members=doc.querySelectorAll('featureMember, member');const features=[];
   members.forEach(m=>{
-    const get=(...names)=>{for(const n of names){const el=m.querySelector(n);if(el&&el.textContent.trim())return el.textContent.trim();}return '';};
-    results.push({
-      code_bss:get('code_bss','bss_id'),
-      nature:get('nature_pe'),
-      profondeur:get('prof_invest'),
-      altitude:get('altitude'),
-      commune:get('commune_actuelle'),
-      nb_piezo:get('nb_mesures_piezo'),
-      lien:get('lien_infoterre')
-    });
+    try{
+      const props={};
+      m.querySelectorAll('*').forEach(ch=>{const tag=ch.localName||ch.tagName;const txt=ch.textContent.trim();if(txt&&!ch.children.length)props[tag]=txt;});
+      let gLat=parseFloat(props.latitude||''),gLng=parseFloat(props.longitude||'');
+      if(isNaN(gLat)||isNaN(gLng)||gLat===0){
+        const pos=m.querySelector('pos, coordinates, posList');
+        if(pos){const c=pos.textContent.trim().split(/[\s,]+/).map(Number);if(c.length>=2){if(Math.abs(c[0])>90){gLng=c[0];gLat=c[1];}else{gLat=c[0];gLng=c[1];}}}
+      }
+      if(!props.code_bss&&props.reference)props.code_bss=props.reference;
+      if(!props.nature_pe&&props.nature)props.nature_pe=props.nature;
+      if(!props.prof_invest&&props.prof_atteinte)props.prof_invest=props.prof_atteinte;
+      if(!props.commune_actuelle&&props.nom_commune)props.commune_actuelle=props.nom_commune;
+      if(!props.altitude&&props.zsol)props.altitude=props.zsol;
+      features.push({props,lat:gLat,lng:gLng});
+    }catch(e){}
   });
+  return features;
+}
+async function iaFetchBSS(lat,lng){
+  const dLat=0.045,dLng=0.065;
+  const bboxStr=(lat-dLat)+','+(lng-dLng)+','+(lat+dLat)+','+(lng+dLng)+',urn:ogc:def:crs:EPSG::4326';
+  const urlEau='https://geoservices.brgm.fr/geologie?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=ms:BSS_EAU_POINT&COUNT=200&BBOX='+bboxStr;
+  const urlTotal='https://geoservices.brgm.fr/geologie?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=ms:BSS_TOTAL_AVEC_LABEL&COUNT=200&BBOX='+bboxStr;
+  const safeFetch=async(url)=>{try{const r=await fetch(url,{signal:AbortSignal.timeout(20000)});return r.ok?await r.text():'';}catch(e){return '';}};
+  const [xmlEau,xmlTotal]=await Promise.all([safeFetch(urlEau),safeFetch(urlTotal)]);
+  const featEau=xmlEau?parseBSSGml(xmlEau,lat,lng):[];
+  const featTotal=xmlTotal?parseBSSGml(xmlTotal,lat,lng):[];
+  // Fusionner et dédoublonner
+  const seen=new Set(),merged=[];
+  for(const f of [...featEau,...featTotal]){
+    const key=f.props.code_bss||f.props.bss_id||f.props.reference||(f.lat+','+f.lng);
+    if(!seen.has(key)){seen.add(key);merged.push(f);}
+  }
+  // Filtrer à 5km et trier par distance
+  const maxDist=2.0;
+  const results=merged.filter(f=>{
+    if(isNaN(f.lat)||isNaN(f.lng))return false;
+    f.dist=haversineKm(lat,lng,f.lat,f.lng);
+    return f.dist<=maxDist;
+  }).sort((a,b)=>a.dist-b.dist).map(f=>({
+    code_bss:f.props.code_bss||f.props.bss_id||'',
+    nature:f.props.nature_pe||f.props.nature||'',
+    profondeur:f.props.prof_invest||f.props.prof_atteinte||'',
+    altitude:f.props.altitude||f.props.zsol||'',
+    commune:f.props.commune_actuelle||f.props.nom_commune||'',
+    nb_piezo:f.props.nb_mesures_piezo||'',
+    lien:f.props.lien_infoterre||'',
+    dist_km:f.dist?f.dist.toFixed(1):''
+  }));
   return results;
 }
 
@@ -3805,21 +3991,52 @@ async function iaGeoInvestigate(){
       }
     }catch(e){}
   }
+  // Reverse cadastre automatique
+  const reverseCadastrePromise=(async()=>{
+    try{
+      const url='https://apicarto.ign.fr/api/cadastre/parcelle?geom=%7B%22type%22%3A%22Point%22%2C%22coordinates%22%3A%5B'+lng+'%2C'+lat+'%5D%7D';
+      const resp=await fetch(url,{signal:AbortSignal.timeout(8000)});
+      if(!resp.ok)return;
+      const data=await resp.json();
+      const feat=(data.features||[])[0];
+      if(feat){
+        const p=feat.properties||{};
+        gd.parcelle={commune:p.nom_com||'',section:p.section||'',numero:p.numero||'',contenance:p.contenance||'',codeInsee:p.code_insee||''};
+      }
+    }catch(e){}
+  })();
   const results=await Promise.allSettled([
     (async()=>{
-      const byPoint=await iaFetchJSON('https://georisques.gouv.fr/api/v1/gaspar/risques?latlon='+lng+','+lat+'&page=1&page_size=50').then(d=>d.data||[]).catch(()=>[]);
-      byPoint.forEach(r=>{r._source='point';});
-      let byCommune=[];
+      // Recherche risques par INSEE (prioritaire, plus complet) + par point (complémentaire)
+      let byInsee=[];
       if(gd.insee){
-        byCommune=await iaFetchJSON('https://georisques.gouv.fr/api/v1/gaspar/risques?code_insee='+gd.insee+'&page=1&page_size=50').then(d=>d.data||[]).catch(()=>[]);
-        byCommune.forEach(r=>{r._source='commune';});
+        byInsee=await iaFetchJSON('https://georisques.gouv.fr/api/v1/gaspar/risques?code_insee='+gd.insee+'&page=1&page_size=50').then(d=>d.data||[]).catch(()=>[]);
       }
+      const byPoint=await iaFetchJSON('https://georisques.gouv.fr/api/v1/gaspar/risques?latlon='+lng+','+lat+'&page=1&page_size=50').then(d=>d.data||[]).catch(()=>[]);
+      // Extraire risques_detail pour plus de précision (comme GEOCARTO)
+      const extractDetailed=(entries,source)=>{
+        const detailed=[];
+        entries.forEach(e=>{
+          if(e.risques_detail&&Array.isArray(e.risques_detail)){
+            e.risques_detail.forEach(rd=>{rd._source=source;rd._commune=e.libelle_commune||'';detailed.push(rd);});
+          }else{
+            e._source=source;detailed.push(e);
+          }
+        });
+        return detailed;
+      };
+      const detInsee=extractDetailed(byInsee,'commune');
+      const detPoint=extractDetailed(byPoint,'point');
+      // Fusionner avec déduplication (point prioritaire)
       const seen=new Set();const merged=[];
-      byPoint.forEach(r=>{const k=r.libelle_risque_long||r.libelle_risque_jo||'';if(!seen.has(k)){seen.add(k);merged.push(r);}});
-      byCommune.forEach(r=>{const k=r.libelle_risque_long||r.libelle_risque_jo||'';if(!seen.has(k)){seen.add(k);merged.push(r);}});
+      detPoint.forEach(r=>{const k=r.libelle_risque_long||r.libelle_risque_jo||r.num_risque||'';if(k&&!seen.has(k)){seen.add(k);merged.push(r);}});
+      detInsee.forEach(r=>{const k=r.libelle_risque_long||r.libelle_risque_jo||r.num_risque||'';if(k&&!seen.has(k)){seen.add(k);merged.push(r);}});
       gd.risques=merged;
+      gd.risquesCommune=byInsee[0]?.libelle_commune||'';
     })(),
-    iaFetchJSON('https://georisques.gouv.fr/api/v1/gaspar/catnat?'+(gd.insee?'code_insee='+gd.insee:'latlon='+lng+','+lat+'&rayon=1000')+'&page=1&page_size=100').then(d=>{gd.catnat=d.data||[];}),
+    iaFetchJSON('https://georisques.gouv.fr/api/v1/gaspar/catnat?'+(gd.insee?'code_insee='+gd.insee:'latlon='+lng+','+lat+'&rayon=1000')+'&page=1&page_size=100').then(d=>{
+      const items=d.data||[];items.sort((a,b)=>(b.date_debut_evt||'').localeCompare(a.date_debut_evt||''));gd.catnat=items;
+    }),
     iaFetchJSON('https://georisques.gouv.fr/api/v1/zonage_sismique?latlon='+lng+','+lat+'&rayon=100').then(d=>{gd.sismique=(d.data&&d.data[0])?d.data[0].code_zone:null;}),
     iaFetchJSON('https://georisques.gouv.fr/api/v1/cavites?latlon='+lng+','+lat+'&rayon=2000&page=1&page_size=50').then(d=>{gd.cavites=d.data||[];}),
     iaFetchJSON('https://georisques.gouv.fr/api/v1/installations_classees?latlon='+lng+','+lat+'&rayon=2000&page=1&page_size=50').then(d=>{gd.icpe=d.data||[];}),
@@ -3829,7 +4046,8 @@ async function iaGeoInvestigate(){
     iaFetchArgiles(lat,lng).then(label=>{gd.argiles=label;}),
     iaFetchGeologie(lat,lng).then(geo=>{gd.geologie=geo;}),
     iaFetchAltitude(lat,lng).then(alt=>{gd.altitude=alt;}),
-    fetchRiskMaps(lat,lng).then(maps=>{gd.riskMaps=maps;})
+    fetchRiskMaps(lat,lng).then(maps=>{gd.riskMaps=maps;}),
+    reverseCadastrePromise
   ]);
   geocartoData=gd;
   document.getElementById('ia-ctx-geocarto').disabled=false;
@@ -3862,6 +4080,12 @@ function renderGeocartoPanel(){
   if(g.altitude)html+='Altitude : <strong>'+g.altitude+' m NGF</strong> \u00a0\u00a0';
   html+='GPS : '+g.lat.toFixed(6)+', '+g.lng.toFixed(6);
   html+='</div>';
+  if(g.parcelle){
+    html+='<div class="gc-meta" style="margin-top:4px;color:#795548">Parcelle : <strong>'+g.parcelle.section+' '+g.parcelle.numero+'</strong>';
+    if(g.parcelle.commune)html+=' — '+g.parcelle.commune;
+    if(g.parcelle.contenance)html+=' — '+g.parcelle.contenance+' m²';
+    html+='</div>';
+  }
   html+='</div>';
   // --- Type de mission ---
   html+='<div style="margin:12px 0 8px;padding:10px 12px;background:#FFF8E1;border-radius:8px;border-left:4px solid #F2B705">';
@@ -3877,6 +4101,16 @@ function renderGeocartoPanel(){
   html+='<option value="G4"'+(projectMission==='G4'?' selected':'')+'>G4</option>';
   html+='<option value="G5"'+(projectMission==='G5'?' selected':'')+'>G5</option>';
   html+='</select></label></div>';
+  // --- Emprise au sol ---
+  const empriseVal=g.empriseAuSol||'';
+  const empriseAuto=elements.filter(e=>e.type==='measureArea'&&e.area);
+  const empriseHint=empriseAuto.length>0?empriseAuto.reduce((s,e)=>s+e.area,0).toFixed(1):'';
+  html+='<div style="margin:4px 0 8px;padding:8px 12px;background:#F3E5F5;border-radius:8px;border-left:4px solid #8E24AA;display:flex;align-items:center;gap:8px">';
+  html+='<label style="font-weight:700;font-size:12px;color:#4A148C;white-space:nowrap">Emprise au sol</label>';
+  html+='<input type="number" min="0" step="0.1" id="gc-emprise" value="'+(empriseVal||empriseHint)+'" placeholder="120" style="flex:1;padding:5px 8px;border:1px solid #ccc;border-radius:4px;font-size:12px;font-weight:700;font-family:inherit" onchange="gcMissionField(\'empriseAuSol\',this.value)">';
+  html+='<span style="font-size:12px;font-weight:700;color:#4A148C">m²</span>';
+  html+='<button type="button" onclick="gcFillEmprise()" style="padding:4px 8px;background:#8E24AA;color:#fff;border:none;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer" title="Remplir avec la surface mesurée">📐</button>';
+  html+='</div>';
   // --- Programme de reconnaissance ---
   const gcR='display:flex;align-items:center;font-size:12px;color:#444;height:28px';
   const gcL='flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
@@ -3889,16 +4123,16 @@ function renderGeocartoPanel(){
   html+='<tr><td style="font-size:12px;color:#444;padding-right:8px">Pénétromètres</td><td style="width:54px"><input type="number" min="0" id="gc-nb-penetro" value="'+(g.nbPenetro||0)+'" style="'+gcIn+'" onchange="gcMissionField(\'nbPenetro\',+this.value)"></td>';
   html+='<td style="font-size:12px;color:#444;padding-left:20px;padding-right:8px">Tarières</td><td style="width:54px"><input type="number" min="0" id="gc-nb-tariere" value="'+(g.nbTariere||0)+'" style="'+gcIn+'" onchange="gcMissionField(\'nbTariere\',+this.value)"></td></tr>';
   html+='<tr><td style="font-size:12px;color:#444;padding-right:8px">Reco fondation</td><td><input type="number" min="0" id="gc-nb-fondation" value="'+(g.nbFondation||0)+'" style="'+gcIn+'" onchange="gcMissionField(\'nbFondation\',+this.value)"></td>';
-  html+='<td style="font-size:12px;color:#444;padding-left:20px;padding-right:8px">Sondage pelle</td><td><input type="number" min="0" id="gc-nb-pelle" value="'+(g.nbPelle||0)+'" style="'+gcIn+'" onchange="gcMissionField(\'nbPelle\',+this.value);gcAutoCheckPelle()"></td></tr>';
+  html+='<td style="font-size:12px;color:#444;padding-left:20px;padding-right:8px">Sondage pelle</td><td><input type="number" min="0" id="gc-nb-pelle" value="'+(g.nbPelle||0)+'" style="'+gcIn+'" onchange="gcMissionField(\'nbPelle\',+this.value);gcAutoCheckPelle();gcCheckPelleClient()"></td></tr>';
   html+='</table>';
   html+='<div style="margin-top:8px;padding-top:8px;border-top:1px solid #D6E4F0">';
   html+='<table style="width:100%;border-collapse:separate;border-spacing:0 4px">';
-  html+='<tr><td style="font-size:12px;color:#444;padding-right:8px">Pelle nécessaire</td><td style="width:120px"><select id="gc-pelle-oui" style="'+gcSl+'" onchange="gcMissionField(\'pelleOui\',this.value===\'oui\')"><option value="oui"'+(g.pelleOui===true?' selected':'')+'>Oui</option><option value="non"'+(g.pelleOui!==true?' selected':'')+'>Non</option></select></td></tr>';
-  html+='<tr><td style="font-size:12px;color:#444;padding-right:8px">Gérée par le client</td><td><select id="gc-pelle-client" style="'+gcSl+'" onchange="gcMissionField(\'pelleClient\',this.value===\'oui\'?true:this.value===\'non\'?false:null)"><option value=""'+(g.pelleClient==null?' selected':'')+'>—</option><option value="oui"'+(g.pelleClient===true?' selected':'')+'>Oui</option><option value="non"'+(g.pelleClient===false?' selected':'')+'>Non</option></select></td></tr>';
+  html+='<tr><td style="font-size:12px;color:#444;padding-right:8px">Pelle nécessaire</td><td style="width:120px"><select id="gc-pelle-oui" style="'+gcSl+'" onchange="gcMissionField(\'pelleOui\',this.value===\'oui\');gcCheckPelleClient()"><option value="oui"'+(g.pelleOui===true?' selected':'')+'>Oui</option><option value="non"'+(g.pelleOui!==true?' selected':'')+'>Non</option></select></td></tr>';
+  html+='<tr><td id="gc-pelle-client-label" style="font-size:12px;color:#444;padding-right:8px">Gérée par le client</td><td><select id="gc-pelle-client" style="'+gcSl+'" onchange="gcMissionField(\'pelleClient\',this.value===\'oui\'?true:this.value===\'non\'?false:null);gcCheckPelleClient()"><option value=""'+(g.pelleClient==null?' selected':'')+'>—</option><option value="oui"'+(g.pelleClient===true?' selected':'')+'>Oui</option><option value="non"'+(g.pelleClient===false?' selected':'')+'>Non</option></select></td></tr>';
   html+='<tr><td style="font-size:12px;color:#444;padding-right:8px">Laboratoire</td><td><select id="gc-labo-oui" style="'+gcSl+'" onchange="gcMissionField(\'laboOui\',this.value===\'oui\')"><option value="oui"'+(g.laboOui?' selected':'')+'>Oui</option><option value="non"'+(!g.laboOui?' selected':'')+'>Non</option></select></td></tr>';
   const liqAuto=g.liquefaction!=null?g.liquefaction:(g.geologie&&g.geologie.notation&&/^Mz/i.test(g.geologie.notation)?'oui':'non');
   const liqVal=typeof liqAuto==='boolean'?(liqAuto?'oui':'non'):(liqAuto||'non');
-  html+='<tr><td style="font-size:12px;color:#444;padding-right:8px">Liquéfaction</td><td><select id="gc-liquefaction" style="'+gcSl+'" onchange="gcMissionField(\'liquefaction\',this.value)"><option value="oui"'+(liqVal==='oui'?' selected':'')+'>Oui</option><option value="oui_sn"'+(liqVal==='oui_sn'?' selected':'')+'>Oui Si Ness.</option><option value="non"'+(liqVal==='non'?' selected':'')+'>Non</option></select></td></tr>';
+  html+='<tr><td style="font-size:12px;color:#444;padding-right:8px">Liquéfaction</td><td><select id="gc-liquefaction" style="'+gcSl+'" onchange="gcMissionField(\'liquefaction\',this.value)"><option value="oui"'+(liqVal==='oui'?' selected':'')+'>Oui</option><option value="oui_sn"'+(liqVal==='oui_sn'?' selected':'')+'>Si nécessaire</option><option value="non"'+(liqVal==='non'?' selected':'')+'>Non</option></select></td></tr>';
   html+='</table></div>';
   html+='<div style="margin-top:8px;padding-top:8px;border-top:1px solid #D6E4F0">';
   html+='<table style="width:100%;border-collapse:separate;border-spacing:0 4px">';
@@ -3944,11 +4178,24 @@ function renderGeocartoPanel(){
     if(g.geologie.litho){geoHtml+='<strong>Lithologie :</strong> '+g.geologie.litho;if(!geoBadge)geoBadge=g.geologie.litho.length>20?g.geologie.litho.substring(0,18)+'…':g.geologie.litho;}
   }
   html+=gcSection('Géologie / Lithologie','gc-badge-blue',geoBadge||'',geoHtml||'Donnée non disponible');
-  // Risques
-  html+=gcListSection('Risques identifiés',g.risques,r=>{
+  // Risques (avec niveaux)
+  function gcRiskLevel(r){
+    const n=((r.libelle_risque_long||'')+(r.libelle_risque_jo||'')).toLowerCase();
+    if(n.includes('inondation')||n.includes('submersion')||n.includes('tsunami'))return'high';
+    if(n.includes('séisme')||n.includes('sismique')||n.includes('volcanique'))return'high';
+    if(n.includes('mouvement')||n.includes('éboulement')||n.includes('glissement'))return'medium';
+    if(n.includes('tempête')||n.includes('cyclone'))return'medium';
+    if(n.includes('radon')||n.includes('minier'))return'low';
+    return'info';
+  }
+  const riskLevelColors={high:'#D94040',medium:'#E88D00',low:'#4CAF50',info:'#888'};
+  const riskLevelLabels={high:'Élevé',medium:'Moyen',low:'Faible',info:'Info'};
+  html+=gcListSection('Risques identifiés'+(g.risquesCommune?' — '+g.risquesCommune:''),g.risques,r=>{
     const lbl=r.libelle_risque_long||r.libelle_risque_jo||'?';
+    const lvl=gcRiskLevel(r);
+    const badge='<span style="display:inline-block;font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;color:#fff;background:'+riskLevelColors[lvl]+';margin-right:4px">'+riskLevelLabels[lvl]+'</span>';
     const src=r._source==='commune'?' <span style="font-size:10px;color:#888;font-style:italic">(commune)</span>':' <span style="font-size:10px;color:#888;font-style:italic">(site)</span>';
-    return lbl+src;
+    return badge+lbl+src+(r.num_risque?' <span style="font-size:10px;color:#aaa">['+r.num_risque+']</span>':'');
   },'red');
   // CatNat
   html+=gcListSection('Catastrophes naturelles',g.catnat,c=>(c.date_debut_evt||'')+' \u2014 '+(c.libelle_risque_jo||''),'orange');
@@ -3959,8 +4206,9 @@ function renderGeocartoPanel(){
   // Mouvements terrain
   html+=gcListSection('Mouvements de terrain',g.mvt,m=>(m.type_mvt||'?')+' ('+(m.date_debut||'')+')'+(m.commune?' · '+m.commune:''), 'orange');
   // BSS
-  html+=gcListSection('Sondages BSS proches',g.bss,b=>{
+  html+=gcListSection('Sondages BSS proches (2 km)',g.bss,b=>{
     let t='<strong>'+(b.code_bss||'?')+'</strong> ('+(b.nature||'')+')';
+    if(b.dist_km)t+=' <span style="font-size:10px;color:#888;font-weight:700">'+b.dist_km+' km</span>';
     if(b.profondeur)t+=' \u2014 prof='+b.profondeur+'m';
     if(b.altitude)t+=' alt='+b.altitude+'m';
     if(b.commune)t+=' · '+b.commune;
@@ -3976,6 +4224,7 @@ function renderGeocartoPanel(){
   // Activer checkbox IA
   const gcCheck=document.getElementById('ia-ctx-geocarto');
   if(gcCheck)gcCheck.disabled=false;
+  gcCheckPelleClient();
 }
 
 function gcSyncMission(val){
@@ -3987,6 +4236,24 @@ function gcSyncMission(val){
 function gcMissionField(field,val){
   if(!geocartoData)return;
   geocartoData[field]=val;
+}
+function gcFillEmprise(){
+  const areas=elements.filter(e=>e.type==='measureArea'&&e.area);
+  if(!areas.length)return;
+  const a=areas.reduce((s,e)=>s+e.area,0);
+  const val=a.toFixed(1);
+  const inp=document.getElementById('gc-emprise');
+  if(inp)inp.value=val;
+  gcMissionField('empriseAuSol',val);
+}
+function gcCheckPelleClient(){
+  const lbl=document.getElementById('gc-pelle-client-label');
+  const pelle=document.getElementById('gc-pelle-oui');
+  const client=document.getElementById('gc-pelle-client');
+  if(!lbl||!pelle||!client)return;
+  if(pelle.value!=='oui'){client.value='';gcMissionField('pelleClient',null);lbl.style.animation='';lbl.style.color='#444';lbl.style.fontWeight='';return;}
+  if(client.value===''){lbl.style.animation='blink-red 1s infinite';lbl.style.color='#D94040';lbl.style.fontWeight='800';}
+  else{lbl.style.animation='';lbl.style.color='#444';lbl.style.fontWeight='';}
 }
 function gcAutoCheckPelle(){
   if(!geocartoData)return;
@@ -4561,12 +4828,13 @@ function openEnqueteSol(){
   if(lat)params.set('lat',lat);
   if(lng)params.set('lng',lng);
   if(addr)params.set('addr',addr);
-  const url='../01_GEOCARTO/index.html'+(params.toString()?'?'+params.toString():'');
+  const url='https://vincentsld.github.io/GEOCARTO/'+(params.toString()?'?'+params.toString():'');
   window.open(url,'_blank');
 }
 
 function openEnqueteSolFromSite(){
-  const ref=document.getElementById('project-ref').value.trim();
+  let ref=document.getElementById('project-ref').value.trim();
+  if(projectName&&ref.endsWith(projectName))ref=ref.slice(0,-projectName.length).trim();
   const params=new URLSearchParams();
   if(ref)params.set('ref',ref);
   if(projectName)params.set('nom',projectName);
@@ -4575,7 +4843,13 @@ function openEnqueteSolFromSite(){
   if(projectAddr)params.set('addr',projectAddr);
   if(projectCp)params.set('cp',projectCp);
   if(projectVille)params.set('ville',projectVille);
-  const url='../01_GEOCARTO/index.html'+(params.toString()?'?'+params.toString():'');
+  if(projectInsee)params.set('insee',projectInsee);
+  if(geocartoData&&geocartoData.parcelle){
+    const p=geocartoData.parcelle;
+    if(p.section)params.set('section',p.section);
+    if(p.numero)params.set('numero',p.numero);
+  }
+  const url='https://vincentsld.github.io/GEOCARTO/'+(params.toString()?'?'+params.toString():'');
   window.open(url,'_blank');
 }
 
@@ -5772,11 +6046,11 @@ function mdlRenderTable(){
   h+='</tr></thead><tbody>';
   modeleFormations.forEach((f,i)=>{
     h+='<tr>';
-    h+='<td style="font-weight:700;color:#E67E22">'+(i+1)+'</td>';
+    h+='<td style="font-weight:700;color:var(--yellow)">'+(i+1)+'</td>';
     h+='<td><input value="'+escapeHtml(f.name||'')+'" onchange="mdlUpd('+i+',\'name\',this.value)" style="text-align:left"></td>';
     h+='<td><input type="number" step="0.1" value="'+(f.top!=null?f.top:'')+'" onchange="mdlUpd('+i+',\'top\',+this.value)"></td>';
     h+='<td><input type="number" step="0.1" value="'+(f.bottom!=null?f.bottom:'')+'" onchange="mdlUpd('+i+',\'bottom\',+this.value)"></td>';
-    h+='<td style="font-weight:700;color:#2C3E50">'+(f.top!=null&&f.bottom!=null?(f.bottom-f.top).toFixed(1):'—')+'</td>';
+    h+='<td style="font-weight:700;color:var(--black)">'+(f.top!=null&&f.bottom!=null?(f.bottom-f.top).toFixed(1):'—')+'</td>';
     h+='<td><select onchange="mdlUpd('+i+',\'nature\',this.value)">';
     const natures=['','Remblais','Terre végétale','Argile','Argile marneuse','Limon','Limon argileux','Sable','Sable argileux','Grave','Gravier','Marne','Calcaire','Schiste','Granite','Roche altérée','Roche saine'];
     natures.forEach(n=>{h+='<option value="'+n+'"'+(f.nature===n?' selected':'')+'>'+n+'</option>';});
@@ -5807,12 +6081,54 @@ function mdlRemoveFormation(){
   mdlRenderTable();
 }
 
+function mdlClearAll(){
+  if(!confirm('Vider toutes les formations du modèle ?'))return;
+  modeleFormations=[];
+  mdlRenderTable();
+  const cvs=document.getElementById('mdl-coupe-canvas');
+  if(cvs){const ctx=cvs.getContext('2d');ctx.clearRect(0,0,cvs.width,cvs.height);}
+}
+
 function mdlAutoFromSondages(){
   if(!sondages||sondages.length===0){alert('Aucun sondage disponible.');return;}
+  // Show selection dialog
+  const typeNames={penetro_dyn:'Pénétro. dyn.',penetro_stat:'Pénétro. stat.',tariere:'Tarière',pelle_meca:'Pelle méca.',fondation:'Reco fondation',piezometre:'Piézomètre',infiltro:'Infiltro.',forage_destr:'Forage destr.',essai_labo:'Labo',pressio:'Pressiomètre',spt:'SPT'};
+  let dlg=document.getElementById('mdl-select-dlg');
+  if(dlg)dlg.remove();
+  dlg=document.createElement('div');dlg.id='mdl-select-dlg';
+  dlg.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;display:flex;align-items:center;justify-content:center';
+  let h='<div style="background:#fff;border-radius:12px;padding:20px 24px;max-width:420px;width:90vw;max-height:70vh;overflow-y:auto;box-shadow:0 8px 30px rgba(0,0,0,0.3);border-top:4px solid #F2B705">';
+  h+='<div style="font-weight:800;font-size:14px;margin-bottom:12px;color:#1A1A1A">Sélectionner les sondages à analyser</div>';
+  h+='<div style="margin-bottom:10px"><label style="font-size:11px;cursor:pointer"><input type="checkbox" id="mdl-sel-all" checked onchange="document.querySelectorAll(\'.mdl-sel-cb\').forEach(c=>c.checked=this.checked)"> <strong>Tout sélectionner</strong></label></div>';
+  sondages.forEach((s,i)=>{
+    h+='<div style="padding:4px 0;border-bottom:1px solid #eee"><label style="font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px">';
+    h+='<input type="checkbox" class="mdl-sel-cb" data-idx="'+i+'" checked>';
+    h+='<span style="font-weight:700;color:#1A1A1A">'+(s.name||s.id)+'</span>';
+    h+='<span style="color:#888;font-size:11px">'+(typeNames[s.type]||s.type)+'</span>';
+    h+='</label></div>';
+  });
+  h+='<div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end">';
+  h+='<button onclick="document.getElementById(\'mdl-select-dlg\').remove()" style="padding:8px 16px;border:1px solid #ccc;border-radius:6px;background:#f5f5f5;font-weight:700;cursor:pointer;font-family:inherit">Annuler</button>';
+  h+='<button onclick="mdlRunAutoWithSelection()" style="padding:8px 16px;border:none;border-radius:6px;background:#F2B705;color:#1A1A1A;font-weight:700;cursor:pointer;font-family:inherit">Valider</button>';
+  h+='</div></div>';
+  dlg.innerHTML=h;
+  document.body.appendChild(dlg);
+}
+
+function mdlRunAutoWithSelection(){
+  const checks=document.querySelectorAll('.mdl-sel-cb:checked');
+  const indices=[...checks].map(c=>+c.dataset.idx);
+  document.getElementById('mdl-select-dlg').remove();
+  if(!indices.length){alert('Aucun sondage sélectionné.');return;}
+  const selected=indices.map(i=>sondages[i]);
+  mdlBuildFromSondages(selected);
+}
+
+function mdlBuildFromSondages(selectedSondages){
   // Collect stratigraphic layers from tariere/pelle_meca/forage_destr
   const allLayers=[];
   const soilColors={remblai:'#8B7355',terre_vegetale:'#6B8E23',argile:'#CD853F',argile_marneuse:'#BC8F8F',limon:'#DEB887',limon_argileux:'#D2B48C',sable:'#F4E4BA',sable_argileux:'#E8D5A0',grave:'#A9A9A9',gravier:'#C0C0C0',marne:'#D3C5A0',calcaire:'#E8E0D0',schiste:'#708090',granite:'#B0A090',argile_sableuse:'#D2B48C',argile_limoneuse:'#C9A87C'};
-  sondages.forEach(s=>{
+  selectedSondages.forEach(s=>{
     if((s.type==='tariere'||s.type==='pelle_meca')&&s.data&&Array.isArray(s.data)){
       s.data.forEach(l=>{allLayers.push({from:l.from,to:l.to,nature:l.nature||'',description:l.description||''});});
     }
@@ -5822,17 +6138,17 @@ function mdlAutoFromSondages(){
   });
   // Collect pressio data by depth
   const pressioByDepth={};
-  sondages.filter(s=>s.type==='pressio'&&s.data&&s.data.readings).forEach(s=>{
+  selectedSondages.filter(s=>s.type==='pressio'&&s.data&&s.data.readings).forEach(s=>{
     s.data.readings.forEach(r=>{if(r.depth!=null&&r.pl!=null){const k=Math.round(r.depth*2)/2;if(!pressioByDepth[k])pressioByDepth[k]={pl:[],em:[]};pressioByDepth[k].pl.push(r.pl);if(r.em!=null)pressioByDepth[k].em.push(r.em);}});
   });
   // Collect SPT data
   const sptByDepth={};
-  sondages.filter(s=>s.type==='spt'&&s.data&&s.data.readings).forEach(s=>{
+  selectedSondages.filter(s=>s.type==='spt'&&s.data&&s.data.readings).forEach(s=>{
     s.data.readings.forEach(r=>{if(r.depth!=null&&(r.n2!=null||r.n3!=null)){const k=Math.round(r.depth*2)/2;if(!sptByDepth[k])sptByDepth[k]=[];sptByDepth[k].push((r.n2||0)+(r.n3||0));}});
   });
   // Collect penetro data
   const qdByDepth={};
-  sondages.filter(s=>s.type==='penetro_dyn'&&s.data&&Array.isArray(s.data)).forEach(s=>{
+  selectedSondages.filter(s=>s.type==='penetro_dyn'&&s.data&&Array.isArray(s.data)).forEach(s=>{
     s.data.forEach(r=>{if(r.depth!=null&&r.blows!=null){const qd=calcQd(r.blows,r.depth);if(qd!=null){const k=Math.round(r.depth*2)/2;if(!qdByDepth[k])qdByDepth[k]=[];qdByDepth[k].push(qd);}}});
   });
   // Group layers by nature (simplified merge)
@@ -9052,7 +9368,15 @@ function downloadCompareGraph(){
 
 // ─── PÉNÉTROMÈTRE STATIQUE ───
 function renderPenetroStatTable(s,$wrap){
-  let html=`<table class="sondage-table"><thead><tr><th>Prof. (m)</th><th>qc (MPa)</th><th>fs (kPa)</th></tr></thead><tbody>`;
+  const tnVal=s.tnAltitude!=null?s.tnAltitude:'';
+  const dpVal=s.sondageDepth!=null?s.sondageDepth:'';
+  let html=`<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:8px;padding:8px 10px;background:#F5F5F5;border-radius:6px">
+    <label style="font-weight:600;font-size:12px">Nivellement TN :</label>
+    <input type="text" inputmode="decimal" value="${tnVal}" placeholder="Ex: 125.30" style="width:120px;padding:5px 8px;border:1px solid #ccc;border-radius:4px;font-size:13px;font-weight:600" onchange="sondageTnInput(this.value)">
+    <label style="font-weight:600;font-size:12px;color:#A0724A">Profondeur (m) :</label>
+    <input type="number" step="0.10" min="0" value="${dpVal}" placeholder="Ex: 4.60" style="width:100px;padding:5px 8px;border:1px solid #ccc;border-radius:4px;font-size:13px;font-weight:700;color:#A0724A" oninput="sondageDepthInput(this.value)">
+  </div>`;
+  html+=`<table class="sondage-table"><thead><tr><th>Prof. (m)</th><th>qc (MPa)</th><th>fs (kPa)</th></tr></thead><tbody>`;
   s.data.forEach((d,i)=>{
     html+=`<tr><td class="depth-cell">${d.depth.toFixed(2)}</td>
     <td><div class="sonde-input-group">
@@ -9186,7 +9510,14 @@ function renderPenetroStatGraph(s){
 // ─── TARIÈRE / PELLE MÉCANIQUE ───
 function renderStratiTable(s,$wrap){
   const isPelle=s.type==='pelle_meca';
-  let html='';
+  const tnVal=s.tnAltitude!=null?s.tnAltitude:'';
+  const dpVal=s.sondageDepth!=null?s.sondageDepth:'';
+  let html=`<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:8px;padding:8px 10px;background:#F5F5F5;border-radius:6px">
+    <label style="font-weight:600;font-size:12px">Nivellement TN :</label>
+    <input type="text" inputmode="decimal" value="${tnVal}" placeholder="Ex: 125.30" style="width:120px;padding:5px 8px;border:1px solid #ccc;border-radius:4px;font-size:13px;font-weight:600" onchange="sondageTnInput(this.value)">
+    <label style="font-weight:600;font-size:12px;color:#A0724A">Profondeur (m) :</label>
+    <input type="number" step="0.10" min="0" value="${dpVal}" placeholder="Ex: 4.60" style="width:100px;padding:5px 8px;border:1px solid #ccc;border-radius:4px;font-size:13px;font-weight:700;color:#A0724A" oninput="sondageDepthInput(this.value)">
+  </div>`;
   if(isPelle){
     html+=`<div style="margin-bottom:8px"><label style="font-size:11px;font-weight:800">Niveau d'eau (m) :</label>
     <input type="number" step="0.01" min="0" value="${s.waterLevel!=null?s.waterLevel:''}" placeholder="Non rencontré"
@@ -9408,9 +9739,14 @@ function renderStratiGraph(s){
 // ─── RECONNAISSANCE DE FONDATION ───
 function renderFondationForm(s,$wrap){
   const d=s.data||{};
+  const tnVal=s.tnAltitude!=null?s.tnAltitude:'';
   const typeOpts=FONDATION_TYPES.map(t=>`<option value="${t.v}"${d.fondationType===t.v?' selected':''}>${t.l}</option>`).join('');
   const stateOpts=FONDATION_STATES.map(t=>`<option value="${t.v}"${d.state===t.v?' selected':''}>${t.l}</option>`).join('');
-  $wrap.innerHTML=`<div class="fondation-form">
+  $wrap.innerHTML=`<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:8px;padding:8px 10px;background:#F5F5F5;border-radius:6px">
+    <label style="font-weight:600;font-size:12px">Nivellement TN :</label>
+    <input type="text" inputmode="decimal" value="${tnVal}" placeholder="Ex: 125.30" style="width:120px;padding:5px 8px;border:1px solid #ccc;border-radius:4px;font-size:13px;font-weight:600" onchange="sondageTnInput(this.value)">
+  </div>
+  <div class="fondation-form">
     <label>Type de fondation<select onchange="fondationInput('fondationType',this.value)">${typeOpts}</select></label>
     <label>Profondeur (m)<input type="number" step="0.01" min="0" value="${d.depth||''}" oninput="fondationInput('depth',this.value)"></label>
     <label>Dimensions (L × l × h)<input type="text" value="${d.dimensions||''}" placeholder="Ex: 0.60 × 0.30 × 0.20" oninput="fondationInput('dimensions',this.value)"></label>
@@ -11607,6 +11943,341 @@ window.captureScan3DToPhotos=function(){
   if(g.renderPhotos)g.renderPhotos();
   alert('Capture 3D ajoutée aux photos du projet.');
 };
+
+// ═══ 7. IMPORT / EXPORT IFC ═══
+
+let _webIfcLoaded=false, _webIfcApi=null;
+let ifcMeshGroup=null; // Group holding imported IFC meshes
+
+async function ensureWebIfc(){
+  if(_webIfcLoaded&&_webIfcApi)return _webIfcApi;
+  // Lazy-load web-ifc from CDN
+  const ver='0.0.66';
+  const cdnBase='https://cdn.jsdelivr.net/npm/web-ifc@'+ver+'/';
+  if(!window.WebIFC){
+    await new Promise((resolve,reject)=>{
+      const s=document.createElement('script');
+      s.src=cdnBase+'web-ifc-api-iife.js';
+      s.onload=resolve;s.onerror=()=>reject(new Error('Impossible de charger web-ifc depuis le CDN'));
+      document.head.appendChild(s);
+    });
+  }
+  const api=new window.WebIFC.IfcAPI();
+  api.SetWasmPath(cdnBase);
+  await api.Init();
+  _webIfcApi=api;_webIfcLoaded=true;
+  return api;
+}
+
+// --- IMPORT IFC ---
+window.importIFC=async function(e){
+  const file=e.target.files&&e.target.files[0];
+  if(!file)return;
+  e.target.value='';
+  if(!scan3dScene){initScan3D();}
+  try{
+    const toast=typeof showToast==='function'?showToast:alert;
+    toast('Chargement IFC en cours...','#3D7AB5');
+    const api=await ensureWebIfc();
+    const buf=await file.arrayBuffer();
+    const data=new Uint8Array(buf);
+    const modelID=api.OpenModel(data);
+
+    // Remove previous IFC import
+    if(ifcMeshGroup){scan3dScene.remove(ifcMeshGroup);ifcMeshGroup=null;}
+    ifcMeshGroup=new THREE.Group();
+    ifcMeshGroup.name='IFC_Import';
+
+    // Color palette for IFC categories
+    const catColors={
+      [api.IFCWALL||0]:0xCCBB88,
+      [api.IFCWALLSTANDARDCASE||0]:0xCCBB88,
+      [api.IFCSLAB||0]:0xAAAAAA,
+      [api.IFCCOLUMN||0]:0x888888,
+      [api.IFCBEAM||0]:0x999999,
+      [api.IFCROOF||0]:0xBB6644,
+      [api.IFCWINDOW||0]:0x88CCEE,
+      [api.IFCDOOR||0]:0x886644,
+      [api.IFCSTAIR||0]:0xAA9988,
+      [api.IFCFURNISHINGELEMENT||0]:0x66AA66,
+      [api.IFCFOOTING||0]:0x777777,
+      [api.IFCPILE||0]:0x665544,
+    };
+    const defaultColor=0xBBBBBB;
+
+    // Stream all meshes
+    api.StreamAllMeshes(modelID,(mesh)=>{
+      const pid=mesh.expressID;
+      const pType=api.GetLineType?api.GetLineType(modelID,pid):0;
+      const color3=catColors[pType]||defaultColor;
+
+      for(let i=0;i<mesh.geometries.size();i++){
+        const geomData=mesh.geometries.get(i);
+        const gID=geomData.geometryExpressID;
+        const flatMesh=api.GetGeometry(modelID,gID);
+        const vData=api.GetVertexArray(flatMesh.GetVertexData(),flatMesh.GetVertexDataSize());
+        const iData=api.GetIndexArray(flatMesh.GetIndexData(),flatMesh.GetIndexDataSize());
+
+        const geometry=new THREE.BufferGeometry();
+        // web-ifc vertex layout: x,y,z, nx,ny,nz (6 floats per vertex)
+        const posArr=new Float32Array(vData.length/6*3);
+        const normArr=new Float32Array(vData.length/6*3);
+        for(let v=0;v<vData.length/6;v++){
+          posArr[v*3]=vData[v*6];
+          posArr[v*3+1]=vData[v*6+1];
+          posArr[v*3+2]=vData[v*6+2];
+          normArr[v*3]=vData[v*6+3];
+          normArr[v*3+1]=vData[v*6+4];
+          normArr[v*3+2]=vData[v*6+5];
+        }
+        geometry.setAttribute('position',new THREE.BufferAttribute(posArr,3));
+        geometry.setAttribute('normal',new THREE.BufferAttribute(normArr,3));
+        geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(iData),1));
+
+        // Apply transform from placement
+        const mat4=new THREE.Matrix4();
+        const fm=geomData.flatTransformation;
+        mat4.set(fm[0],fm[4],fm[8],fm[12],fm[1],fm[5],fm[9],fm[13],fm[2],fm[6],fm[10],fm[14],fm[3],fm[7],fm[11],fm[15]);
+
+        // Get color from geomData if available
+        let meshColor=color3;
+        if(geomData.color){
+          const c=geomData.color;
+          meshColor=new THREE.Color(c.x,c.y,c.z);
+        }
+
+        const material=new THREE.MeshStandardMaterial({
+          color:meshColor,
+          side:THREE.DoubleSide,
+          transparent:geomData.color&&geomData.color.w<1,
+          opacity:geomData.color?geomData.color.w:1,
+          metalness:0.1,roughness:0.7
+        });
+        const m=new THREE.Mesh(geometry,material);
+        m.applyMatrix4(mat4);
+        ifcMeshGroup.add(m);
+        flatMesh.delete();
+      }
+    });
+
+    // Scale & position the IFC model to match scene
+    // IFC uses meters; our scene uses scanScaleFactor
+    ifcMeshGroup.scale.setScalar(scanScaleFactor);
+
+    // Center the IFC model on the scene
+    const box=new THREE.Box3().setFromObject(ifcMeshGroup);
+    if(!box.isEmpty()){
+      const center=box.getCenter(new THREE.Vector3());
+      // If there's already a scan mesh, align IFC to scan center
+      if(scan3dMesh){
+        const scanBox=new THREE.Box3().setFromObject(scan3dMesh);
+        const scanCenter=scanBox.getCenter(new THREE.Vector3());
+        ifcMeshGroup.position.sub(center).add(scanCenter);
+      }
+    }
+
+    scan3dScene.add(ifcMeshGroup);
+    api.CloseModel(modelID);
+
+    document.getElementById('scan3d-empty').style.display='none';
+    if(typeof showToast==='function')showToast('IFC importé : '+ifcMeshGroup.children.length+' objets','#4CAF50');
+  }catch(err){
+    console.error('IFC import error:',err);
+    alert('Erreur lors de l\'import IFC :\n'+err.message);
+  }
+};
+
+// --- EXPORT IFC ---
+window.exportIFC=function(){
+  const g=G();
+  const sondages=g.sondages||[];
+  const formations=g.modeleFormations||[];
+  if(sondages.length===0&&formations.length===0){
+    alert('Aucune donnée géotechnique à exporter en IFC.\nAjoutez des sondages ou des formations.');
+    return;
+  }
+
+  const now=new Date();
+  const ts=now.toISOString().replace(/[-:]/g,'').replace(/\.\d+/,'');
+  const dateFr=now.toLocaleDateString('fr-FR');
+  let id=100; // entity ID counter
+  const nid=()=>('#'+(id++));
+
+  // Collect all STEP lines
+  const lines=[];
+  const add=(line)=>lines.push(line);
+
+  // === HEADER ===
+  const header=[
+    "ISO-10303-21;",
+    "HEADER;",
+    "FILE_DESCRIPTION(('ViewDefinition [CoordinationView]'),'2;1');",
+    "FILE_NAME('geosolia_export.ifc','"+ts+"',('GéoSolia'),('GEOTER'),'','GéoSolia PWA','');",
+    "FILE_SCHEMA(('IFC2X3'));",
+    "END-SECTION;",
+    "DATA;"
+  ];
+
+  // === ENTITIES ===
+  // Organization, Person, Application
+  const orgId=nid();add(orgId+"=IFCORGANIZATION($,'GEOTER','Bureau d''études géotechniques',$,$);");
+  const personId=nid();add(personId+"=IFCPERSON($,'GéoSolia','Export',$,$,$,$,$);");
+  const personOrgId=nid();add(personOrgId+"=IFCPERSONANDORGANIZATION("+personId+","+orgId+",$);");
+  const appId=nid();add(appId+"=IFCAPPLICATION("+orgId+",'1.0','GéoSolia PWA','GEOSOLIA');");
+
+  // OwnerHistory
+  const ownerHistId=nid();add(ownerHistId+"=IFCOWNERHISTORY("+personOrgId+","+appId+",$,.NOCHANGE.,$,$,$,"+Math.floor(now.getTime()/1000)+");");
+
+  // Geometric contexts
+  const dimExp2dId=nid();add(dimExp2dId+"=IFCDIMENSIONALEXPONENTS(0,0,0,0,0,0,0);");
+  const siUnitMId=nid();add(siUnitMId+"=IFCSIUNIT(*,.LENGTHUNIT.,$,.METRE.);");
+  const siUnitAId=nid();add(siUnitAId+"=IFCSIUNIT(*,.PLANEANGLEUNIT.,$,.RADIAN.);");
+  const siUnitSId=nid();add(siUnitSId+"=IFCSIUNIT(*,.SOLIDANGLEUNIT.,$,.STERADIAN.);");
+  const uaId=nid();add(uaId+"=IFCUNITASSIGNMENT(("+siUnitMId+","+siUnitAId+","+siUnitSId+"));");
+
+  // Direction & Point
+  const dir001Id=nid();add(dir001Id+"=IFCDIRECTION((0.,0.,1.));");
+  const dir010Id=nid();add(dir010Id+"=IFCDIRECTION((0.,1.,0.));");
+  const dir100Id=nid();add(dir100Id+"=IFCDIRECTION((1.,0.,0.));");
+  const origin3dId=nid();add(origin3dId+"=IFCCARTESIANPOINT((0.,0.,0.));");
+  const axis3dId=nid();add(axis3dId+"=IFCAXIS2PLACEMENT3D("+origin3dId+","+dir001Id+","+dir100Id+");");
+
+  // Geometric representation context
+  const geomCtxId=nid();add(geomCtxId+"=IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,1.E-05,"+axis3dId+",$);");
+  const geomSubCtxId=nid();add(geomSubCtxId+"=IFCGEOMETRICREPRESENTATIONSUBCONTEXT('Body','Model',*,*,*,*,"+geomCtxId+",$,.MODEL_VIEW.,$);");
+
+  // Local placement (identity)
+  const localPlaceId=nid();add(localPlaceId+"=IFCLOCALPLACEMENT($,"+axis3dId+");");
+
+  // Project
+  const projId=nid();add(projId+"=IFCPROJECT('"+guid()+"',"+ownerHistId+",'Projet Géotechnique','Export GéoSolia — "+dateFr+"',$,$,$,("+geomCtxId+"),"+uaId+");");
+
+  // Site
+  const sitePlaceId=nid();add(sitePlaceId+"=IFCLOCALPLACEMENT($,"+axis3dId+");");
+  const siteId=nid();add(siteId+"=IFCSITE('"+guid()+"',"+ownerHistId+",'Site',$,$,"+sitePlaceId+",$,$,.ELEMENT.,$,$,$,$,$);");
+
+  // RelAggregates project->site
+  const relPSId=nid();add(relPSId+"=IFCRELAGGREGATES('"+guid()+"',"+ownerHistId+",$,$,"+projId+",("+siteId+"));");
+
+  const mScale=g.measureScale||0.01;
+  const planCX=(g.planW||1200)/2;
+  const planCY=(g.planH||800)/2;
+  const refAlt=getNivRefAlt()||0;
+
+  function sondPos(s){
+    const rx=(s.x-planCX)*mScale;
+    const rz=(s.y-planCY)*mScale;
+    return{x:rx, y:rz, z:refAlt};
+  }
+
+  const siteChildren=[];
+
+  // --- Export sondages as IfcBuildingElementProxy (cylindrical representation) ---
+  sondages.forEach((s,idx)=>{
+    const layers=getSondageLayers(s);
+    const maxDepth=layers.reduce((m,l)=>Math.max(m,l.bottom||l.depth||0),0)||5;
+    const pos=sondPos(s);
+    const radius=0.05; // 5cm radius
+
+    // Placement for this sondage
+    const ptId=nid();add(ptId+"=IFCCARTESIANPOINT(("+pos.x.toFixed(4)+","+pos.y.toFixed(4)+","+pos.z.toFixed(4)+"));");
+    const dirDownId=nid();add(dirDownId+"=IFCDIRECTION((0.,0.,-1.));");
+    const axId=nid();add(axId+"=IFCAXIS2PLACEMENT3D("+ptId+","+dirDownId+","+dir100Id+");");
+    const lpId=nid();add(lpId+"=IFCLOCALPLACEMENT("+sitePlaceId+","+axId+");");
+
+    // Circle profile
+    const circId=nid();add(circId+"=IFCCIRCLEPROFILEDEF(.AREA.,$,"+axis3dId+","+radius.toFixed(4)+");");
+    // Extruded solid (cylinder going down)
+    const extId=nid();add(extId+"=IFCEXTRUDEDAREASOLID("+circId+","+axis3dId+","+dir001Id+","+maxDepth.toFixed(4)+");");
+    // Shape representation
+    const shapeRepId=nid();add(shapeRepId+"=IFCSHAPEREPRESENTATION("+geomSubCtxId+",'Body','SweptSolid',("+extId+"));");
+    const prodShapeId=nid();add(prodShapeId+"=IFCPRODUCTDEFINITIONSHAPE($,$,("+shapeRepId+"));");
+
+    const label=s.label||s.type||('Sondage '+(idx+1));
+    const elemId=nid();add(elemId+"=IFCBUILDINGELEMENTPROXY('"+guid()+"',"+ownerHistId+",'"+escIfc(label)+"','Sondage géotechnique',$,"+lpId+","+prodShapeId+",$,$);");
+    siteChildren.push(elemId);
+
+    // Export individual layers as separate proxies
+    layers.forEach((lay,li)=>{
+      const top=lay.top||0;
+      const bot=lay.bottom||lay.depth||0;
+      const thick=bot-top;
+      if(thick<=0)return;
+
+      const lPtId=nid();add(lPtId+"=IFCCARTESIANPOINT(("+pos.x.toFixed(4)+","+pos.y.toFixed(4)+","+(pos.z-top).toFixed(4)+"));");
+      const lAxId=nid();add(lAxId+"=IFCAXIS2PLACEMENT3D("+lPtId+","+dirDownId+","+dir100Id+");");
+      const lLpId=nid();add(lLpId+"=IFCLOCALPLACEMENT("+sitePlaceId+","+lAxId+");");
+
+      const lRad=0.15;
+      const lCircId=nid();add(lCircId+"=IFCCIRCLEPROFILEDEF(.AREA.,$,"+axis3dId+","+lRad.toFixed(4)+");");
+      const lExtId=nid();add(lExtId+"=IFCEXTRUDEDAREASOLID("+lCircId+","+axis3dId+","+dir001Id+","+thick.toFixed(4)+");");
+      const lRepId=nid();add(lRepId+"=IFCSHAPEREPRESENTATION("+geomSubCtxId+",'Body','SweptSolid',("+lExtId+"));");
+      const lProdId=nid();add(lProdId+"=IFCPRODUCTDEFINITIONSHAPE($,$,("+lRepId+"));");
+
+      const layName=lay.nature||lay.name||lay.description||('Couche '+(li+1));
+      const lElemId=nid();add(lElemId+"=IFCBUILDINGELEMENTPROXY('"+guid()+"',"+ownerHistId+",'"+escIfc(layName)+" ("+label+")','Couche de sol — prof. "+top.toFixed(1)+"m à "+bot.toFixed(1)+"m',$,"+lLpId+","+lProdId+",$,$);");
+      siteChildren.push(lElemId);
+    });
+  });
+
+  // --- Export formations as IfcSlab (large horizontal slabs) ---
+  formations.forEach((f,fi)=>{
+    const topD=f.topDepth||0;
+    const botD=f.bottomDepth||f.topDepth+2||2;
+    const thick=botD-topD;
+    if(thick<=0)return;
+
+    // Large rectangular slab centered on site
+    const halfW=20; // 20m half-width
+    const fPtId=nid();add(fPtId+"=IFCCARTESIANPOINT((0.,0.,"+(refAlt-topD).toFixed(4)+"));");
+    const fDirId=nid();add(fDirId+"=IFCDIRECTION((0.,0.,-1.));");
+    const fAxId=nid();add(fAxId+"=IFCAXIS2PLACEMENT3D("+fPtId+","+fDirId+","+dir100Id+");");
+    const fLpId=nid();add(fLpId+"=IFCLOCALPLACEMENT("+sitePlaceId+","+fAxId+");");
+
+    // Rectangular profile
+    const rectId=nid();add(rectId+"=IFCRECTANGLEPROFILEDEF(.AREA.,$,"+axis3dId+","+(halfW*2).toFixed(2)+","+(halfW*2).toFixed(2)+");");
+    const fExtId=nid();add(fExtId+"=IFCEXTRUDEDAREASOLID("+rectId+","+axis3dId+","+dir001Id+","+thick.toFixed(4)+");");
+    const fRepId=nid();add(fRepId+"=IFCSHAPEREPRESENTATION("+geomSubCtxId+",'Body','SweptSolid',("+fExtId+"));");
+    const fProdId=nid();add(fProdId+"=IFCPRODUCTDEFINITIONSHAPE($,$,("+fRepId+"));");
+
+    const fName=f.name||('Formation '+(fi+1));
+    const fElemId=nid();add(fElemId+"=IFCSLAB('"+guid()+"',"+ownerHistId+",'"+escIfc(fName)+"','Formation géologique — prof. "+topD.toFixed(1)+"m à "+botD.toFixed(1)+"m',$,"+fLpId+","+fProdId+",$,.BASESLAB.);");
+    siteChildren.push(fElemId);
+  });
+
+  // RelContainedInSpatialStructure
+  if(siteChildren.length>0){
+    const relContId=nid();add(relContId+"=IFCRELCONTAINEDINSPATIALSTRUCTURE('"+guid()+"',"+ownerHistId+",$,$,("+siteChildren.join(',')+"),"+siteId+");");
+  }
+
+  // === FOOTER ===
+  const footer=["END-SECTION;","END-ISO-10303-21;"];
+
+  // Build complete file
+  const content=header.join('\n')+'\n'+lines.join('\n')+'\n'+footer.join('\n');
+  const blob=new Blob([content],{type:'application/x-step'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='geosolia_export.ifc';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  if(typeof showToast==='function')showToast('Export IFC terminé — '+(siteChildren.length)+' éléments','#4CAF50');
+};
+
+// --- IFC helper: generate IFC GUID (22 char base64) ---
+function guid(){
+  const hex=[...Array(32)].map(()=>Math.floor(Math.random()*16).toString(16)).join('');
+  const chars='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_$';
+  let r='';
+  for(let i=0;i<22;i++){
+    const v=parseInt(hex.substr(i*1.45|0,2),16)%64;
+    r+=chars[v];
+  }
+  return r;
+}
+
+// --- IFC helper: escape string for STEP format ---
+function escIfc(s){return (s||'').replace(/'/g,"''").replace(/\\/g,'\\\\');}
 
 </script>
 <script src="pwa-register.js"></script>
