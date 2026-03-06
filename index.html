@@ -918,7 +918,7 @@
     <div class="tool-sep"></div>
     <button class="tool-btn" onclick="openMiseEnPage()"><span class="icon">📐</span><span class="label">Mise en Page</span></button>
     <button class="tool-btn" onclick="openRapport()"><span class="icon">📋</span><span class="label">Rapport</span></button>
-    <button class="tool-btn" onclick="openModeleGeotech()"><span class="icon">🏗️</span><span class="label">Modèle</span></button>
+    <button class="tool-btn" onclick="openModeleGeotech()"><span class="icon">⛏️</span><span class="label">Modèle</span></button>
     <div class="tool-sep"></div>
     <button class="tool-btn" onclick="exportProject()"><span class="icon">💾</span><span class="label">Enregistrer</span></button>
     <button class="tool-btn" onclick="exportProjectAs()"><span class="icon">📥</span><span class="label">Enreg. sous...</span></button>
@@ -1060,7 +1060,7 @@
   </div>
   <div id="modele-panel">
     <div class="mdl-header">
-      <span>🏗️ Modèle Géotechnique</span>
+      <span>⛏️ Modèle Géotechnique</span>
       <div style="display:flex;gap:10px;align-items:center">
         <button class="mdl-btn mdl-btn-auto" onclick="mdlAutoFromSondages()">⚡ Auto depuis sondages</button>
         <button class="mdl-btn" onclick="gtrAutoClassify()" style="background:#8E44AD;color:#fff">🔬 GTR auto</button>
@@ -3692,24 +3692,44 @@ function renderGeocartoPanel(){
   html+='GPS : '+g.lat.toFixed(6)+', '+g.lng.toFixed(6);
   html+='</div>';
   html+='</div>';
+  // --- Type de mission ---
+  html+='<div style="margin:12px 0 8px;padding:10px 12px;background:#FFF8E1;border-radius:8px;border-left:4px solid #F2B705">';
+  html+='<label style="display:flex;align-items:center;justify-content:space-between;font-size:12px;color:#444"><span style="font-weight:700">Type de mission</span>';
+  html+='<select id="gc-mission-select" style="flex:1;max-width:220px;margin-left:10px;padding:4px 8px;border:1px solid #ccc;border-radius:4px;font-size:12px;font-weight:700" onchange="gcSyncMission(this.value)">';
+  html+='<option value=""'+(projectMission?'':' selected')+'>— Choisir —</option>';
+  html+='<option value="G1_ES"'+(projectMission==='G1_ES'?' selected':'')+'>G1 ES</option>';
+  html+='<option value="G1_PGC"'+(projectMission==='G1_PGC'?' selected':'')+'>G1 PGC</option>';
+  html+='<option value="G2_AVP"'+(projectMission==='G2_AVP'?' selected':'')+'>G2 AVP</option>';
+  html+='<option value="G2_PRO"'+(projectMission==='G2_PRO'?' selected':'')+'>G2 PRO</option>';
+  html+='<option value="G2_DCE"'+(projectMission==='G2_DCE'?' selected':'')+'>G2 DCE/ACT</option>';
+  html+='<option value="G3"'+(projectMission==='G3'?' selected':'')+'>G3</option>';
+  html+='<option value="G4"'+(projectMission==='G4'?' selected':'')+'>G4</option>';
+  html+='<option value="G5"'+(projectMission==='G5'?' selected':'')+'>G5</option>';
+  html+='</select></label></div>';
   // --- Programme de reconnaissance ---
   const gcFld='width:52px;padding:3px 6px;border:1px solid #ccc;border-radius:4px;font-size:12px;font-weight:700;text-align:center';
   const gcLbl='display:flex;align-items:center;justify-content:space-between;font-size:12px;color:#444';
   const gcSel='padding:3px 8px;border:1px solid #ccc;border-radius:4px;font-size:12px;font-weight:700';
-  html+='<div style="margin:12px 0 16px;padding:10px 12px;background:#EFF6FF;border-radius:8px;border-left:4px solid #3D7AB5">';
+  html+='<div style="margin:4px 0 16px;padding:10px 12px;background:#EFF6FF;border-radius:8px;border-left:4px solid #3D7AB5">';
   html+='<div style="font-weight:700;font-size:12px;color:#2C3E50;margin-bottom:8px">Programme de reconnaissance</div>';
   html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 20px">';
   html+='<label style="'+gcLbl+'"><span>Pénétromètres</span><input type="number" min="0" id="gc-nb-penetro" value="'+(g.nbPenetro||0)+'" style="'+gcFld+'" onchange="gcMissionField(\'nbPenetro\',+this.value)"></label>';
   html+='<label style="'+gcLbl+'"><span>Tarières</span><input type="number" min="0" id="gc-nb-tariere" value="'+(g.nbTariere||0)+'" style="'+gcFld+'" onchange="gcMissionField(\'nbTariere\',+this.value)"></label>';
   html+='<label style="'+gcLbl+'"><span>Reco fondation</span><input type="number" min="0" id="gc-nb-fondation" value="'+(g.nbFondation||0)+'" style="'+gcFld+'" onchange="gcMissionField(\'nbFondation\',+this.value)"></label>';
-  html+='<label style="'+gcLbl+'"><span>Pelle mécanique</span><input type="number" min="0" id="gc-nb-pelle" value="'+(g.nbPelle||0)+'" style="'+gcFld+'" onchange="gcMissionField(\'nbPelle\',+this.value);gcAutoCheckPelle()"></label>';
+  html+='<label style="'+gcLbl+'"><span>Sondage pelle</span><input type="number" min="0" id="gc-nb-pelle" value="'+(g.nbPelle||0)+'" style="'+gcFld+'" onchange="gcMissionField(\'nbPelle\',+this.value);gcAutoCheckPelle()"></label>';
   html+='</div>';
   html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 20px;margin-top:10px;padding-top:8px;border-top:1px solid #D6E4F0">';
   html+='<label style="'+gcLbl+'"><span>Pelle nécessaire</span><select id="gc-pelle-oui" style="'+gcSel+'" onchange="gcMissionField(\'pelleOui\',this.value===\'oui\')"><option value="oui"'+(g.pelleOui===true?' selected':'')+'>Oui</option><option value="non"'+(g.pelleOui!==true?' selected':'')+'>Non</option></select></label>';
+  html+='<label style="'+gcLbl+'"><span>A gérer par GPH</span><select id="gc-pelle-client" style="'+gcSel+'" onchange="gcMissionField(\'pelleClient\',this.value===\'oui\'?true:this.value===\'non\'?false:null)"><option value=""'+(g.pelleClient==null?' selected':'')+'>—</option><option value="oui"'+(g.pelleClient===true?' selected':'')+'>Oui</option><option value="non"'+(g.pelleClient===false?' selected':'')+'>Non</option></select></label>';
   html+='<label style="'+gcLbl+'"><span>Laboratoire</span><select id="gc-labo-oui" style="'+gcSel+'" onchange="gcMissionField(\'laboOui\',this.value===\'oui\')"><option value="oui"'+(g.laboOui?' selected':'')+'>Oui</option><option value="non"'+(!g.laboOui?' selected':'')+'>Non</option></select></label>';
+  const liqAuto=g.liquefaction!=null?g.liquefaction:(g.geologie&&g.geologie.notation&&/^Mz/i.test(g.geologie.notation));
+  html+='<label style="'+gcLbl+'"><span>Liquéfaction</span><select id="gc-liquefaction" style="'+gcSel+'" onchange="gcMissionField(\'liquefaction\',this.value===\'oui\')"><option value="oui"'+(liqAuto?' selected':'')+'>Oui</option><option value="non"'+(!liqAuto?' selected':'')+'>Non</option></select></label>';
   html+='</div>';
   html+='<div style="margin-top:10px;padding-top:8px;border-top:1px solid #D6E4F0">';
-  html+='<label style="'+gcLbl+'"><span>Temps estimé terrain</span><input type="text" id="gc-temps-terrain" value="'+(g.tempsTerrain||'')+'" placeholder="" style="width:120px;padding:3px 8px;border:1px solid #ccc;border-radius:4px;font-size:12px;font-weight:700;text-align:center" onchange="gcMissionField(\'tempsTerrain\',this.value)"></label>';
+  const gcTps='width:120px;padding:3px 8px;border:1px solid #ccc;border-radius:4px;font-size:12px;font-weight:700;text-align:center';
+  html+='<label style="'+gcLbl+'"><span>Temps estimé terrain</span><input type="text" id="gc-temps-terrain" value="'+(g.tempsTerrain||'')+'" placeholder="" style="'+gcTps+'" onchange="gcMissionField(\'tempsTerrain\',this.value)"></label>';
+  html+='<label style="'+gcLbl+';margin-top:8px"><span>Temps estimé rapport</span><input type="text" id="gc-temps-rapport" value="'+(g.tempsRapport||'')+'" placeholder="" style="'+gcTps+'" onchange="gcMissionField(\'tempsRapport\',this.value)"></label>';
+  html+='<label style="'+gcLbl+';margin-top:8px"><span>Temps estimé relecture</span><input type="text" id="gc-temps-relecture" value="'+(g.tempsRelecture||'')+'" placeholder="" style="'+gcTps+'" onchange="gcMissionField(\'tempsRelecture\',this.value)"></label>';
   html+='</div>';
   html+='</div>';
   // Infos pour le géotechnicien
@@ -3717,6 +3737,10 @@ function renderGeocartoPanel(){
   html+='<label style="font-weight:700;font-size:12px;color:#333;display:block;margin-bottom:6px">Infos pour le géotechnicien :</label>';
   html+='<textarea id="gc-infos-geotech" rows="4" style="width:100%;border:1px solid #ccc;border-radius:6px;padding:8px;font-size:12px;font-family:inherit;resize:vertical" placeholder="Notes, observations, consignes particulières…">'+(g.infosGeotech||'')+'</textarea>';
   html+='</div>';
+  // === Accordéon Résumé des Risques ===
+  html+='<details class="gc-section" style="margin-top:6px;border:1px solid #ddd;border-radius:8px;overflow:hidden">';
+  html+='<summary style="padding:10px 12px;background:#FFF5F5;cursor:pointer;font-weight:700;font-size:13px;color:#C0392B;display:flex;align-items:center;gap:8px"><span class="gc-arrow">&#9654;</span> Résumé des Risques</summary>';
+  html+='<div style="padding:4px 8px">';
   // Zone sismique
   const sc=g.sismique?String(g.sismique):'?';
   const scColor=sismColors[g.sismique]||'gray';
@@ -3769,6 +3793,7 @@ function renderGeocartoPanel(){
     if(b.lien)t+=' <a href="'+b.lien+'" target="_blank" rel="noopener" style="color:var(--accent-blue,#1976d2);font-size:0.85em">Fiche InfoTerre →</a>';
     return t;
   },'blue');
+  html+='</div></details>';
   $c.innerHTML=html;
   // Bind textarea change
   const gcTa=document.getElementById('gc-infos-geotech');
@@ -3778,6 +3803,12 @@ function renderGeocartoPanel(){
   if(gcCheck)gcCheck.disabled=false;
 }
 
+function gcSyncMission(val){
+  projectMission=val;
+  const rptSel=document.getElementById('rpt-mission-select');
+  if(rptSel)rptSel.value=val;
+  if(typeof rptChangeMission==='function')rptChangeMission(val);
+}
 function gcMissionField(field,val){
   if(!geocartoData)return;
   geocartoData[field]=val;
@@ -5105,6 +5136,8 @@ function closeRapport(){
 
 function rptChangeMission(val){
   projectMission=val;
+  const gcSel=document.getElementById('gc-mission-select');
+  if(gcSel)gcSel.value=val;
   rptActiveChapter=null;
   rptRenderSidebar();
   rptRenderEditor();
@@ -10875,46 +10908,187 @@ window.toggle3DGeoModel=function(){
   show3DGeoModel();
 };
 
+// --- Delaunay 2D triangulation (Bowyer-Watson) ---
+function delaunay2D(points){
+  // points: [{x,z},...] → returns array of [i,j,k] index triples
+  if(points.length<3)return[];
+  // Super-triangle
+  let minX=Infinity,minZ=Infinity,maxX=-Infinity,maxZ=-Infinity;
+  points.forEach(p=>{if(p.x<minX)minX=p.x;if(p.z<minZ)minZ=p.z;if(p.x>maxX)maxX=p.x;if(p.z>maxZ)maxZ=p.z;});
+  const dx=maxX-minX||1,dz=maxZ-minZ||1,dm=Math.max(dx,dz)*10;
+  const cx=(minX+maxX)/2,cz=(minZ+maxZ)/2;
+  const sp=[{x:cx-dm,z:cz-dm},{x:cx+dm,z:cz-dm},{x:cx,z:cz+dm}];
+  const n=points.length;
+  const all=points.concat(sp);
+  let triangles=[[n,n+1,n+2]];
+  function circumTest(tri,p){
+    const [a,b,c]=tri.map(i=>all[i]);
+    const ax=a.x-p.x,az=a.z-p.z;
+    const bx=b.x-p.x,bz=b.z-p.z;
+    const cx2=c.x-p.x,cz2=c.z-p.z;
+    const det=ax*(bz*((cx2*cx2)+(cz2*cz2))-cz2*((bx*bx)+(bz*bz)))-az*(bx*((cx2*cx2)+(cz2*cz2))-cx2*((bx*bx)+(bz*bz)))+(ax*ax+az*az)*(bx*cz2-cx2*bz);
+    return det>0;
+  }
+  for(let i=0;i<n;i++){
+    const p=all[i];
+    const bad=[],edges=[];
+    triangles.forEach(t=>{if(circumTest(t,p))bad.push(t);});
+    bad.forEach(t=>{
+      for(let e=0;e<3;e++){
+        const a=t[e],b=t[(e+1)%3];
+        let shared=false;
+        bad.forEach(t2=>{if(t2===t)return;for(let e2=0;e2<3;e2++){if((t2[e2]===a&&t2[(e2+1)%3]===b)||(t2[e2]===b&&t2[(e2+1)%3]===a)){shared=true;}}});
+        if(!shared)edges.push([a,b]);
+      }
+    });
+    triangles=triangles.filter(t=>!bad.includes(t));
+    edges.forEach(e=>{triangles.push([e[0],e[1],i]);});
+  }
+  return triangles.filter(t=>t[0]<n&&t[1]<n&&t[2]<n);
+}
+
+// --- Match formation name to sondage strati layers ---
+function getSondageLayers(sondage){
+  if(Array.isArray(sondage.data))return sondage.data;
+  if(sondage.data&&Array.isArray(sondage.data.layers))return sondage.data.layers;
+  return[];
+}
+function matchFormationAtSondage(formation, sondage){
+  const layers=getSondageLayers(sondage);
+  if(layers.length===0)return null;
+  const fName=(formation.name||'').toLowerCase().trim();
+  const fNature=(formation.nature||'').toLowerCase().trim();
+  const matched=layers.filter(l=>{
+    const lNat=(l.nature||'').toLowerCase();
+    const lDesc=(l.description||'').toLowerCase();
+    return lNat===fNature || lNat===fName || lDesc.includes(fName) || (fNature&&lDesc.includes(fNature));
+  });
+  if(matched.length===0)return null;
+  const top=Math.min(...matched.map(l=>l.from));
+  const bot=Math.max(...matched.map(l=>l.to));
+  return {top,bottom:bot};
+}
+
 function show3DGeoModel(){
   if(!scan3dScene)return;
   if(geoModelGroup){scan3dScene.remove(geoModelGroup);}
   geoModelGroup=new THREE.Group();
   const g=G();const formations=g.modeleFormations||[];
   if(formations.length===0){alert('Aucune formation dans le modèle géotechnique.');return;}
-  const mScale=g.measureScale||0.01;
-  const extentX=(g.planW||1200)*mScale;
-  const extentZ=(g.planH||800)*mScale;
-  const sX=extentX*scanScaleFactor;
-  const sZ=extentZ*scanScaleFactor;
-  formations.forEach(f=>{
-    const top=f.top!=null?f.top:0;
-    const bot=f.bottom!=null?f.bottom:top+2;
-    const thickness=Math.abs(bot-top);
-    if(thickness<=0)return;
-    const yTop=depthTo3DY(top);
-    const yBot=depthTo3DY(bot);
-    const yCenter=(yTop+yBot)/2;
-    const h=Math.abs(yTop-yBot);
-    const geom=new THREE.BoxGeometry(sX,h,sZ);
-    const col=colorToThree(f.color);
-    const mat=new THREE.MeshPhongMaterial({color:col,transparent:true,opacity:0.35,side:THREE.DoubleSide});
-    const mesh=new THREE.Mesh(geom,mat);
-    mesh.position.set(0,yCenter,0);
-    geoModelGroup.add(mesh);
-    // Wireframe edges
-    const edges=new THREE.EdgesGeometry(geom);
-    const lineMat=new THREE.LineBasicMaterial({color:col,linewidth:1});
-    const wireframe=new THREE.LineSegments(edges,lineMat);
-    wireframe.position.copy(mesh.position);
-    geoModelGroup.add(wireframe);
-    // Label
-    const refAlt=getNivRefAlt();
-    const layerLabel=refAlt!=null?(f.name||'?')+` (${(refAlt-top).toFixed(1)}→${(refAlt-bot).toFixed(1)} NGF)`:(f.name||'?')+` (${top.toFixed(1)}→${bot.toFixed(1)}m)`;
-    const label=createTextSprite(layerLabel,0xFFFFFF);
-    label.position.set(sX/2+0.15,yCenter,0);
-    label.scale.set(0.8,0.2,1);
-    geoModelGroup.add(label);
+
+  // Collect sondages with strati data and plan positions
+  const allSondages=g.sondages||[];const allElements=g.elements||[];
+  const stratiSondages=[];
+  allSondages.forEach(s=>{
+    if((s.type==='tariere'||s.type==='pelle_meca'||s.type==='forage_destr')&&s.data&&getSondageLayers(s).length>0){
+      const sticker=allElements.find(e=>e.sondageId===s.id);
+      if(!sticker)return;
+      const pos=planPosTo3D(sticker.x,sticker.y);
+      stratiSondages.push({sondage:s,x:pos.x,z:pos.z});
+    }
   });
+
+  // Need >=3 sondages for triangulation, otherwise fallback to flat blocks
+  if(stratiSondages.length>=3){
+    // Delaunay triangulation on sondage XZ positions
+    const pts=stratiSondages.map(s=>({x:s.x,z:s.z}));
+    const tris=delaunay2D(pts);
+
+    formations.forEach(f=>{
+      const col=colorToThree(f.color);
+      const fTop=f.top!=null?f.top:0;
+      const fBot=f.bottom!=null?f.bottom:fTop+2;
+      // Get per-sondage depths for this formation
+      const sondageDepths=stratiSondages.map(ss=>{
+        const match=matchFormationAtSondage(f,ss.sondage);
+        return match||{top:fTop,bottom:fBot}; // fallback to formation default
+      });
+
+      // Build prism geometry: for each triangle, 6 vertices (top tri + bottom tri)
+      const vertices=[];const indices=[];
+      tris.forEach(tri=>{
+        const base=vertices.length/3;
+        for(let t=0;t<3;t++){
+          const idx=tri[t];
+          const ss=stratiSondages[idx];
+          const d=sondageDepths[idx];
+          vertices.push(ss.x, depthTo3DY(d.top), ss.z);    // top vertex
+        }
+        for(let t=0;t<3;t++){
+          const idx=tri[t];
+          const ss=stratiSondages[idx];
+          const d=sondageDepths[idx];
+          vertices.push(ss.x, depthTo3DY(d.bottom), ss.z);  // bottom vertex
+        }
+        // Top face
+        indices.push(base,base+1,base+2);
+        // Bottom face (reversed winding)
+        indices.push(base+3,base+5,base+4);
+        // Side faces (3 quads = 6 triangles)
+        for(let e=0;e<3;e++){
+          const a=base+e, b=base+(e+1)%3;
+          const a2=base+3+e, b2=base+3+(e+1)%3;
+          indices.push(a,b,b2);
+          indices.push(a,b2,a2);
+        }
+      });
+
+      if(vertices.length===0)return;
+      const geom=new THREE.BufferGeometry();
+      geom.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
+      geom.setIndex(indices);
+      geom.computeVertexNormals();
+      const mat=new THREE.MeshPhongMaterial({color:col,transparent:true,opacity:0.4,side:THREE.DoubleSide});
+      const mesh=new THREE.Mesh(geom,mat);
+      geoModelGroup.add(mesh);
+      // Wireframe
+      const wireMat=new THREE.MeshBasicMaterial({color:col,wireframe:true,transparent:true,opacity:0.25});
+      const wireMesh=new THREE.Mesh(geom.clone(),wireMat);
+      geoModelGroup.add(wireMesh);
+      // Label at centroid
+      const cx=stratiSondages.reduce((a,s)=>a+s.x,0)/stratiSondages.length;
+      const cz=stratiSondages.reduce((a,s)=>a+s.z,0)/stratiSondages.length;
+      const avgTop=sondageDepths.reduce((a,d)=>a+d.top,0)/sondageDepths.length;
+      const avgBot=sondageDepths.reduce((a,d)=>a+d.bottom,0)/sondageDepths.length;
+      const yLabel=depthTo3DY((avgTop+avgBot)/2);
+      const refAlt=getNivRefAlt();
+      const layerLabel=refAlt!=null?(f.name||'?')+` (${(refAlt-avgTop).toFixed(1)}→${(refAlt-avgBot).toFixed(1)} NGF)`:(f.name||'?')+` (${avgTop.toFixed(1)}→${avgBot.toFixed(1)}m)`;
+      const label=createTextSprite(layerLabel,0xFFFFFF);
+      label.position.set(cx+0.3,yLabel,cz);
+      label.scale.set(0.8,0.2,1);
+      geoModelGroup.add(label);
+    });
+  } else {
+    // Fallback: flat blocks (< 3 sondages)
+    const mScale=g.measureScale||0.01;
+    const sX=(g.planW||1200)*mScale*scanScaleFactor;
+    const sZ=(g.planH||800)*mScale*scanScaleFactor;
+    formations.forEach(f=>{
+      const top=f.top!=null?f.top:0;
+      const bot=f.bottom!=null?f.bottom:top+2;
+      if(Math.abs(bot-top)<=0)return;
+      const yTop=depthTo3DY(top);
+      const yBot=depthTo3DY(bot);
+      const yCenter=(yTop+yBot)/2;
+      const h=Math.abs(yTop-yBot);
+      const geom=new THREE.BoxGeometry(sX,h,sZ);
+      const col=colorToThree(f.color);
+      const mat=new THREE.MeshPhongMaterial({color:col,transparent:true,opacity:0.35,side:THREE.DoubleSide});
+      const mesh=new THREE.Mesh(geom,mat);
+      mesh.position.set(0,yCenter,0);
+      geoModelGroup.add(mesh);
+      const edges=new THREE.EdgesGeometry(geom);
+      const wireframe=new THREE.LineSegments(edges,new THREE.LineBasicMaterial({color:col}));
+      wireframe.position.copy(mesh.position);
+      geoModelGroup.add(wireframe);
+      const refAlt=getNivRefAlt();
+      const layerLabel=refAlt!=null?(f.name||'?')+` (${(refAlt-top).toFixed(1)}→${(refAlt-bot).toFixed(1)} NGF)`:(f.name||'?')+` (${top.toFixed(1)}→${bot.toFixed(1)}m)`;
+      const label=createTextSprite(layerLabel,0xFFFFFF);
+      label.position.set(sX/2+0.15,yCenter,0);
+      label.scale.set(0.8,0.2,1);
+      geoModelGroup.add(label);
+    });
+  }
   scan3dScene.add(geoModelGroup);
   document.getElementById('btn-3d-geomodel').classList.add('active');
 }
