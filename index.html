@@ -4317,10 +4317,12 @@ function buildSondageContext(){
   const soilNames=Object.fromEntries(Object.entries(SOIL_TYPES).map(([k,v])=>[k,v.label]));
   const fondTypeNames={semelle_filante:'Semelle filante',semelle_isolee:'Semelle isolée',radier:'Radier',puits:'Puits',pieux:'Pieux',micropieux:'Micropieux',autre:'Autre'};
   const fondStateNames={bon:'Bon état',moyen:'État moyen',degrade:'Dégradé',tres_degrade:'Très dégradé'};
-  let ctx="\n\n--- DONNÉES DE SONDAGES DU PROJET ---\n";
+  let ctx="\n\n--- DONNÉES DE SONDAGES RÉALISÉS ---\n";
+  ctx+="⚠️ INSTRUCTION OBLIGATOIRE : Les sondages ci-dessous ont été RÉALISÉS par l'utilisateur. Tu DOIS les analyser, citer leurs résultats chiffrés, et baser tes recommandations dessus. Ne propose JAMAIS de réaliser des sondages qui existent déjà ci-dessous.\n\n";
   const refVal=document.getElementById('project-ref').value.trim();
   if(refVal) ctx+="Projet : "+refVal+"\n";
-  ctx+="Nombre de sondages : "+sondages.length+"\n";
+  ctx+="Nombre de sondages réalisés : "+sondages.length+"\n";
+  ctx+="Liste : "+sondages.map(s=>s.name+" ("+(typeNames[s.type]||s.type)+")").join(", ")+"\n";
   sondages.forEach(s=>{
     ctx+="\n========================================\n";
     ctx+="\u2022 "+s.name+" ("+(typeNames[s.type]||s.type)+")\n";
@@ -4479,7 +4481,7 @@ function buildSondageContext(){
       ctx+="  "+n.label+" : "+n.value.toFixed(2)+" m NGF\n";
     });
   }
-  ctx+="\n--- FIN DES DONNÉES ---\n";
+  ctx+="\n--- FIN DONNÉES DE SONDAGES ---\n";
   return ctx;
 }
 
@@ -6147,7 +6149,7 @@ function mdlAutoFromSondages(){
   let dlg=document.getElementById('mdl-select-dlg');
   if(dlg)dlg.remove();
   dlg=document.createElement('div');dlg.id='mdl-select-dlg';
-  dlg.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;display:flex;align-items:center;justify-content:center';
+  dlg.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99999;display:flex;align-items:center;justify-content:center';
   let h='<div style="background:#fff;border-radius:12px;padding:20px 24px;max-width:420px;width:90vw;max-height:70vh;overflow-y:auto;box-shadow:0 8px 30px rgba(0,0,0,0.3);border-top:4px solid #F2B705">';
   h+='<div style="font-weight:800;font-size:14px;margin-bottom:12px;color:#1A1A1A">Sélectionner les sondages à analyser</div>';
   h+='<div style="margin-bottom:10px"><label style="font-size:11px;cursor:pointer"><input type="checkbox" id="mdl-sel-all" checked onchange="document.querySelectorAll(\'.mdl-sel-cb\').forEach(c=>c.checked=this.checked)"> <strong>Tout sélectionner</strong></label></div>';
