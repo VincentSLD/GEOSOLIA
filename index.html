@@ -4111,6 +4111,24 @@ function renderGeocartoPanel(){
   html+='<span style="font-size:12px;font-weight:700;color:#4A148C">m²</span>';
   html+='<button type="button" onclick="gcFillEmprise()" style="padding:4px 8px;background:#8E24AA;color:#fff;border:none;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer" title="Remplir avec la surface mesurée">📐</button>';
   html+='</div>';
+  // --- Typologie et Niveaux ---
+  const typoVal=g.typologie||'maison_individuelle';
+  const nivVal=g.nombreNiveaux||'';
+  html+='<div style="margin:4px 0 8px;padding:8px 12px;background:#E8EAF6;border-radius:8px;border-left:4px solid #3F51B5;display:flex;align-items:center;gap:10px;flex-wrap:wrap">';
+  html+='<label style="font-weight:700;font-size:12px;color:#1A237E;white-space:nowrap">Typologie</label>';
+  html+='<select id="gc-typologie" style="padding:5px 8px;border:1px solid #ccc;border-radius:4px;font-size:12px;font-weight:700;font-family:inherit" onchange="gcMissionField(\'typologie\',this.value)">';
+  html+='<option value="maison_individuelle"'+(typoVal==='maison_individuelle'?' selected':'')+'>Maison individuelle</option>';
+  html+='<option value="autres_batiment"'+(typoVal==='autres_batiment'?' selected':'')+'>Autres bâtiment</option>';
+  html+='</select>';
+  html+='<label style="font-weight:700;font-size:12px;color:#1A237E;white-space:nowrap;margin-left:6px">Nombre de niveaux</label>';
+  html+='<select id="gc-niveaux" style="padding:5px 8px;border:1px solid #ccc;border-radius:4px;font-size:12px;font-weight:700;font-family:inherit" onchange="gcMissionField(\'nombreNiveaux\',this.value)">';
+  html+='<option value=""'+(nivVal===''?' selected':'')+'>—</option>';
+  html+='<option value="ss_rdc"'+(nivVal==='ss_rdc'?' selected':'')+'>Sous-Sol et RDC</option>';
+  html+='<option value="rdc"'+(nivVal==='rdc'?' selected':'')+'>RDC</option>';
+  html+='<option value="rdc_etage"'+(nivVal==='rdc_etage'?' selected':'')+'>RDC et Etage</option>';
+  html+='<option value="ss_rdc_etage"'+(nivVal==='ss_rdc_etage'?' selected':'')+'>Sous-Sol + RDC + Etage</option>';
+  html+='</select>';
+  html+='</div>';
   // --- Programme de reconnaissance ---
   const gcR='display:flex;align-items:center;font-size:12px;color:#444;height:28px';
   const gcL='flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
@@ -4514,18 +4532,48 @@ function buildGeocartoContext(){
       ctx+="\n";
     });
   }
+  // Parcelle
+  if(g.parcelle){
+    ctx+="\nPARCELLE CADASTRALE :\n";
+    ctx+="  Section : "+(g.parcelle.section||"?")+"\n";
+    ctx+="  Numéro : "+(g.parcelle.numero||"?")+"\n";
+    if(g.parcelle.commune)ctx+="  Commune : "+g.parcelle.commune+"\n";
+    if(g.parcelle.contenance)ctx+="  Contenance : "+g.parcelle.contenance+" m²\n";
+  }
+  // Type de mission
+  const missionLabels={G1_ES:'G1 ES (Étude de site)',G1_PGC:'G1 PGC (Principes Généraux de Construction)',G2_AVP:'G2 AVP (Avant-Projet)',G2_PRO:'G2 PRO (Projet)',G2_DCE:'G2 DCE/ACT',G3:'G3 (Études et suivi d\'exécution)',G4:'G4 (Supervision géotechnique)',G5:'G5 (Diagnostic géotechnique)'};
+  if(projectMission)ctx+="\nTYPE DE MISSION : "+(missionLabels[projectMission]||projectMission)+"\n";
+  // Typologie du projet
+  const typoLabels={maison_individuelle:'Maison individuelle',autres_batiment:'Autres bâtiment'};
+  if(g.typologie)ctx+="TYPOLOGIE DU PROJET : "+(typoLabels[g.typologie]||g.typologie)+"\n";
+  // Nombre de niveaux
+  const nivLabels={ss_rdc:'Sous-Sol et RDC',rdc:'RDC seul',rdc_etage:'RDC et Étage',ss_rdc_etage:'Sous-Sol + RDC + Étage'};
+  if(g.nombreNiveaux)ctx+="NOMBRE DE NIVEAUX : "+(nivLabels[g.nombreNiveaux]||g.nombreNiveaux)+"\n";
+  // Emprise au sol
+  if(g.empriseAuSol)ctx+="EMPRISE AU SOL : "+g.empriseAuSol+" m²\n";
+  // Infos géotechnicien
   if(g.infosGeotech){
     ctx+="\nINFOS POUR LE GÉOTECHNICIEN :\n"+g.infosGeotech+"\n";
   }
   // Programme de reconnaissance
-  if(g.nbPenetro||g.nbTariere||g.nbFondation||g.nbPelle){
-    ctx+="\nPROGRAMME DE RECONNAISSANCE :\n";
-    if(g.nbPenetro)ctx+="  Pénétromètres dynamiques : "+g.nbPenetro+"\n";
-    if(g.nbTariere)ctx+="  Tarières : "+g.nbTariere+"\n";
-    if(g.nbFondation)ctx+="  Reconnaissances de fondation : "+g.nbFondation+"\n";
-    if(g.nbPelle)ctx+="  Sondages pelle mécanique : "+g.nbPelle+"\n";
-    ctx+="  Pelle mécanique : "+(g.pelleOui!==false?"Oui":"Non")+"\n";
-    ctx+="  Laboratoire : "+(g.laboOui?"Oui":"Non")+"\n";
+  ctx+="\nPROGRAMME DE RECONNAISSANCE :\n";
+  if(g.nbPenetro)ctx+="  Pénétromètres dynamiques : "+g.nbPenetro+"\n";
+  if(g.nbTariere)ctx+="  Tarières : "+g.nbTariere+"\n";
+  if(g.nbFondation)ctx+="  Reconnaissances de fondation : "+g.nbFondation+"\n";
+  if(g.nbPelle)ctx+="  Sondages pelle mécanique : "+g.nbPelle+"\n";
+  ctx+="  Pelle nécessaire : "+(g.pelleOui!==false?"Oui":"Non")+"\n";
+  if(g.pelleOui!==false)ctx+="  Gérée par le client : "+(g.pelleClient===true?"Oui":g.pelleClient===false?"Non":"Non renseigné")+"\n";
+  ctx+="  Laboratoire : "+(g.laboOui?"Oui":"Non")+"\n";
+  const liqLabels={oui:'Oui',oui_sn:'Si nécessaire',non:'Non'};
+  ctx+="  Liquéfaction : "+(liqLabels[g.liquefaction]||g.liquefaction||"Non")+"\n";
+  // Temps estimés
+  if(g.tempsTerrain)ctx+="  Temps estimé terrain : "+g.tempsTerrain+"\n";
+  if(g.tempsRapport)ctx+="  Temps estimé rapport : "+g.tempsRapport+"\n";
+  if(g.tempsRelecture)ctx+="  Temps estimé relecture : "+g.tempsRelecture+"\n";
+  // Risques détaillés
+  if(g.risques_detail&&g.risques_detail.length>0){
+    ctx+="\nRISQUES DÉTAILLÉS :\n";
+    g.risques_detail.forEach(r=>{ctx+="  - "+(r.libelle||"?")+(r.niveau?" ["+r.niveau+"]":"")+(r.date_debut?" (depuis "+r.date_debut+")":"")+"\n";});
   }
   ctx+="--- FIN DONN\u00c9ES G\u00c9OCARTO ---\n";
   return ctx;
