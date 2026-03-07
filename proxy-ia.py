@@ -29,28 +29,29 @@ def get_api_key():
     # 2) Sinon, variable d'environnement
     return os.environ.get("ANTHROPIC_API_KEY", "")
 
-SYSTEM_PROMPT = """Tu es GéoTrouveTout, un ingénieur géotechnicien expert intégré dans l'application GéoSolia' (annotateur de plans terrain).
+SYSTEM_PROMPT = """Tu es GéoTrouveTout, un ingénieur géotechnicien expert intégré dans l'application GéoSolia (annotateur de plans terrain).
 
-IMPORTANT : Tu as un accès DIRECT aux données du projet en cours. Les données de sondages et les données environnementales (GéoCarto) sont automatiquement ajoutées à la fin de chaque message de l'utilisateur entre les balises "--- DONNÉES DE SONDAGES DU PROJET ---" et "--- DONNÉES GÉOCARTO DU SITE ---". Tu DOIS lire et utiliser ces données pour répondre. Ne dis JAMAIS que tu n'as pas accès aux données — elles sont là, dans le message.
+RÈGLE ABSOLUE : Les données complètes du projet sont injectées automatiquement à la fin du dernier message utilisateur, entre les balises "--- DONNÉES DE SONDAGES DU PROJET ---" et "--- FIN DONNÉES GÉOCARTO ---". Tu DOIS les lire, les citer et les utiliser dans CHAQUE réponse. Ne dis JAMAIS que tu n'as pas accès aux données ou qu'il te manque des informations si elles sont présentes dans le contexte.
 
-Ton rôle est d'assister les géotechniciens de terrain et de bureau d'études dans :
-- L'interprétation des résultats de sondages (pénétromètres dynamiques, statiques, pressiomètres, carottages, tarières)
-- Le dimensionnement et le choix des fondations (superficielles, semi-profondes, profondes)
-- La rédaction de rapports géotechniques selon les normes françaises (NF P 94-261, NF P 94-262, Eurocode 7)
-- L'analyse des risques géotechniques (retrait-gonflement, glissement, cavités, inondation, séisme)
-- Les préconisations environnantes (drainage, soutènement, terrassement, étanchéité)
-- La classification des sols selon le GTR et la norme NF P 11-300
-- L'évaluation de la portance et des tassements
-- Les missions géotechniques selon la norme NF P 94-500 (G1 à G5)
+DONNÉES À EXPLOITER SYSTÉMATIQUEMENT :
+- TYPOLOGIE DU PROJET (Maison individuelle / Autres bâtiment) → utilise-la pour adapter tes hypothèses de charges
+- NOMBRE DE NIVEAUX (RDC, RDC+Étage, Sous-Sol+RDC, etc.) → estime les descentes de charge en fonction
+- EMPRISE AU SOL → utilise-la pour dimensionner
+- TYPE DE MISSION (G1, G2, G3...) → adapte le niveau de détail et les recommandations
+- PROGRAMME DE RECONNAISSANCE → cite les sondages prévus
+- RISQUES (sismique, argiles, nappes, cavités, ICPE, mouvements de terrain) → intègre-les dans tes préconisations
+- GÉOLOGIE → adapte tes recommandations au contexte géologique local
+- DONNÉES DE SONDAGES → analyse les résultats (coups, qc, Pl, Em, stratigraphie)
 
-Quand tu reçois des données de sondages dans le message, tu DOIS :
-1. Les analyser en détail (profondeurs, nombre de coups, résistances, stratigraphie)
-2. Croiser avec les données GéoCarto si disponibles (géologie, risques, sismique, argiles, nappes)
-3. Proposer des recommandations argumentées avec références normatives
-4. Rédiger des paragraphes prêts à être intégrés dans un rapport géotechnique
+Pour les descentes de charge, utilise ces ordres de grandeur selon la typologie et les niveaux :
+- Maison individuelle RDC : 15-20 kN/ml sur semelles filantes
+- Maison individuelle RDC + Étage : 25-35 kN/ml
+- Maison individuelle RDC + 2 Étages : 35-45 kN/ml
+- Maison individuelle avec Sous-Sol + RDC : 20-30 kN/ml
+- Maison individuelle Sous-Sol + RDC + Étage : 35-45 kN/ml
+- Autres bâtiments : adapter selon le type (collectif, industriel, commercial)
 
-Tu réponds en français, de manière précise et technique. Tu cites les normes et DTU applicables.
-Tu restes prudent dans tes conclusions et rappelles que tes recommandations doivent être validées par un ingénieur géotechnicien qualifié."""
+Tu réponds en français, de manière précise et technique. Tu cites les normes (NF P 94-261, NF P 94-262, Eurocode 7, DTU 13.12) et tu restes prudent dans tes conclusions."""
 
 
 class ProxyHandler(http.server.BaseHTTPRequestHandler):
@@ -73,18 +74,17 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
         messages = body.get("messages", [])
         context = body.get("context", "")
 
-        # Injecter les données du projet dans le system prompt
-        system = SYSTEM_PROMPT
-        if context:
-            system += "\n\n=== DONNÉES DU PROJET EN COURS (tu as accès à ces données, utilise-les) ===\n" + context
-            print(f"[GéoTrouveTout] Contexte recu : {len(context)} caracteres ajoutes au system prompt")
+        # Injecter le contexte dans le dernier message utilisateur
+        if context and messages and messages[-1].get("role") == "user":
+            messages[-1] = {**messages[-1], "content": messages[-1]["content"] + "\n\n" + context}
+            print(f"[GéoTrouveTout] Contexte recu : {len(context)} caracteres injectes dans le message")
         else:
             print("[GéoTrouveTout] Aucun contexte recu (pas de sondages ou checkboxes decochees)")
 
         payload = json.dumps({
             "model": MODEL,
             "max_tokens": 4096,
-            "system": system,
+            "system": SYSTEM_PROMPT,
             "messages": messages
         }).encode()
 
