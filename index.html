@@ -3350,7 +3350,7 @@ function duplicateSelected(){
 }
 
 // ═══ IA GÉOTECHNIQUE ═══
-const IA_PROXY_URL='http://localhost:3456';
+const IA_PROXY_URL='/api/chat';
 let iaMessages=[];
 let iaStreaming=false;
 let geocartoData=null;
@@ -4610,7 +4610,7 @@ async function sendIAMessage(){
     }
   }catch(e){
     loadDiv.className='ia-msg system';
-    loadDiv.textContent='Connexion impossible au proxy GéoTrouveTout. Lancez : python proxy-ia.py';
+    loadDiv.textContent='Connexion impossible au serveur GéoTrouveTout. Vérifiez votre connexion internet.';
   }
 
   iaStreaming=false;
