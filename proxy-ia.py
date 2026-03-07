@@ -81,14 +81,8 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
         length = int(self.headers.get("Content-Length", 0))
         body = json.loads(self.rfile.read(length)) if length else {}
         messages = body.get("messages", [])
-        context = body.get("context", "")
-
-        # Injecter le contexte dans le dernier message utilisateur
-        if context and messages and messages[-1].get("role") == "user":
-            messages[-1] = {**messages[-1], "content": messages[-1]["content"] + "\n\n" + context}
-            print(f"[GéoTrouveTout] Contexte recu : {len(context)} caracteres injectes dans le message")
-        else:
-            print("[GéoTrouveTout] Aucun contexte recu (pas de sondages ou checkboxes decochees)")
+        # Context is now injected client-side directly into the last user message
+        print(f"[GéoTrouveTout] {len(messages)} messages reçus")
 
         payload = json.dumps({
             "model": MODEL,

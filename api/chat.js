@@ -53,19 +53,10 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "ANTHROPIC_API_KEY non configurée sur Vercel." });
   }
 
-  const { messages, context } = req.body || {};
+  const { messages } = req.body || {};
 
-  // Inject context into the last user message so the model always sees it
-  let enrichedMessages = [...(messages || [])];
-  if (context && enrichedMessages.length > 0) {
-    const lastIdx = enrichedMessages.length - 1;
-    if (enrichedMessages[lastIdx].role === 'user') {
-      enrichedMessages[lastIdx] = {
-        ...enrichedMessages[lastIdx],
-        content: enrichedMessages[lastIdx].content + "\n\n" + context
-      };
-    }
-  }
+  // Context is now injected client-side directly into the last user message
+  const enrichedMessages = [...(messages || [])];
 
   try {
     const response = await fetch(ANTHROPIC_API_URL, {

@@ -4618,13 +4618,23 @@ async function sendIAMessage(){
   const text=$input.value.trim();
   if(!text)return;
 
-  let ctxSondages='';try{ctxSondages=buildSondageContext();}catch(e){console.warn('[GéoTrouveTout] buildSondageContext ERREUR:',e);}
-  let ctxGeocarto='';try{ctxGeocarto=buildGeocartoContext();}catch(e){console.warn('[GéoTrouveTout] buildGeocartoContext ERREUR:',e);}
+  let ctxSondages='';try{ctxSondages=buildSondageContext();}catch(e){console.error('[GéoTrouveTout] buildSondageContext ERREUR:',e);}
+  let ctxGeocarto='';try{ctxGeocarto=buildGeocartoContext();}catch(e){console.error('[GéoTrouveTout] buildGeocartoContext ERREUR:',e);}
   const iaContext=ctxSondages+ctxGeocarto;
-  console.log('[GéoTrouveTout] Envoi — sondages en mémoire:',sondages.length,'(toujours inclus) | ctxSondages:',ctxSondages.length,'car | ctxGeocarto:',ctxGeocarto.length,'car | total contexte:',iaContext.length,'car');
+  console.log('[GéoTrouveTout] Envoi — sondages en mémoire:',sondages.length,'| ctxSondages:',ctxSondages.length,'car | ctxGeocarto:',ctxGeocarto.length,'car | total:',iaContext.length,'car');
+  if(sondages.length>0)console.log('[GéoTrouveTout] Aperçu contexte sondages:',ctxSondages.substring(0,500));
+  if(sondages.length>0&&ctxSondages.length===0)console.error('[GéoTrouveTout] BUG: sondages.length='+sondages.length+' mais ctxSondages est VIDE!');
   updateIACtxStatus();
 
   iaMessages.push({role:'user',content:text});
+
+  // Build enriched messages: inject context directly in the last user message
+  const msgToSend=iaMessages.map((m,i)=>{
+    if(i===iaMessages.length-1&&m.role==='user'&&iaContext){
+      return {role:m.role,content:m.content+'\n\n'+iaContext};
+    }
+    return m;
+  });
 
   const $m=document.getElementById('ia-messages');
   const userDiv=document.createElement('div');
@@ -4646,7 +4656,7 @@ async function sendIAMessage(){
     const resp=await fetch(IA_PROXY_URL,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({messages:iaMessages,context:iaContext||''})
+      body:JSON.stringify({messages:msgToSend,context:iaContext||''})
     });
     const data=await resp.json();
     if(data.error){
