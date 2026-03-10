@@ -1665,7 +1665,7 @@ const SVG = {
   pressio: `<svg viewBox="-3 0 42 46" fill="none" xmlns="http://www.w3.org/2000/svg"><polygon points="18,43 -2,1 38,1" fill="#F2B705"/><polygon points="18,38 2,4 34,4" stroke="#1A1A1A" stroke-width="2" fill="#FFFFFF"/><rect x="15" y="6" width="6" height="20" rx="2" fill="#F2B705" stroke="#1A1A1A" stroke-width="1"/><ellipse cx="18" cy="20" rx="5" ry="3" fill="none" stroke="#F2B705" stroke-width="2"/><ellipse cx="18" cy="16" rx="4" ry="2.5" fill="none" stroke="#F2B705" stroke-width="1.5" opacity="0.5"/><polygon points="18,32 16,27 20,27" fill="#1A1A1A"/><circle cx="18" cy="8" r="1.5" fill="#1A1A1A"/></svg>`,
   pelle_meca: `<svg viewBox="0 0 40 28" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="36" height="24" stroke="#1A1A1A" stroke-width="2" fill="#FFFFFF"/><rect x="2" y="2" width="18" height="12" fill="#D94040"/><rect x="20" y="14" width="18" height="12" fill="#D94040"/><line x1="20" y1="2" x2="20" y2="26" stroke="#1A1A1A" stroke-width="1.5"/><line x1="2" y1="14" x2="38" y2="14" stroke="#1A1A1A" stroke-width="1.5"/></svg>`,
   pelle_main: `<svg viewBox="0 0 40 28" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="36" height="24" stroke="#1A1A1A" stroke-width="2" fill="#FFFFFF"/><rect x="2" y="2" width="18" height="12" fill="#3D7AB5"/><rect x="20" y="14" width="18" height="12" fill="#3D7AB5"/><line x1="20" y1="2" x2="20" y2="26" stroke="#1A1A1A" stroke-width="1.5"/><line x1="2" y1="14" x2="38" y2="14" stroke="#1A1A1A" stroke-width="1.5"/></svg>`,
-  tariere: `<svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="18" cy="18" r="12" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="2"/><path d="M18 18 L18 30 A12 12 0 0 1 6 18 Z" fill="#D94040"/><path d="M18 18 L30 18 A12 12 0 0 1 18 30 Z" fill="#D94040"/><line x1="18" y1="2" x2="18" y2="34" stroke="#1A1A1A" stroke-width="2"/><line x1="2" y1="18" x2="34" y2="18" stroke="#1A1A1A" stroke-width="2"/><circle cx="18" cy="18" r="12" fill="none" stroke="#1A1A1A" stroke-width="2"/></svg>`,
+  tariere: `<svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="18" cy="18" r="12" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="2"/><path d="M18 18 L30 18 A12 12 0 0 0 18 6 Z" fill="#D94040"/><path d="M18 18 L6 18 A12 12 0 0 0 18 30 Z" fill="#D94040"/><line x1="18" y1="2" x2="18" y2="34" stroke="#1A1A1A" stroke-width="2"/><line x1="2" y1="18" x2="34" y2="18" stroke="#1A1A1A" stroke-width="2"/><circle cx="18" cy="18" r="12" fill="none" stroke="#1A1A1A" stroke-width="2"/></svg>`,
   carottage: `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="12" y="3" width="8" height="24" rx="2" fill="none" stroke="#D94040" stroke-width="2"/><rect x="13.5" y="5" width="5" height="4" rx="1" fill="#C8A876"/><rect x="13.5" y="10" width="5" height="3" rx="1" fill="#8B7355"/><rect x="13.5" y="14" width="5" height="5" rx="1" fill="#A0A0A0"/><rect x="13.5" y="20" width="5" height="4" rx="1" fill="#6B8E5A"/><line x1="12" y1="28" x2="20" y2="28" stroke="#D94040" stroke-width="2"/></svg>`,
   piezo: `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="14" y="2" width="4" height="24" rx="1" fill="#3D7AB5"/><circle cx="16" cy="28" r="3" fill="none" stroke="#3D7AB5" stroke-width="2"/><line x1="10" y1="8" x2="22" y2="8" stroke="#3D7AB5" stroke-width="1"/><line x1="10" y1="12" x2="22" y2="12" stroke="#3D7AB5" stroke-width="1"/><path d="M11 16 L13 14 L13 18Z" fill="#3D7AB5"/><text x="16" y="29" text-anchor="middle" font-size="5" font-weight="bold" fill="#3D7AB5">P</text></svg>`,
   forage_destr: `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="14" y="2" width="4" height="20" rx="1" fill="#7A7A7A"/><circle cx="16" cy="26" r="4" fill="none" stroke="#D94040" stroke-width="2" stroke-dasharray="3 2"/><line x1="13" y1="24" x2="19" y2="28" stroke="#D94040" stroke-width="1.5"/><line x1="19" y1="24" x2="13" y2="28" stroke="#D94040" stroke-width="1.5"/><rect x="12" y="2" width="8" height="3" rx="1" fill="#4A4A4A"/></svg>`,
@@ -1909,7 +1909,7 @@ async function processOfflineQueue(){
 
 const STICKER_SECTIONS = [
   { title: '🔬 Sondages & Essais', items: [
-    {id:'etiq_150', svg:'etiq_150', label:'Géophysique', color:'#3D7AB5', isText:true, noLegend:true},
+    {id:'etiq_150', svg:'etiq_150', label:'150', catalogLabel:'Géophysique', color:'#3D7AB5', isText:true, noLegend:true},
     {id:'penetro_dyn', svg:'penetro_dyn', label:'Pénétro. dynamique', color:'#D94040'},
     {id:'penetro_stat', svg:'penetro_stat', label:'Pénétro. statique', color:'#3D7AB5'},
     {id:'pressio', svg:'pressio', label:'Pressiomètre', color:'#F2B705'},
@@ -1922,7 +1922,7 @@ const STICKER_SECTIONS = [
     {id:'infiltro', svg:'infiltro', label:'Infiltrométrie', color:'#3D7AB5'},
   ]},
   { title: '🌿 Environnement & Terrain', items: [
-    {id:'arbre_dessus', svg:'arbre_dessus', label:'Arbre (dessus)', color:'#2E7D32'},
+    {id:'arbre_dessus', svg:'arbre_dessus', label:'Arbre', color:'#2E7D32'},
     {id:'buisson', svg:'buisson', label:'Buisson', color:'#4CAF50'},
     {id:'haie', svg:'haie', label:'Haie', color:'#4CAF50'},
     {id:'etang', svg:'etang', label:'Étang / Mare', color:'#3D7AB5'},
@@ -1935,7 +1935,7 @@ const STICKER_SECTIONS = [
     {id:'regard', svg:'regard', label:'Regard', color:'#4A4A4A'},
     {id:'cloture', svg:'cloture', label:'Clôture', color:'#7A7A7A'},
     {id:'repere', svg:'repere', label:'Repère', color:'#F2B705'},
-    {id:'photo_pt', svg:'photo_pt', label:'Ph.1', color:'#4A4A4A', defaultLabel:'Ph.1'},
+    {id:'photo_pt', svg:'photo_pt', label:'V1', color:'#4A4A4A', defaultLabel:'V1'},
   ]},
   { title: '🏷️ Étiquettes', items: [
     {id:'boussole', svg:'boussole', label:'Boussole', color:'#D94040', noLegend:true},
@@ -2252,7 +2252,8 @@ function buildCatalog(){
         btn.innerHTML=`<div class="cat-icon" style="display:flex;align-items:center;justify-content:center">${preview}</div><span class="name" style="color:${s.color}">${s.label}</span>`;
       }else if(s.isText){
         const bdrCat=s.noBorder?'border:none;background:none':'border:2px solid #1A1A1A;border-radius:3px;padding:2px 6px;background:#fff';
-        btn.innerHTML=`<div class="cat-icon" style="display:flex;align-items:center;justify-content:center"><span style="display:inline-block;${bdrCat};font-size:9px;font-weight:700;font-family:Arial,sans-serif;color:#1A1A1A;white-space:nowrap">${escXml(s.label)}</span></div><span class="name" style="color:${s.color}">${s.label}</span>`;
+        const displayName=s.catalogLabel||s.label;
+        btn.innerHTML=`<div class="cat-icon" style="display:flex;align-items:center;justify-content:center"><span style="display:inline-block;${bdrCat};font-size:9px;font-weight:700;font-family:Arial,sans-serif;color:#1A1A1A;white-space:nowrap">${escXml(s.label)}</span></div><span class="name" style="color:${s.color}">${displayName}</span>`;
       }else{
         btn.innerHTML=`<div class="cat-icon">${SVG[s.svg]}</div><span class="name" style="color:${s.color}">${s.label}</span>`;
       }
