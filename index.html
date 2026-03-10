@@ -910,18 +910,15 @@
     <button class="tool-btn active" data-tool="select" onclick="selectTool('select')"><span class="icon">👆</span><span class="label">Sélection</span></button>
     <button class="tool-btn" data-tool="sticker" onclick="selectTool('sticker')"><span class="icon">🏷️</span><span class="label">Vignettes</span></button>
     <button class="tool-btn" data-tool="note" onclick="selectTool('note')"><span class="icon">📝</span><span class="label">Notes</span></button>
-    <button class="tool-btn" data-tool="shape" onclick="selectTool('shape')"><span class="icon">🔷</span><span class="label">Formes</span></button>
     <button class="tool-btn" data-tool="text" onclick="selectTool('text')"><span class="icon">✏️</span><span class="label">Texte</span></button>
     <button class="tool-btn" data-tool="arrow" onclick="selectTool('arrow')"><span class="icon" style="font-size:13px;line-height:1;display:inline-flex;flex-direction:column;align-items:center"><span style="line-height:0.8">➜</span><span style="line-height:0.7">──</span></span><span class="label">Traits</span></button>
-    <button class="tool-btn" data-tool="draw" onclick="selectTool('draw')"><span class="icon">🖌️</span><span class="label">Dessin</span></button>
     <button class="tool-btn" data-tool="mrpropre" onclick="selectTool('mrpropre')"><span class="icon">🧽</span><span class="label">Mr Propre</span></button>
     <button class="tool-btn" data-tool="measure" onclick="selectTool('measure')"><span class="icon" style="font-size:15px;line-height:1;display:inline-flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F2B705" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="5" width="22" height="14" rx="2"/><line x1="5" y1="5" x2="5" y2="12"/><line x1="9" y1="5" x2="9" y2="10"/><line x1="13" y1="5" x2="13" y2="12"/><line x1="17" y1="5" x2="17" y2="10"/></svg></span><span class="label">Mesurer</span></button>
     <div class="tool-sep"></div>
-    <button class="tool-btn" onclick="undoAction()"><span class="icon" style="font-style:normal;font-size:16px">⟲</span><span class="label">Annuler</span></button>
-    <button class="tool-btn" onclick="redoAction()"><span class="icon" style="font-style:normal;font-size:16px">⟳</span><span class="label">Remettre</span></button>
+    <button class="tool-btn" onclick="undoAction()" style="min-width:30px;padding:4px 3px"><span class="icon" style="font-style:normal;font-size:16px">⟲</span><span class="label">Annuler</span></button>
+    <button class="tool-btn" onclick="redoAction()" style="min-width:30px;padding:4px 3px"><span class="icon" style="font-style:normal;font-size:16px">⟳</span><span class="label">Remettre</span></button>
     <div class="tool-sep"></div>
     <button class="tool-btn" onclick="duplicateSelected()"><span class="icon">📋</span><span class="label">Dupliquer</span></button>
-    <button class="tool-btn" onclick="openCropTool()"><span class="icon" style="display:inline-flex"><svg viewBox="0 0 20 20" width="17" height="17" fill="none" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round"><path d="M5 1v14h14"/><path d="M1 5h14v14"/></svg></span><span class="label">Rogner</span></button>
     <button class="tool-btn" onclick="toggleInsertMenu()"><span class="icon" style="font-size:15px;line-height:1;display:inline-flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></span><span class="label">Insérer</span></button>
     <div class="tool-sep"></div>
     <button class="tool-btn" onclick="openMiseEnPage()"><span class="icon">📐</span><span class="label">Mise en Page</span></button>
@@ -929,10 +926,16 @@
     <button class="tool-btn" onclick="openModeleGeotech()"><span class="icon">⛏️</span><span class="label">Modèle</span></button>
     <div class="tool-sep"></div>
     <button class="tool-btn" onclick="exportProject()"><span class="icon">💾</span><span class="label">Enregistrer</span></button>
-    <button class="tool-btn" onclick="exportProjectAs()"><span class="icon">📥</span><span class="label">Enreg. sous...</span></button>
-    <button class="tool-btn" onclick="document.getElementById('projectInput').click()"><span class="icon">📂</span><span class="label">Ouvrir</span></button>
+    <div style="position:relative">
+      <button class="tool-btn" onclick="toggleFileMenu()"><span class="icon">📁</span><span class="label">Fichier</span></button>
+      <div id="file-menu" style="display:none;position:absolute;top:100%;left:0;background:var(--white);border:1px solid var(--gray-200);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.15);z-index:200;min-width:140px;padding:4px 0">
+        <button onclick="exportProjectAs();toggleFileMenu()" style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 14px;border:none;background:none;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit"><span>📥</span> Enreg. sous...</button>
+        <button onclick="document.getElementById('projectInput').click();toggleFileMenu()" style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 14px;border:none;background:none;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit"><span>📂</span> Ouvrir</button>
+        <div style="height:1px;background:var(--gray-200);margin:4px 8px"></div>
+        <button onclick="closeProject();toggleFileMenu()" style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 14px;border:none;background:none;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;color:var(--red);font-family:inherit"><span>✕</span> Fermer</button>
+      </div>
+    </div>
     <input type="file" id="projectInput" accept=".geosolia" style="display:none" onchange="importProject(event)">
-    <button class="tool-btn" onclick="closeProject()"><span class="icon" style="font-style:normal;font-size:18px">✕</span><span class="label">Fermer</span></button>
     <div style="flex:1"></div>
     <div class="tool-sep"></div>
     <button class="tool-btn" onclick="toggleGeocartoPanel()" style="background:#4CAF50;color:#fff;border-radius:6px"><span class="icon" style="display:inline-flex"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg></span><span class="label" style="color:#fff">Enquête</span></button>
@@ -974,11 +977,20 @@
         <button class="arr-mode-btn" data-arrmode="double" onclick="setArrowMode('double')" title="Flèche double"><svg viewBox="0 0 24 24"><line x1="7" y1="17" x2="17" y2="7" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round"/><polygon points="20,4 14,6 18,10" fill="#1A1A1A"/><polygon points="4,20 10,18 6,14" fill="#1A1A1A"/></svg></button>
         <button class="arr-mode-btn" data-arrmode="line" onclick="setArrowMode('line')" title="Trait simple"><svg viewBox="0 0 24 24"><line x1="4" y1="20" x2="20" y2="4" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round"/></svg></button>
         <button class="arr-mode-btn" data-arrmode="dashed" onclick="setArrowMode('dashed')" title="Trait pointillé"><svg viewBox="0 0 24 24"><line x1="4" y1="20" x2="20" y2="4" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round" stroke-dasharray="3,3"/></svg></button>
+        <div class="tool-sep" style="height:auto;margin:0 4px"></div>
+        <button class="arr-mode-btn" data-arrmode="draw" onclick="selectTool('draw')" title="Dessin libre">🖌️</button>
+        <button class="arr-mode-btn" data-arrmode="erase" onclick="selectTool('erase')" title="Gomme"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H7L3 16c-.8-.8-.8-2 0-2.8L14.6 1.6c.8-.8 2-.8 2.8 0l4 4c.8.8.8 2 0 2.8L12 18"/><path d="M7 20l-4-4"/></svg></button>
       </div>
       <div class="arr-opt-group"><button class="arr-mode-btn" id="btn-constraint" onclick="constraintMode=!constraintMode;this.classList.toggle('active',constraintMode);document.getElementById('btn-constraint-mp').classList.toggle('active',constraintMode)" title="Contrainte angle (remplace Shift)">📐</button></div>
       <div class="arr-opt-group"><label>Couleur</label><div id="arr-color-dots" class="color-dots-row"></div></div>
       <div class="arr-opt-group"><label>Épaisseur</label><input type="number" class="arr-input" id="arr-width" min="1" max="24" step="1" value="2" onchange="arrowWidth=Math.min(24,Math.max(1,+this.value));this.value=arrowWidth;updateSelectedArrow()"></div>
       <div class="arr-opt-group"><label>Opacité %</label><input type="number" class="arr-input" id="arr-opacity" min="10" max="100" step="5" value="100" style="width:52px" onchange="arrowOpacity=Math.min(100,Math.max(10,+this.value))/100;this.value=Math.round(arrowOpacity*100);updateSelectedArrow()"></div>
+      <div id="draw-opts-in-arrow" style="display:none;align-items:center;gap:6px">
+        <div class="tool-sep" style="height:auto;margin:0 4px"></div>
+        <div class="arr-opt-group"><label>Épaisseur</label><input type="number" class="arr-input" id="draw-width2" min="1" max="24" step="1" value="4" onchange="brushSize=Math.min(24,Math.max(1,+this.value));this.value=brushSize;document.getElementById('draw-width').value=brushSize"></div>
+        <div class="arr-opt-group"><label>Opacité %</label><input type="number" class="arr-input" id="draw-opacity2" min="10" max="100" step="5" value="100" onchange="drawOpacity=Math.min(100,Math.max(10,+this.value))/100;this.value=Math.round(drawOpacity*100);document.getElementById('draw-opacity').value=this.value"></div>
+        <div id="erase-size-group2" class="arr-opt-group" style="display:none"><label>Taille gomme</label><input type="number" class="arr-input" id="erase-width2" min="5" max="80" step="1" value="20" onchange="eraserSize=Math.min(80,Math.max(5,+this.value));this.value=eraserSize;document.getElementById('erase-width').value=eraserSize;updateEraserCursor()"></div>
+      </div>
     </div>
     <div id="insert-options">
       <button class="insert-btn" onclick="insertImageMenu();toggleInsertMenu()">🖼️ Image</button>
@@ -1221,6 +1233,7 @@
       </div>
       <div id="mep-legend-items"></div>
       <div id="mep-preview-wrap"><canvas id="mep-canvas"></canvas></div>
+      <button class="mep-download-btn" onclick="openCropTool()" style="background:var(--black);color:var(--yellow)">✂️ Rogner le plan</button>
       <button class="mep-download-btn" onclick="captureSnapshot()" style="background:var(--black);color:var(--yellow)">👁 Aperçu du plan seul</button>
       <button class="mep-download-btn" onclick="mepDownload()">💾 Enregistrer</button>
     </div>
@@ -1663,9 +1676,9 @@ const SVG = {
   penetro_dyn: `<svg viewBox="-3 0 42 46" fill="none" xmlns="http://www.w3.org/2000/svg"><polygon points="18,43 -2,1 38,1" fill="#D94040"/><polygon points="18,38 2,4 34,4" stroke="#1A1A1A" stroke-width="2" fill="#FFFFFF"/><rect x="16" y="6" width="4" height="20" rx="1" fill="#D94040"/><polygon points="18,32 14,26 22,26" fill="#D94040"/><line x1="12" y1="10" x2="24" y2="10" stroke="#D94040" stroke-width="2"/><line x1="12" y1="14" x2="24" y2="14" stroke="#D94040" stroke-width="1.5" stroke-dasharray="2 1"/><circle cx="18" cy="8" r="2" fill="#F2B705"/></svg>`,
   penetro_stat: `<svg viewBox="-3 0 42 46" fill="none" xmlns="http://www.w3.org/2000/svg"><polygon points="18,43 -2,1 38,1" fill="#3D7AB5"/><polygon points="18,38 2,4 34,4" stroke="#1A1A1A" stroke-width="2" fill="#FFFFFF"/><rect x="16" y="6" width="4" height="18" rx="1" fill="#3D7AB5"/><polygon points="18,30 14,24 22,24" fill="#3D7AB5"/><rect x="12" y="5" width="12" height="4" rx="1" fill="#3D7AB5"/><line x1="18" y1="9" x2="18" y2="24" stroke="#fff" stroke-width="1" stroke-dasharray="2 2"/></svg>`,
   pressio: `<svg viewBox="-3 0 42 46" fill="none" xmlns="http://www.w3.org/2000/svg"><polygon points="18,43 -2,1 38,1" fill="#F2B705"/><polygon points="18,38 2,4 34,4" stroke="#1A1A1A" stroke-width="2" fill="#FFFFFF"/><rect x="15" y="6" width="6" height="20" rx="2" fill="#F2B705" stroke="#1A1A1A" stroke-width="1"/><ellipse cx="18" cy="20" rx="5" ry="3" fill="none" stroke="#F2B705" stroke-width="2"/><ellipse cx="18" cy="16" rx="4" ry="2.5" fill="none" stroke="#F2B705" stroke-width="1.5" opacity="0.5"/><polygon points="18,32 16,27 20,27" fill="#1A1A1A"/><circle cx="18" cy="8" r="1.5" fill="#1A1A1A"/></svg>`,
-  pelle_meca: `<svg viewBox="0 0 40 28" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="36" height="24" stroke="#1A1A1A" stroke-width="2" fill="#FFFFFF"/><rect x="2" y="2" width="18" height="12" fill="#D94040"/><rect x="20" y="14" width="18" height="12" fill="#D94040"/><line x1="20" y1="2" x2="20" y2="26" stroke="#1A1A1A" stroke-width="1.5"/><line x1="2" y1="14" x2="38" y2="14" stroke="#1A1A1A" stroke-width="1.5"/></svg>`,
-  pelle_main: `<svg viewBox="0 0 40 28" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="36" height="24" stroke="#1A1A1A" stroke-width="2" fill="#FFFFFF"/><rect x="2" y="2" width="18" height="12" fill="#3D7AB5"/><rect x="20" y="14" width="18" height="12" fill="#3D7AB5"/><line x1="20" y1="2" x2="20" y2="26" stroke="#1A1A1A" stroke-width="1.5"/><line x1="2" y1="14" x2="38" y2="14" stroke="#1A1A1A" stroke-width="1.5"/></svg>`,
-  tariere: `<svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="18" cy="18" r="12" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="2"/><path d="M18 18 L30 18 A12 12 0 0 0 18 6 Z" fill="#D94040"/><path d="M18 18 L6 18 A12 12 0 0 0 18 30 Z" fill="#D94040"/><line x1="18" y1="2" x2="18" y2="34" stroke="#1A1A1A" stroke-width="2"/><line x1="2" y1="18" x2="34" y2="18" stroke="#1A1A1A" stroke-width="2"/><circle cx="18" cy="18" r="12" fill="none" stroke="#1A1A1A" stroke-width="2"/></svg>`,
+  pelle_meca: `<svg viewBox="0 0 40 28" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="36" height="24" fill="#FFFFFF"/><rect x="2" y="2" width="18" height="12" fill="#D94040"/><rect x="20" y="14" width="18" height="12" fill="#D94040"/><rect x="2" y="2" width="36" height="24" stroke="#1A1A1A" stroke-width="2" fill="none"/><line x1="20" y1="2" x2="20" y2="26" stroke="#1A1A1A" stroke-width="1.5"/><line x1="2" y1="14" x2="38" y2="14" stroke="#1A1A1A" stroke-width="1.5"/></svg>`,
+  pelle_main: `<svg viewBox="0 0 40 28" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="36" height="24" fill="#FFFFFF"/><rect x="2" y="2" width="18" height="12" fill="#3D7AB5"/><rect x="20" y="14" width="18" height="12" fill="#3D7AB5"/><rect x="2" y="2" width="36" height="24" stroke="#1A1A1A" stroke-width="2" fill="none"/><line x1="20" y1="2" x2="20" y2="26" stroke="#1A1A1A" stroke-width="1.5"/><line x1="2" y1="14" x2="38" y2="14" stroke="#1A1A1A" stroke-width="1.5"/></svg>`,
+  tariere: `<svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="18" cy="18" r="12" fill="#FFFFFF"/><path d="M18 18 L30 18 A12 12 0 0 0 18 6 Z" fill="#D94040"/><path d="M18 18 L6 18 A12 12 0 0 0 18 30 Z" fill="#D94040"/><circle cx="18" cy="18" r="12" fill="none" stroke="#1A1A1A" stroke-width="2"/><line x1="18" y1="6" x2="18" y2="30" stroke="#1A1A1A" stroke-width="2"/><line x1="6" y1="18" x2="30" y2="18" stroke="#1A1A1A" stroke-width="2"/></svg>`,
   carottage: `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="12" y="3" width="8" height="24" rx="2" fill="none" stroke="#D94040" stroke-width="2"/><rect x="13.5" y="5" width="5" height="4" rx="1" fill="#C8A876"/><rect x="13.5" y="10" width="5" height="3" rx="1" fill="#8B7355"/><rect x="13.5" y="14" width="5" height="5" rx="1" fill="#A0A0A0"/><rect x="13.5" y="20" width="5" height="4" rx="1" fill="#6B8E5A"/><line x1="12" y1="28" x2="20" y2="28" stroke="#D94040" stroke-width="2"/></svg>`,
   piezo: `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="14" y="2" width="4" height="24" rx="1" fill="#3D7AB5"/><circle cx="16" cy="28" r="3" fill="none" stroke="#3D7AB5" stroke-width="2"/><line x1="10" y1="8" x2="22" y2="8" stroke="#3D7AB5" stroke-width="1"/><line x1="10" y1="12" x2="22" y2="12" stroke="#3D7AB5" stroke-width="1"/><path d="M11 16 L13 14 L13 18Z" fill="#3D7AB5"/><text x="16" y="29" text-anchor="middle" font-size="5" font-weight="bold" fill="#3D7AB5">P</text></svg>`,
   forage_destr: `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="14" y="2" width="4" height="20" rx="1" fill="#7A7A7A"/><circle cx="16" cy="26" r="4" fill="none" stroke="#D94040" stroke-width="2" stroke-dasharray="3 2"/><line x1="13" y1="24" x2="19" y2="28" stroke="#D94040" stroke-width="1.5"/><line x1="19" y1="24" x2="13" y2="28" stroke="#D94040" stroke-width="1.5"/><rect x="12" y="2" width="8" height="3" rx="1" fill="#4A4A4A"/></svg>`,
@@ -1926,10 +1939,10 @@ const STICKER_SECTIONS = [
     {id:'buisson', svg:'buisson', label:'Buisson', color:'#4CAF50'},
     {id:'haie', svg:'haie', label:'Haie', color:'#4CAF50'},
     {id:'etang', svg:'etang', label:'Étang / Mare', color:'#3D7AB5'},
-    {id:'zone_humide', svg:'zone_humide', label:'Zone humide', color:'#3D7AB5'},
-    {id:'talus', svg:'talus', label:'Talus', color:'#8B6914', defaultLabel:'Talus'},
-    {id:'remblai', svg:'remblai', label:'Remblai', color:'#8B6914', defaultLabel:'Remblai'},
-    {id:'puits_dessus', svg:'puits_dessus', label:'Puits Existant', color:'#4A4A4A', defaultLabel:'Puits Existant'},
+    {id:'zone_humide', svg:'zone_humide', label:'Zone humide', color:'#3D7AB5', defaultLabel:'Zone humide', defaultLabelPos:'bottom'},
+    {id:'talus', svg:'talus', label:'Talus', color:'#8B6914', defaultLabel:'Talus', defaultLabelPos:'bottom'},
+    {id:'remblai', svg:'remblai', label:'Remblai', color:'#8B6914', defaultLabel:'Remblai', defaultLabelPos:'bottom'},
+    {id:'puits_dessus', svg:'puits_dessus', label:'Puits Existant', color:'#4A4A4A', defaultLabel:'Puits Existant', defaultLabelPos:'bottom'},
   ]},
   { title: '📍 Annotations', items: [
     {id:'regard', svg:'regard', label:'Regard', color:'#4A4A4A'},
@@ -1944,18 +1957,18 @@ const STICKER_SECTIONS = [
     {id:'etiq_muret', svg:'etiq_muret', label:'Muret', color:'#1A1A1A', isText:true, noLegend:true},
     {id:'etiq_pente', svg:'etiq_pente', label:'Pente X%', color:'#1A1A1A', isText:true, noBorder:true, noLegend:true},
   ]},
-];
-const SHAPE_ITEMS=[
-  {id:'shape_circle',    label:'Cercle',    isShape:true, shapeType:'circle',   filled:false, color:'#D94040', noLegend:true},
-  {id:'shape_rect',      label:'Rectangle', isShape:true, shapeType:'rect',     filled:false, color:'#3D7AB5', noLegend:true},
-  {id:'shape_tri',       label:'Triangle',  isShape:true, shapeType:'triangle', filled:false, color:'#F2B705', noLegend:true},
-  {id:'shape_diamond',   label:'Losange',   isShape:true, shapeType:'diamond',  filled:false, color:'#4CAF50', noLegend:true},
-  {id:'shape_star',      label:'Étoile',    isShape:true, shapeType:'star',     filled:false, color:'#F2B705', noLegend:true},
-  {id:'shape_cross',     label:'Croix',     isShape:true, shapeType:'cross',    filled:false, color:'#1A1A1A', noLegend:true},
+  { title: '🔷 Formes géométriques', items: [
+    {id:'shape_circle',    label:'Cercle',    isShape:true, shapeType:'circle',   filled:false, color:'#D94040', noLegend:true},
+    {id:'shape_rect',      label:'Rectangle', isShape:true, shapeType:'rect',     filled:false, color:'#3D7AB5', noLegend:true},
+    {id:'shape_tri',       label:'Triangle',  isShape:true, shapeType:'triangle', filled:false, color:'#F2B705', noLegend:true},
+    {id:'shape_diamond',   label:'Losange',   isShape:true, shapeType:'diamond',  filled:false, color:'#4CAF50', noLegend:true},
+    {id:'shape_star',      label:'Étoile',    isShape:true, shapeType:'star',     filled:false, color:'#F2B705', noLegend:true},
+    {id:'shape_cross',     label:'Croix',     isShape:true, shapeType:'cross',    filled:false, color:'#1A1A1A', noLegend:true},
+  ]},
 ];
 
 // Flatten for lookup
-const ALL_STICKERS = STICKER_SECTIONS.flatMap(s => s.items).concat(SHAPE_ITEMS);
+const ALL_STICKERS = STICKER_SECTIONS.flatMap(s => s.items);
 
 let currentTool='select',planImgSrc=null,planW=1200,planH=800,scale=1,baseScale=1,offX=0,offY=0;
 let isPanning=false,panStartX=0,panStartY=0,panOX=0,panOY=0;
@@ -2013,6 +2026,8 @@ window.addEventListener('orientationchange',()=>{setTimeout(resizeDrawCanvas,200
 function resizeDrawCanvas(){const r=$area.getBoundingClientRect();$drawCanvas.width=r.width;$drawCanvas.height=r.height;$cleanCanvas.width=r.width;$cleanCanvas.height=r.height;redrawCanvas();redrawCleanCanvas();}
 
 function toggleInsertMenu(){document.getElementById('insert-options').classList.toggle('show');}
+function toggleFileMenu(){const m=document.getElementById('file-menu');m.style.display=m.style.display==='none'?'block':'none';}
+document.addEventListener('click',e=>{const m=document.getElementById('file-menu');if(m&&m.style.display==='block'&&!e.target.closest('#file-menu')&&!e.target.closest('[onclick*="toggleFileMenu"]'))m.style.display='none';});
 function selectTool(t){
   if(t!=='text')finalizeInlineText();
   clearSelection();
@@ -2027,7 +2042,7 @@ function selectTool(t){
   document.querySelectorAll('.tool-btn[data-tool]').forEach(b=>{b.className='tool-btn';if(b.dataset.tool===t||(isMp&&b.dataset.tool==='mrpropre')||(isMeas&&b.dataset.tool==='measure')){const c={select:'active',sticker:'active-yellow',shape:'active-yellow',text:'active-dark',draw:'active-red',erase:'active-orange',mrpropre:'active',cleanzone:'active',arrow:'active-red',measureDist:'active',measureArea:'active'};b.classList.add(c[t]||'active');}});
   $area.style.cursor={select:'grab',draw:'crosshair',erase:'none',mrpropre:'none',cleanzone:'crosshair',sticker:'crosshair',text:'text',arrow:'crosshair',measureDist:'crosshair',measureArea:'crosshair'}[realTool]||'crosshair';
   document.getElementById('color-options').style.display=(t==='draw'||t==='text'||t==='erase')?'flex':'none';
-  document.getElementById('brush-options').style.display=(t==='draw'||t==='erase')?'flex':'none';
+  document.getElementById('brush-options').style.display='none';
   document.getElementById('erase-size-group').style.display=t==='erase'?'flex':'none';
   document.getElementById('eraser-cursor').style.display=t==='erase'?'block':'none';
   if(t==='erase')updateEraserCursor();
@@ -2040,8 +2055,13 @@ function selectTool(t){
   if(!isMeas){measureDistStart=null;measureDistPreviewEnd=null;measureAreaPts=[];measureAreaPreview=null;}
   document.getElementById('text-options').style.display=t==='text'?'flex':'none';
   czPoints=[];czPreview=null;
-  document.getElementById('arrow-options').classList.toggle('show',t==='arrow');
-  if(t==='sticker'){openCatalog();closeShapeCatalog();closeNotesCatalog();}else if(t==='shape'){openShapeCatalog();closeCatalog();closeNotesCatalog();}else if(t==='note'){openNotesCatalog();closeCatalog();closeShapeCatalog();}else{closeCatalog();closeShapeCatalog();closeNotesCatalog();}renderElements();
+  const isDrawTool=t==='draw'||t==='erase';
+  document.getElementById('arrow-options').classList.toggle('show',t==='arrow'||isDrawTool);
+  document.getElementById('draw-opts-in-arrow').style.display=isDrawTool?'flex':'none';
+  if(isDrawTool){document.getElementById('erase-size-group2').style.display=t==='erase'?'flex':'none';}
+  document.querySelectorAll('#arrow-options .arr-mode-btn[data-arrmode]').forEach(b=>{b.classList.toggle('active',isDrawTool?b.dataset.arrmode===t:b.dataset.arrmode===arrowMode);});
+  if(isDrawTool){document.querySelectorAll('.tool-btn[data-tool]').forEach(b=>{if(b.dataset.tool==='arrow')b.classList.add('active-red');});};
+  if(t==='sticker'){openCatalog();closeNotesCatalog();}else if(t==='shape'){openCatalog();closeNotesCatalog();}else if(t==='note'){openNotesCatalog();closeCatalog();}else{closeCatalog();closeNotesCatalog();}renderElements();
 }
 document.addEventListener('keydown',function(e){if(e.key==='Escape'){if(isCalibrating){cancelCalibration();return;}if(measureDistStart){measureDistStart=null;measureDistPreviewEnd=null;renderElements();return;}if(measureAreaPts.length>0){measureAreaPts=[];measureAreaPreview=null;renderElements();return;}if(currentTool!=='select')selectTool('select');}});
 function buildColorOptions(){const $c=document.getElementById('color-options');COLORS.forEach(c=>{const d=document.createElement('button');d.className='color-dot';d.style.background=c;if(c==='#FFFFFF')d.style.border='2px solid #D4D4D4';d.onclick=()=>{if(currentTool==='draw')drawColor=c;else{textColor=c;const ed=document.getElementById('inline-text-editor');if(ed)ed.style.color=c;}updateColorDots();};$c.appendChild(d);});
@@ -2562,7 +2582,7 @@ function onPD(e){
   if(currentTool==='sticker'&&selectedStickerId){const s=ALL_STICKERS.find(x=>x.id===selectedStickerId);
     if(s.isShape){const nel={id:Date.now(),type:'sticker',isShape:true,shapeType:s.shapeType,filled:!!s.filled,x:pt.px,y:pt.py,color:s.color,fillColor:s.color,sScale:1.8,shapeW:40,shapeH:40,strokeWidth:2,opacity:1,noLegend:true};elements.push(nel);selectOnly(nel.id);selectTool('select');renderElements();return;}
     if(s.isGroup&&s.groupItems){const t=Date.now();s.groupItems.forEach((gi,i)=>{const nel={id:t+i,type:'sticker',x:pt.px+(gi.dx||0)/scale,y:pt.py+(gi.dy||0)/scale,label:gi.label,color:gi.color,sScale:gi.sScale||1,svgKey:gi.svgKey||s.svg,noLegend:true,groupId:t,groupLocked:true};if(gi.isText)nel.isText=true;if(gi.noBorder)nel.noBorder=true;if(gi.underline)nel.underline=true;elements.push(nel);});selectOnly(t);selectTool('select');renderElements();return;}
-    const defScale=s.id==='boussole'?3.6:s.id==='etiq_150'?0.9:1.8;const nel={id:Date.now(),type:'sticker',x:pt.px,y:pt.py,svgKey:s.svg,label:s.label,color:s.color,sScale:defScale};if(s.isText)nel.isText=true;if(s.noBorder)nel.noBorder=true;if(s.noLegend)nel.noLegend=true;if(s.defaultLabel)nel.showLabel=true;elements.push(nel);if(s.id==='etiq_150'){clearSelection();renderElements();return;}selectOnly(nel.id);selectTool('select');renderElements();return;}
+    const defScale=s.id==='boussole'?3.6:s.id==='etiq_150'?0.9:1.8;const nel={id:Date.now(),type:'sticker',x:pt.px,y:pt.py,svgKey:s.svg,label:s.label,color:s.color,sScale:defScale};if(s.isText)nel.isText=true;if(s.noBorder)nel.noBorder=true;if(s.noLegend)nel.noLegend=true;if(s.defaultLabel){nel.showLabel=true;if(s.defaultLabelPos)nel.labelPos=s.defaultLabelPos;}elements.push(nel);if(s.id==='etiq_150'){clearSelection();renderElements();return;}selectOnly(nel.id);selectTool('select');renderElements();return;}
   if(currentTool==='note'&&selectedNote){const noteHtml=selectedNote.text.replace(/\n/g,'<br>');elements.push({id:Date.now(),type:'text',x:pt.px,y:pt.py,html:noteHtml,text:selectedNote.text,color:'#1A1A1A',bordered:true});selectOnly(elements[elements.length-1].id);selectTool('select');renderElements();return;}
   if(currentTool==='text'){if(e.target.closest('#inline-text-editor'))return;openTextEditor(pt.px,pt.py);return;}
   if(currentTool==='arrow'){arrowStartPt={x:pt.px,y:pt.py};arrowPreviewEnd=null;$area.setPointerCapture(e.pointerId);return;}
