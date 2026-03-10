@@ -220,7 +220,7 @@
   .legend-item .legend-count{background:var(--gray-100);color:var(--gray-700);border-radius:10px;padding:1px 8px;font-size:10px;font-weight:800;margin-left:auto;flex-shrink:0}
   .legend-item .legend-label{font-size:12px;font-weight:700}
 
-  #photo-section{width:270px;min-width:200px;max-width:50vw;display:none;flex-direction:column;flex-shrink:0;background:var(--white);border-left:2px solid var(--yellow);overflow-y:auto;position:relative}
+  #photo-section{width:270px;min-width:200px;max-width:50vw;display:none;flex-direction:column;flex-shrink:0;background:var(--white);border-right:2px solid var(--yellow);overflow-y:auto;position:relative}
   #photo-section.open{display:flex}
   #ia-panel{position:fixed;top:0;right:0;bottom:0;width:420px;max-width:95vw;background:var(--white);box-shadow:-4px 0 24px rgba(0,0,0,0.2);z-index:800;display:none;flex-direction:column;transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1)}
   #ia-panel.open{display:flex;transform:translateX(0)}
@@ -333,7 +333,7 @@
   #photo-lightbox .lb-close{position:absolute;top:16px;right:20px;background:var(--red);color:#fff;border:none;border-radius:50%;width:44px;height:44px;font-size:22px;font-weight:800;cursor:pointer;box-shadow:0 4px 16px rgba(217,64,64,0.4);display:flex;align-items:center;justify-content:center}
 
   /* ═══ SONDAGES ═══ */
-  #sondage-type-modal{width:300px;min-width:240px;max-width:50vw;display:none;flex-direction:column;flex-shrink:0;background:var(--white);border-left:2px solid var(--yellow);overflow:hidden;position:relative}
+  #sondage-type-modal{width:300px;min-width:240px;max-width:50vw;display:none;flex-direction:column;flex-shrink:0;background:var(--white);border-right:2px solid var(--yellow);overflow:hidden;position:relative}
   #sondage-type-modal.open{display:flex}
   .sondage-type-resize-handle{position:absolute;top:0;left:-5px;width:10px;height:100%;cursor:col-resize;z-index:20}
   .sondage-type-resize-handle:hover,.sondage-type-resize-handle.active{background:var(--yellow);opacity:0.3;border-radius:3px}
@@ -925,16 +925,16 @@
     <button class="tool-btn" onclick="openRapport()"><span class="icon">📋</span><span class="label">Rapport</span></button>
     <button class="tool-btn" onclick="openModeleGeotech()"><span class="icon">⛏️</span><span class="label">Modèle</span></button>
     <div class="tool-sep"></div>
-    <button class="tool-btn" onclick="exportProject()"><span class="icon">💾</span><span class="label">Enregistrer</span></button>
     <div style="position:relative">
       <button class="tool-btn" onclick="toggleFileMenu()"><span class="icon">📁</span><span class="label">Fichier</span></button>
-      <div id="file-menu" style="display:none;position:absolute;top:100%;left:0;background:var(--white);border:1px solid var(--gray-200);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.15);z-index:200;min-width:140px;padding:4px 0">
+      <div id="file-menu" style="display:none;position:fixed;background:var(--white);border:1px solid var(--gray-200);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.15);z-index:999;min-width:140px;padding:4px 0">
         <button onclick="exportProjectAs();toggleFileMenu()" style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 14px;border:none;background:none;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit"><span>📥</span> Enreg. sous...</button>
         <button onclick="document.getElementById('projectInput').click();toggleFileMenu()" style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 14px;border:none;background:none;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit"><span>📂</span> Ouvrir</button>
         <div style="height:1px;background:var(--gray-200);margin:4px 8px"></div>
         <button onclick="closeProject();toggleFileMenu()" style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 14px;border:none;background:none;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;color:var(--red);font-family:inherit"><span>✕</span> Fermer</button>
       </div>
     </div>
+    <button class="tool-btn" onclick="exportProject()"><span class="icon">💾</span><span class="label">Enregistrer</span></button>
     <input type="file" id="projectInput" accept=".geosolia" style="display:none" onchange="importProject(event)">
     <div style="flex:1"></div>
     <div class="tool-sep"></div>
@@ -1010,6 +1010,7 @@
       <div class="arr-opt-group"><label>Couleur</label><div id="meas-color-dots" class="color-dots-row"></div></div>
       <div class="arr-opt-group"><label style="display:flex;align-items:center;gap:3px;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap"><input type="checkbox" id="meas-approx" style="accent-color:var(--yellow);width:13px;height:13px;cursor:pointer" onchange="setMeasApprox(this.checked)"> ≈ Environ</label></div>
       <div class="arr-opt-group"><label style="font-size:10px;font-weight:700;display:flex;align-items:center;gap:3px;white-space:nowrap">Taille <input type="number" id="meas-font-size" value="11" min="7" max="24" step="1" style="width:38px;height:20px;border:1px solid #ddd;border-radius:4px;text-align:center;font-size:10px;font-weight:700;font-family:inherit;padding:0" onchange="setMeasFontSize(parseInt(this.value)||11)"> px</label></div>
+      <div class="tool-sep" style="height:auto;margin:0 6px"></div>
       <div class="arr-opt-group"><button class="arr-mode-btn" id="btn-snap" onclick="toggleSnap()" title="Accroche aux lignes du plan"><svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="#1A1A1A" stroke-width="1.5" stroke-linecap="round"><circle cx="10" cy="10" r="4" stroke="#4CAF50" stroke-width="2"/><line x1="10" y1="2" x2="10" y2="6"/><line x1="10" y1="14" x2="10" y2="18"/><line x1="2" y1="10" x2="6" y2="10"/><line x1="14" y1="10" x2="18" y2="10"/></svg></button></div>
       <div class="arr-opt-group"><button class="arr-mode-btn" id="btn-recalibrate" onclick="startCalibration()" title="Recalibrer l'échelle"><svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="#1A1A1A" stroke-width="1.5" stroke-linecap="round"><line x1="2" y1="16" x2="18" y2="16"/><line x1="4" y1="16" x2="4" y2="12"/><line x1="10" y1="16" x2="10" y2="12"/><line x1="7" y1="16" x2="7" y2="14"/><line x1="13" y1="16" x2="13" y2="14"/><line x1="16" y1="16" x2="16" y2="12"/><path d="M3 6l3-4h8l3 4" stroke="#F2B705" stroke-width="2"/><line x1="10" y1="6" x2="10" y2="9" stroke="#F2B705" stroke-width="1.5"/></svg></button></div>
       <div class="arr-opt-group"><span class="measure-scale-info" id="measure-scale-display">Non calibré</span></div>
@@ -1238,33 +1239,6 @@
       <button class="mep-download-btn" onclick="mepDownload()">💾 Enregistrer</button>
     </div>
   </div>
-  <div id="canvas-area">
-    <svg id="grid-svg"><defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><circle cx="20" cy="20" r="0.7" fill="#C0C0C0"/></pattern></defs><rect width="100%" height="100%" fill="url(#grid)"/></svg>
-    <img id="plan-img" alt="Plan" draggable="false"><canvas id="clean-canvas"></canvas><canvas id="draw-canvas"></canvas>
-    <div id="elements-layer"></div>
-    <div id="eraser-cursor"></div>
-    <div id="mrpropre-cursor"></div>
-    <div id="empty-state">
-      <div id="welcome-screen"><div class="big-icon">📐</div><div class="welcome-title">Géo<span class="highlight">Solia'</span></div><p>Application de relevé terrain</p><div class="welcome-btns"><button class="btn-load-center" onclick="openNewStudyModal()">📝 Nouveau Projet</button><button class="btn-load-center btn-open-project" onclick="document.getElementById('projectInput').click()">📂 Ouvrir un projet</button></div><button onclick="openIDBRecovery()" style="background:none;border:none;color:var(--gray-500);font-size:11px;font-weight:700;cursor:pointer;margin-top:10px;text-decoration:underline">Sauvegardes locales</button></div>
-      <div id="load-plan-screen" style="display:none"><div class="big-icon">📐</div><p>Chargez un plan PDF ou une image<br>pour commencer à annoter</p><button class="btn-load-center" onclick="openPlanPicker()">📄 Charger un plan</button><div class="hint">PDF, JPG, PNG</div></div>
-    </div>
-    <button id="btn-recadrer" onclick="resetView()" title="Recadrer">🎯</button>
-  </div>
-  <div id="photo-section">
-    <div class="photo-resize-handle" id="photo-resize-handle"></div>
-    <div class="photo-panel-header">
-      <span>📸 Photos du terrain</span>
-      <div class="hdr-btns"><button class="panel-pin" id="photo-pin" onclick="togglePin('photo')" title="Épingler">📌</button><button class="photo-panel-close" onclick="togglePhotoSection()">✕</button></div>
-    </div>
-    <div class="photo-panel-body">
-      <div class="photo-panel-actions">
-        <button class="btn-photo" onclick="openCamera()">+ Prendre une photo</button>
-        <button class="btn-download-photos" id="btn-dl-photos" onclick="downloadSelectedPhotos()" disabled>Enregistrer</button>
-      </div>
-      <div id="photo-empty">Aucune photo pour l'instant.<br>Appuyez sur le bouton ci-dessus pour capturer.</div>
-      <div id="photo-grid"></div>
-    </div>
-  </div>
   <div id="sondage-type-modal">
     <div class="sondage-type-resize-handle" id="sondage-type-resize-handle"></div>
     <div class="sondage-type-header">
@@ -1273,15 +1247,17 @@
     </div>
     <div id="sondage-type-inner">
       <h2></h2>
-      <div id="niv-ref-section" style="margin-bottom:14px;padding:10px 12px;background:#F5F5F5;border-radius:8px;border-left:4px solid #E74C3C">
-        <div style="font-weight:700;font-size:13px;margin-bottom:6px">🎯 Niveau de référence</div>
-        <div id="niv-ref-edit" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <input type="number" step="0.01" id="niv-ref-value" placeholder="Altitude (m NGF)" value="100" style="width:100%;padding:6px 8px;border:1px solid #ccc;border-radius:4px;font-size:12px;box-sizing:border-box">
-          <input type="text" id="niv-ref-label" placeholder="Nom" value="Niv. Ref." style="width:100%;padding:6px 8px;border:1px solid #ccc;border-radius:4px;font-size:12px;box-sizing:border-box">
-          <button class="sondage-type-btn" onclick="placeNiveauRef()" style="margin:0;padding:8px 14px;font-size:12px;flex:none">📌 Placer</button>
+      <div id="niv-ref-section" style="margin-bottom:14px;padding:8px 10px;background:#F5F5F5;border-radius:8px;border-left:4px solid #E74C3C">
+        <div id="niv-ref-edit" style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap">
+          <span style="font-weight:700;font-size:11px;white-space:nowrap">🎯 Niv. réf.</span>
+          <input type="number" step="0.01" id="niv-ref-value" placeholder="Alt. NGF" value="100" style="width:65px;padding:5px 6px;border:1px solid #ccc;border-radius:4px;font-size:11px;box-sizing:border-box">
+          <input type="text" id="niv-ref-label" placeholder="Nom" value="Niv. Ref." style="width:70px;padding:5px 6px;border:1px solid #ccc;border-radius:4px;font-size:11px;box-sizing:border-box">
+          <button class="sondage-type-btn" onclick="placeNiveauRef()" style="margin:0;padding:5px 10px;font-size:11px;flex:none;white-space:nowrap">📌 Placer</button>
         </div>
         <div id="niv-ref-list" style="margin-top:6px"></div>
       </div>
+      <button class="sondage-type-btn" onclick="document.getElementById('gps-calib-panel').style.display=document.getElementById('gps-calib-panel').style.display==='none'?'block':'none'" style="margin-bottom:8px;background:#f0f0f0;color:#333;font-size:11px;padding:6px 10px">📡 Calibration GPS</button>
+      <div id="gps-calib-panel" style="display:none">
       <div class="gps-calib-section">
         <div class="gps-calib-title">📡 Calibration GPS du plan</div>
         <div class="gps-calib-status" id="gps-calib-status">Non calibré — positionnement GPS approximatif</div>
@@ -1301,19 +1277,50 @@
           <button class="gps-calib-btn gps-calib-btn-reset" onclick="gpsCalibReset()">Réinitialiser</button>
         </div>
       </div>
+      </div>
       <div class="sondage-type-row"><button class="sondage-type-btn" onclick="newSondage('penetro_dyn')" style="flex:1;margin-bottom:0"><span class="sondage-type-icon">🔴</span> Pénétro. Dynamique</button><button class="sondage-compare-btn" onclick="openCompareModal('penetro_dyn')" title="Comparer">📊</button></div>
       <div class="sondage-type-row"><button class="sondage-type-btn" onclick="newSondage('penetro_stat')" style="flex:1;margin-bottom:0"><span class="sondage-type-icon">🔵</span> Pénétro. Statique</button><button class="sondage-compare-btn" onclick="openCompareModal('penetro_stat')" title="Comparer">📊</button></div>
       <div class="sondage-type-row"><button class="sondage-type-btn" onclick="newSondage('tariere')" style="flex:1;margin-bottom:0"><span class="sondage-type-icon">⚫</span> Tarière</button><button class="sondage-compare-btn" onclick="openCompareModal('tariere')" title="Comparer">📊</button></div>
       <div class="sondage-type-row"><button class="sondage-type-btn" onclick="newSondage('pelle_meca')" style="flex:1;margin-bottom:0"><span class="sondage-type-icon">🟡</span> Pelle Mécanique</button><button class="sondage-compare-btn" onclick="openCompareModal('pelle_meca')" title="Comparer">📊</button></div>
-      <button class="sondage-type-btn" onclick="newSondage('fondation')"><span class="sondage-type-icon">🏗️</span> Reconnaissance de Fondation</button>
+      <button class="sondage-type-btn" onclick="newSondage('fondation')"><span class="sondage-type-icon">🏗️</span> Reco Fondation</button>
+      <button onclick="const p=document.getElementById('sondage-more');p.style.display=p.style.display==='none'?'block':'none';this.querySelector('.acc-arrow').textContent=p.style.display==='none'?'▸':'▾'" style="width:100%;background:none;border:1px solid var(--gray-200);border-radius:6px;padding:6px 10px;font-size:11px;font-weight:700;color:var(--gray-500);cursor:pointer;display:flex;align-items:center;gap:4px;margin-bottom:4px;font-family:inherit"><span class="acc-arrow">▸</span> Autres sondages...</button>
+      <div id="sondage-more" style="display:none">
       <div class="sondage-type-row"><button class="sondage-type-btn" onclick="newSondage('piezometre')" style="flex:1;margin-bottom:0"><span class="sondage-type-icon">💧</span> Piézomètre</button><button class="sondage-compare-btn" onclick="openCompareModal('piezometre')" title="Comparer">📊</button></div>
       <div class="sondage-type-row"><button class="sondage-type-btn" onclick="newSondage('infiltro')" style="flex:1;margin-bottom:0"><span class="sondage-type-icon">💦</span> Infiltrométrie</button><button class="sondage-compare-btn" onclick="openCompareModal('infiltro')" title="Comparer">📊</button></div>
       <div class="sondage-type-row"><button class="sondage-type-btn" onclick="newSondage('forage_destr')" style="flex:1;margin-bottom:0"><span class="sondage-type-icon">🔶</span> Forage Destructif</button><button class="sondage-compare-btn" onclick="openCompareModal('forage_destr')" title="Comparer">📊</button></div>
       <div class="sondage-type-row"><button class="sondage-type-btn" onclick="newSondage('pressio')" style="flex:1;margin-bottom:0"><span class="sondage-type-icon">🔧</span> Pressiomètre Ménard</button><button class="sondage-compare-btn" onclick="openCompareModal('pressio')" title="Comparer">📊</button></div>
       <div class="sondage-type-row"><button class="sondage-type-btn" onclick="newSondage('spt')" style="flex:1;margin-bottom:0"><span class="sondage-type-icon">🔨</span> Essai SPT</button><button class="sondage-compare-btn" onclick="openCompareModal('spt')" title="Comparer">📊</button></div>
       <button class="sondage-type-btn" onclick="newSondage('essai_labo')"><span class="sondage-type-icon">🧪</span> Essais Laboratoire</button>
+      </div>
       <div id="sondage-existing-list"></div>
     </div>
+  </div>
+  <div id="photo-section">
+    <div class="photo-resize-handle" id="photo-resize-handle"></div>
+    <div class="photo-panel-header">
+      <span>📸 Photos du terrain</span>
+      <div class="hdr-btns"><button class="panel-pin" id="photo-pin" onclick="togglePin('photo')" title="Épingler">📌</button><button class="photo-panel-close" onclick="togglePhotoSection()">✕</button></div>
+    </div>
+    <div class="photo-panel-body">
+      <div class="photo-panel-actions">
+        <button class="btn-photo" onclick="openCamera()">+ Prendre une photo</button>
+        <button class="btn-download-photos" id="btn-dl-photos" onclick="downloadSelectedPhotos()" disabled>Enregistrer</button>
+      </div>
+      <div id="photo-empty">Aucune photo pour l'instant.<br>Appuyez sur le bouton ci-dessus pour capturer.</div>
+      <div id="photo-grid"></div>
+    </div>
+  </div>
+  <div id="canvas-area">
+    <svg id="grid-svg"><defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><circle cx="20" cy="20" r="0.7" fill="#C0C0C0"/></pattern></defs><rect width="100%" height="100%" fill="url(#grid)"/></svg>
+    <img id="plan-img" alt="Plan" draggable="false"><canvas id="clean-canvas"></canvas><canvas id="draw-canvas"></canvas>
+    <div id="elements-layer"></div>
+    <div id="eraser-cursor"></div>
+    <div id="mrpropre-cursor"></div>
+    <div id="empty-state">
+      <div id="welcome-screen"><div class="big-icon">📐</div><div class="welcome-title">Géo<span class="highlight">Solia'</span></div><p>Application de relevé terrain</p><div class="welcome-btns"><button class="btn-load-center" onclick="openNewStudyModal()">📝 Nouveau Projet</button><button class="btn-load-center btn-open-project" onclick="document.getElementById('projectInput').click()">📂 Ouvrir un projet</button></div><button onclick="openIDBRecovery()" style="background:none;border:none;color:var(--gray-500);font-size:11px;font-weight:700;cursor:pointer;margin-top:10px;text-decoration:underline">Sauvegardes locales</button></div>
+      <div id="load-plan-screen" style="display:none"><div class="big-icon">📐</div><p>Chargez un plan PDF ou une image<br>pour commencer à annoter</p><button class="btn-load-center" onclick="openPlanPicker()">📄 Charger un plan</button><div class="hint">PDF, JPG, PNG</div></div>
+    </div>
+    <button id="btn-recadrer" onclick="resetView()" title="Recadrer">🎯</button>
   </div>
   </div><!-- /main-body -->
   <div id="catalog-overlay">
@@ -2026,7 +2033,7 @@ window.addEventListener('orientationchange',()=>{setTimeout(resizeDrawCanvas,200
 function resizeDrawCanvas(){const r=$area.getBoundingClientRect();$drawCanvas.width=r.width;$drawCanvas.height=r.height;$cleanCanvas.width=r.width;$cleanCanvas.height=r.height;redrawCanvas();redrawCleanCanvas();}
 
 function toggleInsertMenu(){document.getElementById('insert-options').classList.toggle('show');}
-function toggleFileMenu(){const m=document.getElementById('file-menu');m.style.display=m.style.display==='none'?'block':'none';}
+function toggleFileMenu(){const m=document.getElementById('file-menu');if(m.style.display==='none'){const btn=m.parentElement.querySelector('.tool-btn');const r=btn.getBoundingClientRect();m.style.left=r.left+'px';m.style.top=r.bottom+4+'px';m.style.display='block';}else{m.style.display='none';}}
 document.addEventListener('click',e=>{const m=document.getElementById('file-menu');if(m&&m.style.display==='block'&&!e.target.closest('#file-menu')&&!e.target.closest('[onclick*="toggleFileMenu"]'))m.style.display='none';});
 function selectTool(t){
   if(t!=='text')finalizeInlineText();
@@ -7869,7 +7876,7 @@ const SOIL_DESCRIPTIONS={
   loess:['Lœss','Lœss calcaire','Lœss brun'],
   argile_a_silex:['Argile à silex','Argile à silex brune','Argile à silex rougeâtre']
 };
-const SONDAGE_LABELS={'penetro_dyn':'Pénétromètre Dynamique','penetro_stat':'Pénétromètre Statique','tariere':'Sondage à la Tarière','pelle_meca':'Sondage Pelle Mécanique','fondation':'Reconnaissance de Fondation','piezometre':'Piézomètre','infiltro':'Infiltrométrie','forage_destr':'Forage Destructif','essai_labo':'Essais Laboratoire','pressio':'Pressiomètre Ménard','spt':'Essai SPT'};
+const SONDAGE_LABELS={'penetro_dyn':'Pénétromètre Dynamique','penetro_stat':'Pénétromètre Statique','tariere':'Sondage à la Tarière','pelle_meca':'Sondage Pelle Mécanique','fondation':'Reco Fondation','piezometre':'Piézomètre','infiltro':'Infiltrométrie','forage_destr':'Forage Destructif','essai_labo':'Essais Laboratoire','pressio':'Pressiomètre Ménard','spt':'Essai SPT'};
 const SONDAGE_ICONS={'penetro_dyn':'🔴','penetro_stat':'🔵','tariere':'⚫','pelle_meca':'🟡','fondation':'🏗️','piezometre':'💧','infiltro':'💦','forage_destr':'🔶','essai_labo':'🧪','pressio':'🔧','spt':'🔨'};
 const FONDATION_TYPES=[{v:'semelle_filante',l:'Semelle filante'},{v:'semelle_isolee',l:'Semelle isolée'},{v:'radier',l:'Radier'},{v:'puits',l:'Puits'},{v:'pieux',l:'Pieux'},{v:'micropieux',l:'Micropieux'},{v:'autre',l:'Autre'}];
 const FONDATION_STATES=[{v:'bon',l:'Bon état'},{v:'moyen',l:'État moyen'},{v:'degrade',l:'Dégradé'},{v:'tres_degrade',l:'Très dégradé'}];
