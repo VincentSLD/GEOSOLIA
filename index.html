@@ -1427,6 +1427,8 @@
     <div id="ia-ctx-status" style="font-size:10px;padding:4px 16px;color:var(--gray-500);background:var(--gray-50);border-top:1px solid var(--gray-100);cursor:pointer" onclick="updateIACtxStatus()" title="Cliquez pour rafraîchir">📊 Cliquez pour vérifier les données disponibles</div>
     <div id="ia-input-area">
       <textarea id="ia-input" rows="1" placeholder="Posez votre question..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendIAMessage();}"></textarea>
+      <button id="ia-dictate" onclick="toggleDictation()" title="Dicter" style="background:none;border:none;font-size:18px;cursor:pointer;padding:4px;line-height:1;flex-shrink:0">🎙️</button>
+      <button id="ia-reformulate" onclick="reformulateIA()" title="Reformuler avec l'IA" style="background:none;border:none;font-size:16px;cursor:pointer;padding:4px;line-height:1;flex-shrink:0">✨</button>
       <button id="ia-send" onclick="sendIAMessage()">Envoyer</button>
     </div>
   </div>
@@ -4601,6 +4603,51 @@ function updateIACtxStatus(){
   else if(!geocartoData)parts.push('⚠️ Pas de GéoCarto');
   else parts.push('⬜ GéoCarto désactivé');
   $s.textContent='📊 '+parts.join(' | ');
+}
+
+// ═══ DICTATION (Web Speech API) ═══
+let iaRecognition=null, iaIsRecording=false;
+function toggleDictation(){
+  const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SpeechRecognition){alert('La reconnaissance vocale n\'est pas supportée par ce navigateur.');return;}
+  const btn=document.getElementById('ia-dictate');
+  if(iaIsRecording){iaRecognition.stop();return;}
+  iaRecognition=new SpeechRecognition();
+  iaRecognition.lang='fr-FR';
+  iaRecognition.continuous=true;
+  iaRecognition.interimResults=true;
+  const $input=document.getElementById('ia-input');
+  const startText=$input.value;
+  let finalTranscript='';
+  iaRecognition.onresult=(e)=>{
+    let interim='';finalTranscript='';
+    for(let i=0;i<e.results.length;i++){
+      if(e.results[i].isFinal)finalTranscript+=e.results[i][0].transcript;
+      else interim+=e.results[i][0].transcript;
+    }
+    $input.value=startText+(startText?' ':'')+finalTranscript+interim;
+    $input.style.height='auto';$input.style.height=$input.scrollHeight+'px';
+  };
+  iaRecognition.onstart=()=>{iaIsRecording=true;btn.style.background='var(--red)';btn.style.borderRadius='50%';};
+  iaRecognition.onend=()=>{iaIsRecording=false;btn.style.background='none';btn.style.borderRadius='';};
+  iaRecognition.onerror=(e)=>{console.error('Speech error:',e.error);iaIsRecording=false;btn.style.background='none';btn.style.borderRadius='';};
+  iaRecognition.start();
+}
+
+// ═══ REFORMULATION IA ═══
+async function reformulateIA(){
+  const $input=document.getElementById('ia-input');
+  const text=$input.value.trim();
+  if(!text){alert('Saisissez ou dictez du texte d\'abord.');return;}
+  const btn=document.getElementById('ia-reformulate');
+  btn.disabled=true;btn.textContent='⏳';
+  try{
+    const resp=await fetch(IA_PROXY_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:[{role:'user',content:'Reformule cette question de manière claire et professionnelle pour un contexte géotechnique. Réponds UNIQUEMENT avec la question reformulée, sans explication ni commentaire :\n\n'+text}],stream:false})});
+    const data=await resp.json();
+    const reformulated=data.content?data.content[0].text:data.choices?data.choices[0].message.content:data.text||data.response||'';
+    if(reformulated){$input.value=reformulated.trim();$input.style.height='auto';$input.style.height=$input.scrollHeight+'px';}
+  }catch(e){console.error('Reformulation error:',e);alert('Erreur lors de la reformulation.');}
+  btn.disabled=false;btn.textContent='✨';
 }
 
 async function sendIAMessage(){
