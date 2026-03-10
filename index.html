@@ -2020,7 +2020,7 @@ const NOTES_CATALOG=[
 ];
 let selectedNote=null;
 
-buildCatalog();buildShapeCatalog();buildNotesCatalog();buildColorOptions();resizeDrawCanvas();
+buildCatalog();buildNotesCatalog();buildColorOptions();resizeDrawCanvas();
 window.addEventListener('resize',resizeDrawCanvas);
 window.addEventListener('orientationchange',()=>{setTimeout(resizeDrawCanvas,200);});
 function resizeDrawCanvas(){const r=$area.getBoundingClientRect();$drawCanvas.width=r.width;$drawCanvas.height=r.height;$cleanCanvas.width=r.width;$cleanCanvas.height=r.height;redrawCanvas();redrawCleanCanvas();}
@@ -2287,19 +2287,8 @@ function updateCatalogActive(){document.querySelectorAll('.catalog-item').forEac
 function openCatalog(){document.getElementById('catalog-overlay').classList.add('open');updateCatalogActive();}
 function closeCatalog(){document.getElementById('catalog-overlay').classList.remove('open');}
 
-function buildShapeCatalog(){
-  const $grid=document.getElementById('shape-catalog-grid');
-  SHAPE_ITEMS.forEach(s=>{
-    const btn=document.createElement('button');btn.className='catalog-item';
-    const preview=generateShapeSVG(s.shapeType,24,24,s.color,s.filled);
-    btn.innerHTML=`<div class="cat-icon" style="display:flex;align-items:center;justify-content:center">${preview}</div><span class="name" style="color:${s.color}">${s.label}</span>`;
-    btn.onclick=()=>{selectedStickerId=s.id;closeShapeCatalog();updateShapeCatalogActive();};
-    btn.dataset.sid=s.id;$grid.appendChild(btn);
-  });
-}
-function updateShapeCatalogActive(){document.querySelectorAll('#shape-catalog-grid .catalog-item').forEach(b=>{b.classList.toggle('active',b.dataset.sid===selectedStickerId);});}
-function openShapeCatalog(){document.getElementById('shape-catalog-overlay').classList.add('open');updateShapeCatalogActive();}
-function closeShapeCatalog(){document.getElementById('shape-catalog-overlay').classList.remove('open');}
+function openShapeCatalog(){openCatalog();}
+function closeShapeCatalog(){}
 
 function buildNotesCatalog(){
   const $grid=document.getElementById('notes-catalog-grid');if(!$grid)return;
