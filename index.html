@@ -1427,7 +1427,7 @@
     <div id="ia-ctx-status" style="font-size:10px;padding:4px 16px;color:var(--gray-500);background:var(--gray-50);border-top:1px solid var(--gray-100);cursor:pointer" onclick="updateIACtxStatus()" title="Cliquez pour rafraîchir">📊 Cliquez pour vérifier les données disponibles</div>
     <div id="ia-input-area">
       <textarea id="ia-input" rows="1" placeholder="Posez votre question..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendIAMessage();}"></textarea>
-      <button id="ia-dictate" onclick="toggleDictation()" title="Dicter" style="background:none;border:none;font-size:18px;cursor:pointer;padding:4px;line-height:1;flex-shrink:0">🎙️</button>
+      <button id="ia-dictate" onclick="toggleIADictation()" title="Dicter" style="background:none;border:none;font-size:18px;cursor:pointer;padding:4px;line-height:1;flex-shrink:0">🎙️</button>
       <button id="ia-reformulate" onclick="reformulateIA()" title="Reformuler avec l'IA" style="background:none;border:none;font-size:16px;cursor:pointer;padding:4px;line-height:1;flex-shrink:0">✨</button>
       <button id="ia-send" onclick="sendIAMessage()">Envoyer</button>
     </div>
@@ -4607,7 +4607,7 @@ function updateIACtxStatus(){
 
 // ═══ DICTATION (Web Speech API) ═══
 let iaRecognition=null, iaIsRecording=false;
-function toggleDictation(){
+function toggleIADictation(){
   const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SpeechRecognition){alert('La reconnaissance vocale n\'est pas supportée par ce navigateur.');return;}
   const btn=document.getElementById('ia-dictate');
@@ -8300,8 +8300,9 @@ function renderPenetroDynTable(s,$wrap){
 function toggleQdGraphVisibility(checked){
   const s=getCurrentSondage();if(!s)return;
   s.showDepthLine=checked;
-  renderPenetroDynGraph(s);
-  renderQdGraph(s);
+  if(s.type==='penetro_dyn'){renderPenetroDynGraph(s);renderQdGraph(s);}
+  if(s.type==='tariere'||s.type==='pelle_meca')renderStratiGraph(s);
+  if(s.type==='penetro_stat')renderPenetroStatGraph(s);
 }
 
 function sondageTnInput(val){
@@ -8327,6 +8328,8 @@ function sondageDepthStep(delta){
   const inp=document.getElementById('sonde-depth-input');
   if(inp)inp.value=s.sondageDepth;
   if(s.type==='penetro_dyn'){renderPenetroDynGraph(s);renderQdGraph(s);}
+  if(s.type==='tariere'||s.type==='pelle_meca')renderStratiGraph(s);
+  if(s.type==='penetro_stat')renderPenetroStatGraph(s);
   renderElements();
 }
 
@@ -8334,6 +8337,8 @@ function waterLevelInput(val){
   const s=getCurrentSondage();if(!s)return;
   s.waterLevel=val===''?null:parseFloat(val);
   if(s.type==='penetro_dyn'){renderPenetroDynGraph(s);renderQdGraph(s);}
+  if(s.type==='tariere'||s.type==='pelle_meca')renderStratiGraph(s);
+  if(s.type==='penetro_stat')renderPenetroStatGraph(s);
 }
 function waterLevelStep(delta){
   const s=getCurrentSondage();if(!s)return;
@@ -8342,12 +8347,15 @@ function waterLevelStep(delta){
   const inp=document.getElementById('sonde-water-input');
   if(inp)inp.value=s.waterLevel;
   if(s.type==='penetro_dyn'){renderPenetroDynGraph(s);renderQdGraph(s);}
+  if(s.type==='tariere'||s.type==='pelle_meca')renderStratiGraph(s);
+  if(s.type==='penetro_stat')renderPenetroStatGraph(s);
 }
 function toggleWaterLineVisibility(checked){
   const s=getCurrentSondage();if(!s)return;
   s.showWaterLine=checked;
-  renderPenetroDynGraph(s);
-  renderQdGraph(s);
+  if(s.type==='penetro_dyn'){renderPenetroDynGraph(s);renderQdGraph(s);}
+  if(s.type==='tariere'||s.type==='pelle_meca')renderStratiGraph(s);
+  if(s.type==='penetro_stat')renderPenetroStatGraph(s);
 }
 
 function sondageDynInput(idx,val){
@@ -9468,11 +9476,38 @@ function downloadCompareGraph(){
 function renderPenetroStatTable(s,$wrap){
   const tnVal=s.tnAltitude!=null?s.tnAltitude:'';
   const dpVal=s.sondageDepth!=null?s.sondageDepth:'';
-  let html=`<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:8px;padding:8px 10px;background:#F5F5F5;border-radius:6px">
-    <label style="font-weight:600;font-size:12px">Nivellement TN :</label>
-    <input type="text" inputmode="decimal" value="${tnVal}" placeholder="Ex: 125.30" style="width:120px;padding:5px 8px;border:1px solid #ccc;border-radius:4px;font-size:13px;font-weight:600" onchange="sondageTnInput(this.value)">
-    <label style="font-weight:600;font-size:12px;color:#A0724A">Profondeur (m) :</label>
-    <input type="number" step="0.10" min="0" value="${dpVal}" placeholder="Ex: 4.60" style="width:100px;padding:5px 8px;border:1px solid #ccc;border-radius:4px;font-size:13px;font-weight:700;color:#A0724A" oninput="sondageDepthInput(this.value)">
+  const showDepthLine=s.showDepthLine!==false;
+  let html=`<div style="display:grid;grid-template-columns:auto 1fr;align-items:center;gap:6px 10px;margin-bottom:8px;padding:8px 10px;background:#F5F5F5;border-radius:6px">
+    <label style="font-weight:600;font-size:12px;white-space:nowrap">Nivellement TN :</label>
+    <input type="text" inputmode="decimal" value="${tnVal}" placeholder="Ex: 125.30" style="width:100%;max-width:260px;padding:5px 8px;border:1px solid #ccc;border-radius:4px;font-size:13px;font-weight:600;box-sizing:border-box" onchange="sondageTnInput(this.value)">
+
+    <label style="font-weight:600;font-size:12px;white-space:nowrap;color:#A0724A">Profondeur (m) :</label>
+    <div style="display:flex;align-items:center;gap:0">
+      <input type="number" step="0.10" min="0" id="sonde-depth-input" value="${dpVal}" placeholder="Ex: 4.60" style="flex:1;max-width:226px;padding:5px 8px;border:1px solid #ccc;border-radius:6px 0 0 6px;font-size:14px;font-weight:700;color:#A0724A;-moz-appearance:textfield;outline:none;box-sizing:border-box" oninput="sondageDepthInput(this.value)">
+      <div style="display:flex;flex-direction:column">
+        <button onclick="sondageDepthStep(-0.10)" tabindex="-1" style="width:34px;height:20px;border:1px solid #ccc;border-left:none;border-radius:0 6px 0 0;background:#f5f0e4;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;color:#A0724A;padding:0">&#x25B2;</button>
+        <button onclick="sondageDepthStep(0.10)" tabindex="-1" style="width:34px;height:20px;border:1px solid #ccc;border-left:none;border-top:none;border-radius:0 0 6px 0;background:#f5f0e4;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;color:#A0724A;padding:0">&#x25BC;</button>
+      </div>
+    </div>
+
+    <span></span>
+    <label style="font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px;color:#A0724A">
+      <input type="checkbox" ${showDepthLine?'checked':''} onchange="toggleQdGraphVisibility(this.checked)" style="cursor:pointer"> Afficher la profondeur
+    </label>
+
+    <label style="font-weight:600;font-size:12px;white-space:nowrap;color:#2196F3">Niveau d'eau (m) :</label>
+    <div style="display:flex;align-items:center;gap:0">
+      <input type="number" step="0.10" min="0" id="sonde-water-input" value="${s.waterLevel!=null?s.waterLevel:''}" placeholder="Non rencontré" style="flex:1;max-width:226px;padding:5px 8px;border:1px solid #ccc;border-radius:6px 0 0 6px;font-size:14px;font-weight:700;color:#2196F3;-moz-appearance:textfield;outline:none;box-sizing:border-box" oninput="waterLevelInput(this.value)">
+      <div style="display:flex;flex-direction:column">
+        <button onclick="waterLevelStep(-0.10)" tabindex="-1" style="width:34px;height:20px;border:1px solid #ccc;border-left:none;border-radius:0 6px 0 0;background:#e3f2fd;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;color:#2196F3;padding:0">&#x25B2;</button>
+        <button onclick="waterLevelStep(0.10)" tabindex="-1" style="width:34px;height:20px;border:1px solid #ccc;border-left:none;border-top:none;border-radius:0 0 6px 0;background:#e3f2fd;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;color:#2196F3;padding:0">&#x25BC;</button>
+      </div>
+    </div>
+
+    <span></span>
+    <label style="font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px;color:#2196F3">
+      <input type="checkbox" ${s.showWaterLine!==false?'checked':''} onchange="toggleWaterLineVisibility(this.checked)" style="cursor:pointer"> Afficher le niveau d'eau
+    </label>
   </div>`;
   html+=`<table class="sondage-table"><thead><tr><th>Prof. (m)</th><th>qc (MPa)</th><th>fs (kPa)</th></tr></thead><tbody>`;
   s.data.forEach((d,i)=>{
@@ -9610,18 +9645,39 @@ function renderStratiTable(s,$wrap){
   const isPelle=s.type==='pelle_meca';
   const tnVal=s.tnAltitude!=null?s.tnAltitude:'';
   const dpVal=s.sondageDepth!=null?s.sondageDepth:'';
-  let html=`<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:8px;padding:8px 10px;background:#F5F5F5;border-radius:6px">
-    <label style="font-weight:600;font-size:12px">Nivellement TN :</label>
-    <input type="text" inputmode="decimal" value="${tnVal}" placeholder="Ex: 125.30" style="width:120px;padding:5px 8px;border:1px solid #ccc;border-radius:4px;font-size:13px;font-weight:600" onchange="sondageTnInput(this.value)">
-    <label style="font-weight:600;font-size:12px;color:#A0724A">Profondeur (m) :</label>
-    <input type="number" step="0.10" min="0" value="${dpVal}" placeholder="Ex: 4.60" style="width:100px;padding:5px 8px;border:1px solid #ccc;border-radius:4px;font-size:13px;font-weight:700;color:#A0724A" oninput="sondageDepthInput(this.value)">
+  const showDepthLine=s.showDepthLine!==false;
+  let html=`<div style="display:grid;grid-template-columns:auto 1fr;align-items:center;gap:6px 10px;margin-bottom:8px;padding:8px 10px;background:#F5F5F5;border-radius:6px">
+    <label style="font-weight:600;font-size:12px;white-space:nowrap">Nivellement TN :</label>
+    <input type="text" inputmode="decimal" value="${tnVal}" placeholder="Ex: 125.30" style="width:100%;max-width:260px;padding:5px 8px;border:1px solid #ccc;border-radius:4px;font-size:13px;font-weight:600;box-sizing:border-box" onchange="sondageTnInput(this.value)">
+
+    <label style="font-weight:600;font-size:12px;white-space:nowrap;color:#A0724A">Profondeur (m) :</label>
+    <div style="display:flex;align-items:center;gap:0">
+      <input type="number" step="0.10" min="0" id="sonde-depth-input" value="${dpVal}" placeholder="Ex: 4.60" style="flex:1;max-width:226px;padding:5px 8px;border:1px solid #ccc;border-radius:6px 0 0 6px;font-size:14px;font-weight:700;color:#A0724A;-moz-appearance:textfield;outline:none;box-sizing:border-box" oninput="sondageDepthInput(this.value)">
+      <div style="display:flex;flex-direction:column">
+        <button onclick="sondageDepthStep(-0.10)" tabindex="-1" style="width:34px;height:20px;border:1px solid #ccc;border-left:none;border-radius:0 6px 0 0;background:#f5f0e4;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;color:#A0724A;padding:0">&#x25B2;</button>
+        <button onclick="sondageDepthStep(0.10)" tabindex="-1" style="width:34px;height:20px;border:1px solid #ccc;border-left:none;border-top:none;border-radius:0 0 6px 0;background:#f5f0e4;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;color:#A0724A;padding:0">&#x25BC;</button>
+      </div>
+    </div>
+
+    <span></span>
+    <label style="font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px;color:#A0724A">
+      <input type="checkbox" ${showDepthLine?'checked':''} onchange="toggleQdGraphVisibility(this.checked)" style="cursor:pointer"> Afficher la profondeur
+    </label>
+
+    <label style="font-weight:600;font-size:12px;white-space:nowrap;color:#2196F3">Niveau d'eau (m) :</label>
+    <div style="display:flex;align-items:center;gap:0">
+      <input type="number" step="0.10" min="0" id="sonde-water-input" value="${s.waterLevel!=null?s.waterLevel:''}" placeholder="Non rencontré" style="flex:1;max-width:226px;padding:5px 8px;border:1px solid #ccc;border-radius:6px 0 0 6px;font-size:14px;font-weight:700;color:#2196F3;-moz-appearance:textfield;outline:none;box-sizing:border-box" oninput="waterLevelInput(this.value)">
+      <div style="display:flex;flex-direction:column">
+        <button onclick="waterLevelStep(-0.10)" tabindex="-1" style="width:34px;height:20px;border:1px solid #ccc;border-left:none;border-radius:0 6px 0 0;background:#e3f2fd;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;color:#2196F3;padding:0">&#x25B2;</button>
+        <button onclick="waterLevelStep(0.10)" tabindex="-1" style="width:34px;height:20px;border:1px solid #ccc;border-left:none;border-top:none;border-radius:0 0 6px 0;background:#e3f2fd;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;color:#2196F3;padding:0">&#x25BC;</button>
+      </div>
+    </div>
+
+    <span></span>
+    <label style="font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px;color:#2196F3">
+      <input type="checkbox" ${s.showWaterLine!==false?'checked':''} onchange="toggleWaterLineVisibility(this.checked)" style="cursor:pointer"> Afficher le niveau d'eau
+    </label>
   </div>`;
-  if(isPelle){
-    html+=`<div style="margin-bottom:8px"><label style="font-size:11px;font-weight:800">Niveau d'eau (m) :</label>
-    <input type="number" step="0.01" min="0" value="${s.waterLevel!=null?s.waterLevel:''}" placeholder="Non rencontré"
-    style="width:100px;padding:4px 6px;border:1px solid var(--gray-200);border-radius:4px;font-size:12px;font-weight:700;margin-left:6px"
-    oninput="const ss=getCurrentSondage();if(ss)ss.waterLevel=this.value===''?null:parseFloat(this.value);renderStratiGraph(ss)"></div>`;
-  }
   html+=`<table class="sondage-table"><thead><tr><th>De (m)</th><th>À (m)</th><th>Épaiss. (m)</th><th>Nature</th><th>Description</th></tr></thead><tbody>`;
   s.data.forEach((d,i)=>{
     const epaisseur=((d.to||0)-(d.from||0)).toFixed(2);
