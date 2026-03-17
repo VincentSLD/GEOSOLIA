@@ -896,7 +896,9 @@
   .login-btn:hover{background:var(--yellow-light);box-shadow:0 4px 16px var(--yellow-glow)}
   .login-btn:disabled{opacity:0.5;cursor:not-allowed}
   .login-error{color:var(--red);font-size:12px;font-weight:700;text-align:center;margin-top:12px;min-height:18px}
-  .login-footer{text-align:center;margin-top:20px;font-size:11px;color:var(--gray-500)}
+  .login-success{color:var(--green);font-size:12px;font-weight:700;text-align:center;margin-top:12px;min-height:18px}
+  .login-footer{text-align:center;margin-top:20px;font-size:11px;color:var(--gray-500);cursor:pointer}
+  .login-footer b{color:var(--yellow-dark);text-decoration:underline}
   #auth-user-bar{display:none;align-items:center;gap:8px;margin-left:8px}
   #auth-user-bar.visible{display:flex}
   .auth-avatar{width:28px;height:28px;border-radius:50%;background:var(--yellow);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:var(--black)}
@@ -912,6 +914,7 @@
       <h1>Geo<span>Solia'</span></h1>
       <p>by GPH</p>
     </div>
+    <!-- CONNEXION -->
     <form id="login-form" autocomplete="on">
       <div class="login-field">
         <label for="login-email">Email</label>
@@ -924,7 +927,27 @@
       <button type="submit" class="login-btn" id="login-submit">Se connecter</button>
       <div class="login-error" id="login-error"></div>
     </form>
-    <div class="login-footer">Connexion reservee aux utilisateurs autorises</div>
+    <!-- INSCRIPTION -->
+    <form id="signup-form" autocomplete="on" style="display:none">
+      <div class="login-field">
+        <label for="signup-name">Nom complet</label>
+        <input type="text" id="signup-name" placeholder="Prenom Nom" required autocomplete="name">
+      </div>
+      <div class="login-field">
+        <label for="signup-email">Email</label>
+        <input type="email" id="signup-email" placeholder="votre@email.com" required autocomplete="email">
+      </div>
+      <div class="login-field">
+        <label for="signup-password">Mot de passe</label>
+        <input type="password" id="signup-password" placeholder="6 caracteres minimum" required minlength="6" autocomplete="new-password">
+      </div>
+      <button type="submit" class="login-btn" id="signup-submit">Creer mon compte</button>
+      <div class="login-error" id="signup-error"></div>
+      <div class="login-success" id="signup-success"></div>
+    </form>
+    <div class="login-footer">
+      <span id="toggle-signup" onclick="toggleAuthMode()">Pas encore de compte ? <b>S'inscrire</b></span>
+    </div>
   </div>
 </div>
 
@@ -1736,9 +1759,9 @@ let currentAuthUser = null;
 
 // Vérifie si l'utilisateur a accès à GéoSolia (table geosolia_access)
 async function checkGeosoliaAccess(userId) {
-  const { data, error } = await sbAuth.from('geosolia_access').select('id').eq('user_id', userId).maybeSingle();
+  const { data, error } = await sbAuth.from('geosolia_access').select('id, approved').eq('user_id', userId).maybeSingle();
   if (error) { console.error('Erreur geosolia_access:', error); return false; }
-  return !!data;
+  return data?.approved === true;
 }
 
 // Affiche l'app et masque le login
@@ -1786,7 +1809,7 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
     const hasAccess = await checkGeosoliaAccess(data.user.id);
     if (!hasAccess) {
       await sbAuth.auth.signOut();
-      throw new Error('Acces non autorise pour cette application.');
+      throw new Error('Votre acces n\'a pas encore ete approuve par un administrateur.');
     }
     showApp(data.user);
   } catch (err) {
@@ -1818,6 +1841,63 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
 // Écouter les changements d'auth (refresh token, etc.)
 sbAuth.auth.onAuthStateChange((event, session) => {
   if (event === 'SIGNED_OUT') showLogin();
+});
+
+// Toggle connexion / inscription
+function toggleAuthMode() {
+  const loginForm = document.getElementById('login-form');
+  const signupForm = document.getElementById('signup-form');
+  const toggle = document.getElementById('toggle-signup');
+  const isLogin = loginForm.style.display !== 'none';
+  loginForm.style.display = isLogin ? 'none' : 'block';
+  signupForm.style.display = isLogin ? 'block' : 'none';
+  toggle.innerHTML = isLogin
+    ? 'Deja un compte ? <b>Se connecter</b>'
+    : 'Pas encore de compte ? <b>S\'inscrire</b>';
+  document.getElementById('login-error').textContent = '';
+  document.getElementById('signup-error').textContent = '';
+  document.getElementById('signup-success').textContent = '';
+}
+
+// Formulaire inscription
+document.getElementById('signup-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const name = document.getElementById('signup-name').value.trim();
+  const email = document.getElementById('signup-email').value.trim();
+  const password = document.getElementById('signup-password').value;
+  const errorEl = document.getElementById('signup-error');
+  const successEl = document.getElementById('signup-success');
+  const btn = document.getElementById('signup-submit');
+  errorEl.textContent = '';
+  successEl.textContent = '';
+  btn.disabled = true;
+  btn.textContent = 'Creation...';
+  try {
+    const { data, error } = await sbAuth.auth.signUp({
+      email,
+      password,
+      options: { data: { full_name: name } }
+    });
+    if (error) throw error;
+    // Inserer dans geosolia_access (approved=false)
+    const userId = data.user.id;
+    await sbAuth.from('geosolia_access').insert({ user_id: userId, approved: false });
+    // Notifier l'admin par email
+    fetch('/api/notify-admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, user_email: email, user_name: name })
+    }).catch(() => {});
+    successEl.textContent = 'Compte cree ! Un administrateur a ete notifie. Vous recevrez l\'acces sous peu.';
+    await sbAuth.auth.signOut();
+  } catch (err) {
+    errorEl.textContent = err.message === 'User already registered'
+      ? 'Un compte existe deja avec cet email.'
+      : err.message || 'Erreur lors de la creation.';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Creer mon compte';
+  }
 });
 
 pdfjsLib.GlobalWorkerOptions.workerSrc='lib/pdf.worker.min.js';
