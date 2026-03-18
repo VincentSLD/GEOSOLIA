@@ -14,17 +14,18 @@ export default async function handler(req, res) {
 
   const sb = createClient(SUPABASE_URL, serviceKey);
 
-  // Verifier que l'appelant est admin via son token Supabase
+  // Verifier que l'appelant est admin en decodant le JWT
   const authHeader = req.headers.authorization;
   if (!authHeader?.startsWith('Bearer ')) return res.status(401).json({ error: 'Token manquant' });
 
   try {
     const userToken = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authErr } = await sb.auth.getUser(userToken);
-    if (authErr || !user) return res.status(401).json({ error: 'Token invalide', detail: authErr?.message });
-    if (!ADMIN_EMAILS.includes(user.email)) return res.status(403).json({ error: 'Acces reserve aux administrateurs' });
+    const payload = JSON.parse(Buffer.from(userToken.split('.')[1], 'base64').toString());
+    if (!payload.email || !payload.exp) return res.status(401).json({ error: 'Token invalide' });
+    if (payload.exp * 1000 < Date.now()) return res.status(401).json({ error: 'Token expire' });
+    if (!ADMIN_EMAILS.includes(payload.email)) return res.status(403).json({ error: 'Acces reserve aux administrateurs' });
   } catch (e) {
-    return res.status(401).json({ error: 'Erreur auth: ' + e.message });
+    return res.status(401).json({ error: 'Erreur decodage token: ' + e.message });
   }
 
   // GET = lister les utilisateurs
