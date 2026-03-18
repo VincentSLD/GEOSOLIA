@@ -1,7 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = 'https://asuccniyofzvwgooxjah.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFzdWNjbml5b2Z6dndnb294amFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5MDQyNjgsImV4cCI6MjA4ODQ4MDI2OH0.dPerW1BApAxe26xzv9i7oWIubgGuzO5RibMvs-MFm88';
 const ADMIN_EMAILS = ['vsalaud@be-gph.fr'];
 
 export default async function handler(req, res) {
@@ -13,44 +12,51 @@ export default async function handler(req, res) {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!serviceKey) return res.status(500).json({ error: 'SUPABASE_SERVICE_ROLE_KEY manquante' });
 
+  const sb = createClient(SUPABASE_URL, serviceKey);
+
   // Verifier que l'appelant est admin via son token Supabase
   const authHeader = req.headers.authorization;
   if (!authHeader?.startsWith('Bearer ')) return res.status(401).json({ error: 'Token manquant' });
 
-  // Client anon pour valider le token utilisateur
-  const userToken = authHeader.replace('Bearer ', '');
-  const sbAnon = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    global: { headers: { Authorization: `Bearer ${userToken}` } }
-  });
-  const { data: { user }, error: authErr } = await sbAnon.auth.getUser(userToken);
-  if (authErr || !user) return res.status(401).json({ error: 'Token invalide' });
-  if (!ADMIN_EMAILS.includes(user.email)) return res.status(403).json({ error: 'Acces reserve aux administrateurs' });
+  try {
+    const userToken = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authErr } = await sb.auth.getUser(userToken);
+    if (authErr || !user) return res.status(401).json({ error: 'Token invalide', detail: authErr?.message });
+    if (!ADMIN_EMAILS.includes(user.email)) return res.status(403).json({ error: 'Acces reserve aux administrateurs' });
+  } catch (e) {
+    return res.status(401).json({ error: 'Erreur auth: ' + e.message });
+  }
 
-  // Client service_role pour les operations admin
-  const sb = createClient(SUPABASE_URL, serviceKey);
-
-  // GET = lister les utilisateurs en attente
+  // GET = lister les utilisateurs
   if (req.method === 'GET') {
-    const { data: pending, error } = await sb
-      .from('geosolia_access')
-      .select('user_id, approved, created_at')
-      .order('created_at', { ascending: false });
+    try {
+      const { data: pending, error } = await sb
+        .from('geosolia_access')
+        .select('user_id, approved, created_at')
+        .order('created_at', { ascending: false });
 
-    if (error) return res.status(500).json({ error: error.message });
+      if (error) return res.status(500).json({ error: error.message });
 
-    // Enrichir avec les emails depuis auth.users
-    const enriched = await Promise.all(pending.map(async (row) => {
-      const { data: { user: u } } = await sb.auth.admin.getUserById(row.user_id);
-      return {
-        user_id: row.user_id,
-        email: u?.email || 'inconnu',
-        name: u?.user_metadata?.full_name || '',
-        approved: row.approved,
-        created_at: row.created_at
-      };
-    }));
+      // Enrichir avec les emails depuis auth.users
+      const enriched = await Promise.all(pending.map(async (row) => {
+        try {
+          const { data: { user: u } } = await sb.auth.admin.getUserById(row.user_id);
+          return {
+            user_id: row.user_id,
+            email: u?.email || 'inconnu',
+            name: u?.user_metadata?.full_name || '',
+            approved: row.approved,
+            created_at: row.created_at
+          };
+        } catch (e) {
+          return { user_id: row.user_id, email: 'erreur', name: '', approved: row.approved, created_at: row.created_at };
+        }
+      }));
 
-    return res.status(200).json({ users: enriched });
+      return res.status(200).json({ users: enriched });
+    } catch (e) {
+      return res.status(500).json({ error: 'Erreur GET: ' + e.message });
+    }
   }
 
   // POST = approuver ou rejeter
@@ -60,20 +66,23 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'user_id et action (approve/reject) requis' });
     }
 
-    if (action === 'approve') {
-      const { error } = await sb
-        .from('geosolia_access')
-        .update({ approved: true })
-        .eq('user_id', user_id);
-      if (error) return res.status(500).json({ error: error.message });
-      return res.status(200).json({ ok: true, message: 'Utilisateur approuve' });
-    }
+    try {
+      if (action === 'approve') {
+        const { error } = await sb
+          .from('geosolia_access')
+          .update({ approved: true })
+          .eq('user_id', user_id);
+        if (error) return res.status(500).json({ error: error.message });
+        return res.status(200).json({ ok: true, message: 'Utilisateur approuve' });
+      }
 
-    if (action === 'reject') {
-      // Supprimer l'acces + le compte auth
-      await sb.from('geosolia_access').delete().eq('user_id', user_id);
-      await sb.auth.admin.deleteUser(user_id);
-      return res.status(200).json({ ok: true, message: 'Utilisateur supprime' });
+      if (action === 'reject') {
+        await sb.from('geosolia_access').delete().eq('user_id', user_id);
+        await sb.auth.admin.deleteUser(user_id);
+        return res.status(200).json({ ok: true, message: 'Utilisateur supprime' });
+      }
+    } catch (e) {
+      return res.status(500).json({ error: 'Erreur POST: ' + e.message });
     }
   }
 
