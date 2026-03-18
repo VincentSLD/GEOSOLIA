@@ -1,6 +1,8 @@
 import { createHmac } from 'crypto';
+import { createClient } from '@supabase/supabase-js';
 
 const ADMIN_EMAIL = 'vsalaud@be-gph.fr';
+const SUPABASE_URL = 'https://asuccniyofzvwgooxjah.supabase.co';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -11,10 +13,18 @@ export default async function handler(req, res) {
 
   const resendKey = process.env.RESEND_API_KEY;
   const secret = process.env.APPROVE_SECRET;
-  if (!resendKey || !secret) return res.status(500).json({ error: 'Config manquante (RESEND_API_KEY ou APPROVE_SECRET)' });
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!resendKey || !secret || !serviceKey) return res.status(500).json({ error: 'Config manquante (RESEND_API_KEY, APPROVE_SECRET ou SUPABASE_SERVICE_ROLE_KEY)' });
 
   const { user_id, user_email, user_name } = req.body || {};
   if (!user_id || !user_email) return res.status(400).json({ error: 'user_id et user_email requis' });
+
+  // Inserer dans geosolia_access (avec service_role pour bypass RLS)
+  const sb = createClient(SUPABASE_URL, serviceKey);
+  const { error: insertErr } = await sb
+    .from('geosolia_access')
+    .upsert({ user_id, approved: false }, { onConflict: 'user_id', ignoreDuplicates: true });
+  if (insertErr) return res.status(500).json({ error: 'Erreur insertion geosolia_access: ' + insertErr.message });
 
   // Generer le token HMAC
   const token = createHmac('sha256', secret).update(user_id).digest('hex');

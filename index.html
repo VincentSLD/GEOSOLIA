@@ -1879,15 +1879,17 @@ document.getElementById('signup-form').addEventListener('submit', async (e) => {
       options: { data: { full_name: name } }
     });
     if (error) throw error;
-    // Inserer dans geosolia_access (approved=false)
+    // Notifier l'admin (cree aussi la ligne geosolia_access cote serveur)
     const userId = data.user.id;
-    await sbAuth.from('geosolia_access').insert({ user_id: userId, approved: false });
-    // Notifier l'admin par email
-    fetch('/api/notify-admin', {
+    const notifyRes = await fetch('/api/notify-admin', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ user_id: userId, user_email: email, user_name: name })
-    }).catch(() => {});
+    });
+    if (!notifyRes.ok) {
+      const errData = await notifyRes.json().catch(() => ({}));
+      console.warn('Notification admin echouee:', errData.error || notifyRes.status);
+    }
     successEl.textContent = 'Compte cree ! Un administrateur a ete notifie. Vous recevrez l\'acces sous peu.';
     await sbAuth.auth.signOut();
   } catch (err) {
