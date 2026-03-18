@@ -904,6 +904,22 @@
   .auth-avatar{width:28px;height:28px;border-radius:50%;background:var(--yellow);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:var(--black)}
   .auth-logout{background:none;border:1px solid rgba(255,255,255,0.2);border-radius:6px;color:rgba(255,255,255,0.7);font-size:10px;font-weight:700;padding:4px 10px;cursor:pointer;transition:all .2s;font-family:inherit}
   .auth-logout:hover{border-color:var(--red);color:var(--red)}
+  .admin-btn{background:none;border:1px solid rgba(255,255,255,0.2);border-radius:6px;color:rgba(255,255,255,0.7);font-size:10px;font-weight:700;padding:4px 10px;cursor:pointer;transition:all .2s;font-family:inherit;position:relative}
+  .admin-btn:hover{border-color:var(--yellow);color:var(--yellow)}
+  .admin-badge{position:absolute;top:-5px;right:-5px;background:var(--red);color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:900;display:flex;align-items:center;justify-content:center;line-height:1}
+  #admin-panel{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;color:#1A1A1A;border-radius:16px;padding:24px;width:90%;max-width:480px;max-height:80vh;overflow-y:auto;z-index:10001;box-shadow:0 16px 64px rgba(0,0,0,0.5)}
+  #admin-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:10000;cursor:pointer}
+  .admin-title{font-size:16px;font-weight:900;margin:0 0 16px;text-transform:uppercase;letter-spacing:0.05em}
+  .admin-user{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee}
+  .admin-user:last-child{border-bottom:none}
+  .admin-user-info{font-size:13px;line-height:1.4}
+  .admin-user-info .name{font-weight:700}
+  .admin-user-info .email{color:#888;font-size:11px}
+  .admin-user-actions{display:flex;gap:6px}
+  .admin-approve{background:#4CAF50;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit}
+  .admin-reject{background:#D94040;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit}
+  .admin-approved{color:#4CAF50;font-size:11px;font-weight:700}
+  .admin-empty{text-align:center;color:#999;font-size:13px;padding:20px 0}
 </style>
 </head>
 <body>
@@ -976,7 +992,12 @@
     <div class="actions">
       <label for="project-ref" style="color:rgba(255,255,255,0.6);font-size:11px;font-weight:700;white-space:nowrap;margin-right:4px">Ref. Dossier :</label><input type="text" id="project-ref" placeholder="N° réf. projet" spellcheck="false" readonly>
       <input type="file" id="fileInput" accept=".pdf,image/*" style="display:none" onchange="loadPlan(event)">
-      <div id="auth-user-bar"><span class="auth-avatar" id="auth-avatar"></span><button class="auth-logout" onclick="authLogout()">Deconnexion</button></div>
+      <div id="auth-user-bar"><span class="auth-avatar" id="auth-avatar"></span><button class="admin-btn" id="admin-btn" onclick="openAdminPanel()" style="display:none">Admin<span class="admin-badge" id="admin-badge" style="display:none">0</span></button><button class="auth-logout" onclick="authLogout()">Deconnexion</button></div>
+    <div id="admin-overlay" onclick="closeAdminPanel()"></div>
+    <div id="admin-panel">
+      <div class="admin-title">Gestion des utilisateurs</div>
+      <div id="admin-list"></div>
+    </div>
     </div>
   </div>
   <div id="toolbar">
@@ -1759,9 +1780,7 @@ let currentAuthUser = null;
 
 // Vérifie si l'utilisateur a accès à GéoSolia (table geosolia_access)
 async function checkGeosoliaAccess(userId) {
-  console.log('checkGeosoliaAccess pour userId:', userId);
   const { data, error } = await sbAuth.from('geosolia_access').select('id, approved').eq('user_id', userId).maybeSingle();
-  console.log('geosolia_access result:', { data, error });
   if (error) { console.error('Erreur geosolia_access:', error); return false; }
   return data?.approved === true;
 }
@@ -1779,6 +1798,7 @@ function showApp(user) {
     : email.slice(0, 2).toUpperCase();
   document.getElementById('auth-avatar').textContent = initials;
   document.getElementById('auth-user-bar').classList.add('visible');
+  checkAdmin(user);
 }
 
 // Affiche le login et masque l'app
@@ -1793,6 +1813,87 @@ function showLogin() {
 async function authLogout() {
   await sbAuth.auth.signOut();
   showLogin();
+}
+
+// ═══ ADMIN PANEL ═══
+const ADMIN_EMAILS = ['vsalaud@be-gph.fr'];
+
+async function checkAdmin(user) {
+  if (!ADMIN_EMAILS.includes(user.email)) return;
+  document.getElementById('admin-btn').style.display = '';
+  // Compter les pending
+  try {
+    const token = (await sbAuth.auth.getSession()).data.session?.access_token;
+    const r = await fetch('/api/admin-users', { headers: { Authorization: 'Bearer ' + token } });
+    if (!r.ok) return;
+    const { users } = await r.json();
+    const pending = users.filter(u => !u.approved).length;
+    const badge = document.getElementById('admin-badge');
+    if (pending > 0) { badge.textContent = pending; badge.style.display = 'flex'; }
+    else { badge.style.display = 'none'; }
+  } catch (e) { console.warn('Admin check failed:', e); }
+}
+
+async function openAdminPanel() {
+  document.getElementById('admin-overlay').style.display = 'block';
+  document.getElementById('admin-panel').style.display = 'block';
+  document.getElementById('admin-list').innerHTML = '<div class="admin-empty">Chargement...</div>';
+  try {
+    const token = (await sbAuth.auth.getSession()).data.session?.access_token;
+    const r = await fetch('/api/admin-users', { headers: { Authorization: 'Bearer ' + token } });
+    if (!r.ok) throw new Error('Erreur ' + r.status);
+    const { users } = await r.json();
+    const list = document.getElementById('admin-list');
+    if (!users.length) { list.innerHTML = '<div class="admin-empty">Aucun utilisateur</div>'; return; }
+    list.innerHTML = users.map(u => `
+      <div class="admin-user" id="admin-row-${u.user_id}">
+        <div class="admin-user-info">
+          <div class="name">${u.name || 'Sans nom'}</div>
+          <div class="email">${u.email}</div>
+        </div>
+        <div class="admin-user-actions">
+          ${u.approved
+            ? '<span class="admin-approved">Approuve</span>'
+            : `<button class="admin-approve" onclick="adminAction('${u.user_id}','approve')">Approuver</button><button class="admin-reject" onclick="adminAction('${u.user_id}','reject')">Refuser</button>`
+          }
+        </div>
+      </div>
+    `).join('');
+  } catch (e) {
+    document.getElementById('admin-list').innerHTML = '<div class="admin-empty">Erreur: ' + e.message + '</div>';
+  }
+}
+
+function closeAdminPanel() {
+  document.getElementById('admin-overlay').style.display = 'none';
+  document.getElementById('admin-panel').style.display = 'none';
+}
+
+async function adminAction(userId, action) {
+  const row = document.getElementById('admin-row-' + userId);
+  const actions = row.querySelector('.admin-user-actions');
+  actions.innerHTML = '<span style="color:#888;font-size:11px">...</span>';
+  try {
+    const token = (await sbAuth.auth.getSession()).data.session?.access_token;
+    const r = await fetch('/api/admin-users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify({ user_id: userId, action })
+    });
+    if (!r.ok) throw new Error('Erreur');
+    if (action === 'approve') {
+      actions.innerHTML = '<span class="admin-approved">Approuve</span>';
+    } else {
+      row.remove();
+    }
+    // Mettre a jour le badge
+    const badge = document.getElementById('admin-badge');
+    const pending = document.querySelectorAll('.admin-approve').length;
+    if (pending > 0) { badge.textContent = pending; badge.style.display = 'flex'; }
+    else { badge.style.display = 'none'; }
+  } catch (e) {
+    actions.innerHTML = '<span style="color:var(--red);font-size:11px">Erreur</span>';
+  }
 }
 
 // Formulaire login
