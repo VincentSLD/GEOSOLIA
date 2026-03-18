@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = 'https://asuccniyofzvwgooxjah.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFzdWNjbml5b2Z6dndnb294amFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5MDQyNjgsImV4cCI6MjA4ODQ4MDI2OH0.dPerW1BApAxe26xzv9i7oWIubgGuzO5RibMvs-MFm88';
 const ADMIN_EMAILS = ['vsalaud@be-gph.fr'];
 
 export default async function handler(req, res) {
@@ -16,10 +17,17 @@ export default async function handler(req, res) {
   const authHeader = req.headers.authorization;
   if (!authHeader?.startsWith('Bearer ')) return res.status(401).json({ error: 'Token manquant' });
 
-  const sb = createClient(SUPABASE_URL, serviceKey);
-  const { data: { user }, error: authErr } = await sb.auth.getUser(authHeader.replace('Bearer ', ''));
+  // Client anon pour valider le token utilisateur
+  const userToken = authHeader.replace('Bearer ', '');
+  const sbAnon = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    global: { headers: { Authorization: `Bearer ${userToken}` } }
+  });
+  const { data: { user }, error: authErr } = await sbAnon.auth.getUser(userToken);
   if (authErr || !user) return res.status(401).json({ error: 'Token invalide' });
   if (!ADMIN_EMAILS.includes(user.email)) return res.status(403).json({ error: 'Acces reserve aux administrateurs' });
+
+  // Client service_role pour les operations admin
+  const sb = createClient(SUPABASE_URL, serviceKey);
 
   // GET = lister les utilisateurs en attente
   if (req.method === 'GET') {
