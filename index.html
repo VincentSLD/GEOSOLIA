@@ -1616,7 +1616,16 @@
     <div id="ia-draw-preview" style="text-align:center;margin-bottom:10px;background:var(--gray-50);border-radius:var(--radius);padding:8px;border:1px solid var(--gray-200)">
       <canvas id="ia-draw-canvas" style="max-width:100%;max-height:120px;border-radius:4px"></canvas>
     </div>
-    <textarea id="ia-draw-prompt" placeholder="Que represente ce dessin ? Comment l'ameliorer ?&#10;Ex: C'est un arbre, le rendre realiste avec des couleurs&#10;Ex: Transformer en fleche propre rouge&#10;Ex: C'est une maison, ajouter des details"></textarea>
+    <div style="display:flex;gap:4px;margin-bottom:6px;flex-wrap:wrap" id="ia-draw-presets">
+      <button onclick="document.getElementById('ia-draw-prompt').value='C\'est une mare / plan d\'eau vue de dessus'" style="padding:3px 8px;border:1px solid var(--gray-200);border-radius:12px;background:var(--gray-50);font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--gray-500)">Mare / plan d'eau</button>
+      <button onclick="document.getElementById('ia-draw-prompt').value='C\'est un arbre vu de dessus'" style="padding:3px 8px;border:1px solid var(--gray-200);border-radius:12px;background:var(--gray-50);font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--gray-500)">Arbre</button>
+      <button onclick="document.getElementById('ia-draw-prompt').value='C\'est une haie / vegetation vue de dessus'" style="padding:3px 8px;border:1px solid var(--gray-200);border-radius:12px;background:var(--gray-50);font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--gray-500)">Haie</button>
+      <button onclick="document.getElementById('ia-draw-prompt').value='C\'est une maison vue de dessus'" style="padding:3px 8px;border:1px solid var(--gray-200);border-radius:12px;background:var(--gray-50);font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--gray-500)">Maison</button>
+      <button onclick="document.getElementById('ia-draw-prompt').value='C\'est un talus / remblai vu de dessus'" style="padding:3px 8px;border:1px solid var(--gray-200);border-radius:12px;background:var(--gray-50);font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--gray-500)">Talus</button>
+      <button onclick="document.getElementById('ia-draw-prompt').value='C\'est une route / chemin vu de dessus'" style="padding:3px 8px;border:1px solid var(--gray-200);border-radius:12px;background:var(--gray-50);font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--gray-500)">Route</button>
+      <button onclick="document.getElementById('ia-draw-prompt').value='C\'est une cloture / mur vu de dessus'" style="padding:3px 8px;border:1px solid var(--gray-200);border-radius:12px;background:var(--gray-50);font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--gray-500)">Cloture</button>
+    </div>
+    <textarea id="ia-draw-prompt" placeholder="Decrivez le dessin ou choisissez un preset ci-dessus..."></textarea>
     <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
       <label style="font-size:10px;font-weight:700;color:var(--gray-500);display:flex;align-items:center;gap:4px"><input type="checkbox" id="ia-draw-fill" checked> Remplissage / couleurs</label>
       <label style="font-size:10px;font-weight:700;color:var(--gray-500);display:flex;align-items:center;gap:4px"><input type="checkbox" id="ia-draw-realistic" checked> Realiste</label>
