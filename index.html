@@ -3293,14 +3293,16 @@ function renderElements(){
         ${el.approx?`<text x="${lcx}" y="${lcy+labelOff2+mfs+2}" text-anchor="middle" font-size="${approxFs2}" font-style="italic" fill="${mc}" font-family="Nunito Sans,sans-serif">environ</text>`:''}
       </svg>${handles2}<button class="del-btn" data-action="del" data-eid="${eid2}">×</button>`;
     }else if(el.type==='drawing'){
-      const dw=el.w||1,dh=el.h||1;const pad=el.size*2;
+      const dw=el.w||1,dh=el.h||1;const pad=Math.max(el.size*2,12);
       const svgW=dw+pad*2,svgH=dh+pad*2;
       const pathD=el.points.map((p,i)=>((i===0||p.break)?'M':'L')+(p.x+pad).toFixed(1)+','+(p.y+pad).toFixed(1)).join(' ');
+      const hitSize=Math.max(el.size+10,16);
       div.style.left=(el.x*scale+offX)+'px';div.style.top=(el.y*scale+offY)+'px';
       div.style.transform='translate('+(-pad*scale)+'px,'+(-pad*scale)+'px) scale('+scale+')';
       div.style.transformOrigin='0 0';
-      div.innerHTML=`<svg width="${svgW}" height="${svgH}" style="overflow:visible;pointer-events:none;display:block" xmlns="http://www.w3.org/2000/svg">
-        <path d="${pathD}" fill="none" stroke="${el.color}" stroke-width="${el.size}" stroke-linecap="round" stroke-linejoin="round" opacity="${el.opacity!=null?el.opacity:1}" style="pointer-events:stroke;cursor:move"/>
+      div.innerHTML=`<svg width="${svgW}" height="${svgH}" style="overflow:visible;display:block" xmlns="http://www.w3.org/2000/svg">
+        <path d="${pathD}" fill="none" stroke="transparent" stroke-width="${hitSize}" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:stroke;cursor:move"/>
+        <path d="${pathD}" fill="none" stroke="${el.color}" stroke-width="${el.size}" stroke-linecap="round" stroke-linejoin="round" opacity="${el.opacity!=null?el.opacity:1}" style="pointer-events:none"/>
       </svg><button class="del-btn" data-action="del" data-eid="${el.id}">×</button>`;
     }else if(el.type==='image'){
       const iw=el.w||150,ih=el.h||100;const irot=el.rotation||0;
