@@ -1627,9 +1627,13 @@
       <button onclick="document.getElementById('ia-draw-prompt').value='C\'est une cloture / mur vu de dessus'" style="padding:3px 8px;border:1px solid var(--gray-200);border-radius:12px;background:var(--gray-50);font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--gray-500)">Cloture</button>
     </div>
     <textarea id="ia-draw-prompt" placeholder="Decrivez le dessin ou choisissez un preset ci-dessus..."></textarea>
-    <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
-      <label style="font-size:10px;font-weight:700;color:var(--gray-500);display:flex;align-items:center;gap:4px"><input type="checkbox" id="ia-draw-fill" checked> Remplissage / couleurs</label>
-      <label style="font-size:10px;font-weight:700;color:var(--gray-500);display:flex;align-items:center;gap:4px"><input type="checkbox" id="ia-draw-realistic" checked> Realiste</label>
+    <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center">
+      <label style="font-size:10px;font-weight:700;color:var(--gray-500);display:flex;align-items:center;gap:4px">Moteur :
+        <select id="ia-draw-engine" style="font-size:10px;padding:2px 4px;border:1px solid var(--gray-200);border-radius:4px;font-family:inherit">
+          <option value="dalle" selected>DALL-E 3 (image realiste)</option>
+          <option value="claude">Claude (SVG vectoriel)</option>
+        </select>
+      </label>
       <label style="font-size:10px;font-weight:700;color:var(--gray-500);display:flex;align-items:center;gap:4px"><input type="checkbox" id="ia-draw-transparent" checked> Fond transparent</label>
       <label style="font-size:10px;font-weight:700;color:var(--gray-500);display:flex;align-items:center;gap:4px"><input type="checkbox" id="ia-draw-proportions" checked> Garder les proportions</label>
     </div>
@@ -3883,8 +3887,7 @@ async function submitIADrawing(){
   const prompt=document.getElementById('ia-draw-prompt').value.trim();
   if(!prompt){document.getElementById('ia-draw-prompt').style.borderColor='#D94040';return;}
 
-  const useFill=document.getElementById('ia-draw-fill').checked;
-  const useRealistic=document.getElementById('ia-draw-realistic').checked;
+  const engine=document.getElementById('ia-draw-engine').value;
   const useTransparent=document.getElementById('ia-draw-transparent').checked;
   const useProportions=document.getElementById('ia-draw-proportions').checked;
 
@@ -3897,75 +3900,74 @@ async function submitIADrawing(){
     const base64=drawingToBase64(el);
     const pad=Math.max(el.size*2,12);
     const w=Math.round((el.w||1)+pad*2),h=Math.round((el.h||1)+pad*2);
+    let imgDataUrl;
 
-    let styleInstructions='';
-    if(useFill)styleInstructions+='Utilise des couleurs riches et du remplissage (fill) pour les formes. ';
-    if(useRealistic)styleInstructions+='Rends le dessin realiste et detaille, comme une illustration professionnelle. Ajoute des ombres legeres, des degrades si pertinent. ';
-    if(useTransparent)styleInstructions+='Le fond du SVG doit etre transparent (pas de rectangle blanc de fond). ';
-    else styleInstructions+='Ajoute un fond blanc au SVG. ';
-    const ratio=(w/h).toFixed(2);
-    if(useProportions)styleInstructions+='REGLE CRITIQUE — CONTOUR ET PROPORTIONS : Le croquis fait '+w+'px de large sur '+h+'px de haut (ratio '+ratio+'). Tu DOIS produire un SVG avec EXACTEMENT viewBox="0 0 '+w+' '+h+'" et width="'+w+'" height="'+h+'". Tu dois TRACER PAR-DESSUS le croquis original : le contour/la silhouette de ton dessin ameliore doit suivre EXACTEMENT la forme dessinee par l\'utilisateur. Ne change PAS la forme, ne la simplifie pas en cercle ou en rectangle si ce n\'en est pas un. Si l\'utilisateur a dessine une mare irreguliere, trace une mare irreguliere avec le MEME contour. Si c\'est une forme oblongue, garde la forme oblongue. Ameliore la qualite (lisser les traits, ajouter couleurs/details) MAIS garde le trace original comme guide de contour. ';
+    if(engine==='dalle'){
+      // === DALL-E 3 ===
+      status.textContent='DALL-E 3 genere l\'image...';
+      const aspectDesc=w>h*1.3?'format paysage (plus large que haut)':h>w*1.3?'format portrait (plus haut que large)':'format carre';
+      const bgDesc=useTransparent?'Le fond DOIT etre transparent (pas de fond blanc ni colore). Dessine UNIQUEMENT le sujet sans aucun arriere-plan.':'';
+      const propDesc=useProportions?'IMPORTANT : respecte exactement la forme et les proportions du croquis original. Le dessin fait '+w+'px de large et '+h+'px de haut. Le sujet doit occuper toute la zone et garder la meme silhouette que le croquis.':'';
 
-    // Simplifier les points du contour pour le prompt (1 point sur N)
-    const step=Math.max(1,Math.floor(el.points.length/80));
-    const sampledPts=el.points.filter((_,i)=>i%step===0||i===el.points.length-1);
-    const pathStr=sampledPts.map(p=>Math.round(p.x+pad)+','+Math.round(p.y+pad)).join(' ');
+      const dallePrompt='Vue de dessus (top-down view) pour un plan de chantier geotechnique. '+prompt+'. '
+        +'Style : illustration technique realiste, couleurs naturelles, vue aerienne aplatie, '+aspectDesc+'. '
+        +propDesc+' '+bgDesc
+        +' Pas de texte, pas de legende, pas de bordure. Image propre et nette.';
 
-    const sysMsg=`Tu es un illustrateur SVG expert. L'utilisateur te montre un croquis fait a main levee et te donne les coordonnees exactes du trace.
-
-COORDONNEES DU CONTOUR ORIGINAL (x,y en pixels dans un canvas de ${w}x${h}) :
-${pathStr}
-
-METHODE DE TRAVAIL OBLIGATOIRE :
-1. Utilise les coordonnees ci-dessus comme points de passage de ton dessin.
-2. Cree un <path> SVG qui passe par ces points (utilise des courbes C ou Q pour lisser entre les points).
-3. Remplis et decore l'interieur de cette forme selon la demande de l'utilisateur.
-4. Le contour de ton dessin DOIT suivre ces coordonnees. Ne deplace PAS la forme, ne la redimensionne PAS, ne la simplifie PAS.
-
-REGLES STRICTES :
-- Reponds UNIQUEMENT avec le code SVG brut (commencant par <svg et finissant par </svg>).
-- Pas de markdown, pas de texte avant ou apres, pas de backticks.
-- Le SVG doit avoir EXACTEMENT : width="${w}" height="${h}" viewBox="0 0 ${w} ${h}".
-- ${styleInstructions}
-- Utilise des couleurs adaptees au sujet.
-- Pas de texte dans le SVG sauf si explicitement demande.
-- Pas de references externes (images, fonts).`;
-
-    const messages=[{role:'user',content:[
-      {type:'image',source:{type:'base64',media_type:'image/png',data:base64}},
-      {type:'text',text:'Voici mon croquis a main levee. '+prompt+'\n\n'+sysMsg}
-    ]}];
-
-    status.textContent='L\'IA dessine...';
-
-    const resp=await fetch(IA_PROXY_URL,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({messages:messages})
-    });
-    const data=await resp.json();
-    if(data.error)throw new Error(data.error.message||JSON.stringify(data.error));
-
-    const text=(data.content&&data.content[0]&&data.content[0].text)||'';
-    // Extraire le SVG de la reponse
-    const svgMatch=text.match(/<svg[\s\S]*<\/svg>/i);
-    if(!svgMatch)throw new Error('L\'IA n\'a pas retourne de SVG valide');
-    let svgStr=svgMatch[0];
-
-    // Forcer les dimensions et viewBox pour garantir les proportions
-    if(useProportions){
-      svgStr=svgStr.replace(/<svg([^>]*)>/i,(m,attrs)=>{
-        attrs=attrs.replace(/width\s*=\s*["'][^"']*["']/gi,'');
-        attrs=attrs.replace(/height\s*=\s*["'][^"']*["']/gi,'');
-        attrs=attrs.replace(/viewBox\s*=\s*["'][^"']*["']/gi,'');
-        return `<svg${attrs} width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet">`;
+      const resp=await fetch('/api/draw',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({prompt:dallePrompt,width:w,height:h,mode:'dalle'})
       });
+      const data=await resp.json();
+      if(data.error)throw new Error(typeof data.error==='string'?data.error:data.error.message||JSON.stringify(data.error));
+      if(!data.image)throw new Error('Pas d\'image dans la reponse');
+
+      imgDataUrl='data:image/png;base64,'+data.image;
+
+    }else{
+      // === Claude SVG ===
+      status.textContent='Claude genere le SVG...';
+      let styleInstructions='Utilise des couleurs riches et du remplissage. Rends le dessin realiste et detaille. ';
+      if(useTransparent)styleInstructions+='Le fond du SVG doit etre transparent. ';
+      else styleInstructions+='Ajoute un fond blanc au SVG. ';
+      const ratio=(w/h).toFixed(2);
+      if(useProportions)styleInstructions+='REGLE CRITIQUE — Le croquis fait '+w+'x'+h+'px (ratio '+ratio+'). Trace PAR-DESSUS le croquis original en gardant exactement sa forme et sa silhouette. ';
+
+      const step=Math.max(1,Math.floor(el.points.length/80));
+      const sampledPts=el.points.filter((_,i)=>i%step===0||i===el.points.length-1);
+      const pathStr=sampledPts.map(p=>Math.round(p.x+pad)+','+Math.round(p.y+pad)).join(' ');
+
+      const sysMsg=`Tu es un illustrateur SVG expert. Coordonnees du contour (x,y pixels, canvas ${w}x${h}) :\n${pathStr}\n\nReponds UNIQUEMENT avec le SVG brut (<svg>...</svg>). width="${w}" height="${h}" viewBox="0 0 ${w} ${h}". ${styleInstructions} Utilise des <path> avec courbes de Bezier. Pas de texte, pas de refs externes.`;
+
+      const messages=[{role:'user',content:[
+        {type:'image',source:{type:'base64',media_type:'image/png',data:base64}},
+        {type:'text',text:'Voici mon croquis. '+prompt+'\n\n'+sysMsg}
+      ]}];
+
+      const resp=await fetch(IA_PROXY_URL,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({messages:messages})
+      });
+      const data=await resp.json();
+      if(data.error)throw new Error(data.error.message||JSON.stringify(data.error));
+
+      const text=(data.content&&data.content[0]&&data.content[0].text)||'';
+      const svgMatch=text.match(/<svg[\s\S]*<\/svg>/i);
+      if(!svgMatch)throw new Error('L\'IA n\'a pas retourne de SVG valide');
+      let svgStr=svgMatch[0];
+
+      if(useProportions){
+        svgStr=svgStr.replace(/<svg([^>]*)>/i,(m,attrs)=>{
+          attrs=attrs.replace(/width\s*=\s*["'][^"']*["']/gi,'').replace(/height\s*=\s*["'][^"']*["']/gi,'').replace(/viewBox\s*=\s*["'][^"']*["']/gi,'');
+          return `<svg${attrs} width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet">`;
+        });
+      }
+
+      status.textContent='Rendu de l\'image...';
+      imgDataUrl=await svgToImage(svgStr,w,h,useTransparent);
     }
-
-    status.textContent='Rendu de l\'image...';
-
-    // Convertir SVG en image PNG
-    const imgDataUrl=await svgToImage(svgStr,w,h,useTransparent);
 
     // Remplacer le dessin par une image
     const idx=elements.findIndex(e=>e.id===el.id);
@@ -3980,7 +3982,7 @@ REGLES STRICTES :
 
     closeIADrawPopup();
     renderElements();
-    if(typeof showToast==='function')showToast('Dessin ameliore par l\'IA');
+    if(typeof showToast==='function')showToast('Dessin ameliore par l\'IA ('+(engine==='dalle'?'DALL-E 3':'Claude')+')');
   }catch(err){
     status.textContent='Erreur : '+err.message;status.style.color='#D94040';
   }finally{
