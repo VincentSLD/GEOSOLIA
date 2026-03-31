@@ -4665,7 +4665,7 @@ async function iaFetchBSS(lat,lng){
     altitude:f.props.altitude||f.props.zsol||'',
     commune:f.props.commune_actuelle||f.props.nom_commune||'',
     nb_piezo:f.props.nb_mesures_piezo||'',
-    lien:f.props.lien_infoterre||'',
+    lien:(f.props.code_bss||f.props.bss_id||f.props.reference)?'http://ficheinfoterre.brgm.fr/InfoterreFiche/ficheBss.action?id='+encodeURIComponent(f.props.code_bss||f.props.bss_id||f.props.reference):'',
     dist_km:f.dist?f.dist.toFixed(1):''
   }));
   return results;
