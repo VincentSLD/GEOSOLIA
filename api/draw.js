@@ -23,7 +23,10 @@ export default async function handler(req, res) {
   try {
     if (mode === "dalle") {
       // DALL-E 3 : génération d'image à partir du prompt
-      const size = width > height ? "1792x1024" : height > width ? "1024x1792" : "1024x1024";
+      const w = Number(width) || 512, h = Number(height) || 512;
+      const size = w > h * 1.3 ? "1792x1024" : h > w * 1.3 ? "1024x1792" : "1024x1024";
+      // DALL-E 3 limite le prompt à 4000 caractères
+      const safePrompt = prompt.length > 3900 ? prompt.substring(0, 3900) : prompt;
       const response = await fetch(OPENAI_API_URL, {
         method: "POST",
         headers: {
@@ -32,7 +35,7 @@ export default async function handler(req, res) {
         },
         body: JSON.stringify({
           model: "dall-e-3",
-          prompt: prompt,
+          prompt: safePrompt,
           n: 1,
           size: size,
           response_format: "b64_json",
@@ -41,7 +44,10 @@ export default async function handler(req, res) {
       });
 
       const data = await response.json();
-      if (!response.ok) return res.status(response.status).json(data);
+      if (!response.ok) {
+        const msg = data?.error?.message || JSON.stringify(data);
+        return res.status(response.status).json({ error: { message: msg } });
+      }
       return res.status(200).json({
         image: data.data?.[0]?.b64_json || null,
         revised_prompt: data.data?.[0]?.revised_prompt || ""
@@ -76,7 +82,10 @@ export default async function handler(req, res) {
       });
 
       const data = await response.json();
-      if (!response.ok) return res.status(response.status).json(data);
+      if (!response.ok) {
+        const msg = data?.error?.message || JSON.stringify(data);
+        return res.status(response.status).json({ error: { message: msg } });
+      }
       return res.status(200).json({
         text: data.choices?.[0]?.message?.content || ""
       });
