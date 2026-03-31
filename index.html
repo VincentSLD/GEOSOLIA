@@ -3892,7 +3892,8 @@ async function submitIADrawing(){
     if(useRealistic)styleInstructions+='Rends le dessin realiste et detaille, comme une illustration professionnelle. Ajoute des ombres legeres, des degrades si pertinent. ';
     if(useTransparent)styleInstructions+='Le fond du SVG doit etre transparent (pas de rectangle blanc de fond). ';
     else styleInstructions+='Ajoute un fond blanc au SVG. ';
-    if(useProportions)styleInstructions+='IMPORTANT : respecte EXACTEMENT les proportions et la forme du croquis original. La largeur fait '+w+'px et la hauteur '+h+'px, garde ce ratio. Le dessin ameliore doit occuper la meme zone et avoir la meme silhouette/forme que l\'original, simplement avec des traits propres et des details. Ne transforme PAS une forme allongee en forme carree, ne change PAS les proportions. ';
+    const ratio=(w/h).toFixed(2);
+    if(useProportions)styleInstructions+='REGLE CRITIQUE — PROPORTIONS : Le croquis fait '+w+'px de large sur '+h+'px de haut (ratio '+ratio+'). Tu DOIS produire un SVG avec EXACTEMENT viewBox="0 0 '+w+' '+h+'" et width="'+w+'" height="'+h+'". Le dessin ameliore DOIT remplir ce rectangle en gardant la silhouette originale. NE CHANGE PAS les proportions : une forme large reste large, une forme haute reste haute. ';
 
     const sysMsg=`Tu es un illustrateur SVG expert. L'utilisateur te montre un croquis fait a main levee sur un plan de chantier et te demande de le transformer en un dessin SVG propre et ameliore.
 
@@ -3927,7 +3928,17 @@ INSTRUCTIONS :
     // Extraire le SVG de la reponse
     const svgMatch=text.match(/<svg[\s\S]*<\/svg>/i);
     if(!svgMatch)throw new Error('L\'IA n\'a pas retourne de SVG valide');
-    const svgStr=svgMatch[0];
+    let svgStr=svgMatch[0];
+
+    // Forcer les dimensions et viewBox pour garantir les proportions
+    if(useProportions){
+      svgStr=svgStr.replace(/<svg([^>]*)>/i,(m,attrs)=>{
+        attrs=attrs.replace(/width\s*=\s*["'][^"']*["']/gi,'');
+        attrs=attrs.replace(/height\s*=\s*["'][^"']*["']/gi,'');
+        attrs=attrs.replace(/viewBox\s*=\s*["'][^"']*["']/gi,'');
+        return `<svg${attrs} width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet">`;
+      });
+    }
 
     status.textContent='Rendu de l\'image...';
 
