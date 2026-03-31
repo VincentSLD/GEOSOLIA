@@ -3915,18 +3915,23 @@ async function submitIADrawing(){
       else styleInst+='Ajoute un fond blanc. ';
       if(useProportions)styleInst+='CRITIQUE : Le croquis fait '+w+'x'+h+'px. Trace PAR-DESSUS le croquis en gardant exactement sa silhouette. ';
 
-      const gptPrompt='Please convert this hand-drawn sketch into a clean, detailed SVG illustration. The user says: "'+prompt+'"\n\n'
+      const gptPrompt='You are a world-class SVG illustrator specializing in photorealistic top-down map illustrations. '
+        +'Convert this hand-drawn sketch into a beautiful, highly detailed SVG. The user describes it as: "'+prompt+'"\n\n'
         +'Outline coordinates (x,y pixels in a '+w+'x'+h+' canvas):\n'+pathStr+'\n\n'
-        +'Reply with ONLY the raw SVG code, starting with <svg and ending with </svg>. No markdown, no explanation.\n'
-        +'SVG attributes: width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'"\n'
+        +'Reply with ONLY the raw SVG code (<svg>...</svg>). No markdown, no explanation, no backticks.\n'
+        +'SVG: width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'"\n'
         +styleInst+'\n'
-        +'Style guidelines:\n'
-        +'- Use <defs> with <linearGradient>, <radialGradient> and <filter> (feGaussianBlur for drop shadows)\n'
-        +'- Layer multiple elements: base shape, then details on top, then highlights/shadows\n'
-        +'- Use <path> with Bezier curves (C/Q) following the outline coordinates above\n'
-        +'- Rich natural colors with gradients for depth and realism\n'
-        +'- At least 5-10 SVG elements for a detailed render\n'
-        +'- No text, no external references, no <image> tags';
+        +'CRITICAL RENDERING RULES for photorealistic quality:\n'
+        +'1. GRADIENTS: Define at least 3-4 gradients in <defs>. Use radialGradient for organic shapes (water, trees) and linearGradient for structures. Each gradient must have 3+ stops with realistic color transitions.\n'
+        +'2. SHADOWS: Add a <filter id="shadow"> with feGaussianBlur stdDeviation="3" + feOffset dx="4" dy="4" + feComposite. Apply to main shape with filter="url(#shadow)".\n'
+        +'3. LAYERING (back to front): shadow layer → base fill with main gradient → inner detail shapes → edge highlights (semi-transparent white strokes) → subtle texture patterns.\n'
+        +'4. DETAIL SHAPES: Add 8-15 smaller shapes inside the main outline for texture. For water: ripple ellipses with white opacity 0.15. For trees: overlapping leaf clusters in varying greens. For vegetation: small organic blobs.\n'
+        +'5. EDGE TREATMENT: The main outline should use a darker shade stroke (2-3px) with rounded joins. Add an inner lighter stroke (1px, white opacity 0.3) offset by 2px for a 3D bevel effect.\n'
+        +'6. COLOR PALETTE: Use at minimum 6 different colors/shades. Never use flat single-color fills. Every shape must have a gradient or pattern fill.\n'
+        +'7. ORGANIC CURVES: All <path> elements must use C (cubic Bezier) curves, never straight lines for natural shapes.\n'
+        +'8. Follow the outline coordinates closely for the main shape boundary.\n'
+        +'9. No <text>, no <image>, no external references. Pure SVG shapes only.\n'
+        +'10. Target: 15-25 total SVG elements for a rich, layered result.';
 
       const resp=await fetch('/api/draw',{
         method:'POST',
