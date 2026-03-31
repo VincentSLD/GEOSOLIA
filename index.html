@@ -119,6 +119,12 @@
   #clean-canvas{position:absolute;top:0;left:0;pointer-events:none;z-index:2}
   #btn-recadrer{position:absolute;bottom:14px;right:14px;z-index:50;width:40px;height:40px;border-radius:50%;border:none;background:var(--black);color:var(--yellow);font-size:20px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;transition:transform .15s,box-shadow .15s}
   #btn-recadrer:hover{transform:scale(1.1);box-shadow:0 3px 12px rgba(0,0,0,0.5)}
+  #page-bar{display:flex;align-items:center;justify-content:center;gap:8px;padding:6px 12px;background:var(--black);border-top:2px solid var(--yellow);flex-shrink:0}
+  #page-bar span{font-size:12px;font-weight:800;color:var(--white);min-width:90px;text-align:center}
+  #page-bar button{background:var(--gray-800);color:var(--white);border:none;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s}
+  #page-bar button:hover:not(:disabled){background:var(--yellow);color:var(--black)}
+  #page-bar button:disabled{opacity:0.3;cursor:default}
+  #page-add{background:var(--yellow)!important;color:var(--black)!important;font-weight:800}
   #empty-state{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;pointer-events:auto;z-index:60}
   #empty-state .big-icon{font-size:56px;opacity:.18}
   #empty-state p{font-size:14px;color:var(--gray-300);font-weight:700;text-align:center;line-height:1.6}
@@ -1424,6 +1430,12 @@
     </div>
     <button id="btn-recadrer" onclick="resetView()" title="Recadrer">🎯</button>
   </div>
+  <div id="page-bar" style="display:none">
+    <button id="page-prev" onclick="goToPage(currentPageIdx-1)" title="Page précédente">◀</button>
+    <span id="page-info">Page 1 / 1</span>
+    <button id="page-next" onclick="goToPage(currentPageIdx+1)" title="Page suivante">▶</button>
+    <button id="page-add" onclick="addNewPage()" title="Ajouter une page">+ Page</button>
+  </div>
   </div><!-- /main-body -->
   <div id="catalog-overlay">
     <div id="catalog-header"><span>🏷️ Catalogue de vignettes</span><button class="catalog-close" onclick="closeCatalog()">✕</button></div>
@@ -2222,26 +2234,45 @@ async function restoreFromIDB(id){
   const hAddr0=document.getElementById('ia-geo-addr');if(hAddr0&&projectAddr)hAddr0.value=projectAddr;
   const hLat0=document.getElementById('ia-geo-lat');if(hLat0&&projectLat)hLat0.value=projectLat;
   const hLng0=document.getElementById('ia-geo-lng');if(hLng0&&projectLng)hLng0.value=projectLng;
-  if(!project.planImgSrc){
+  if(!project.planImgSrc&&!(project.pages&&project.pages.length>0)){
     if(window.importScan3DFromProject)window.importScan3DFromProject(project.scan3d||null);
+    pages=[];currentPageIdx=0;updatePageBar();
     if(typeof showToast==='function')showToast('Projet restaur\u00e9 depuis la sauvegarde locale');
     return;
   }
-  planImgSrc=project.planImgSrc;planW=project.planW||1200;planH=project.planH||800;
+  // Restore pages
+  if(project.pages&&project.pages.length>0){
+    pages=project.pages.map(pg=>({
+      planImgSrc:pg.planImgSrc,planW:pg.planW||1200,planH:pg.planH||800,
+      elements:(pg.elements||[]).map(el=>{el.id=el.id||Date.now()+Math.random();return el;}),
+      drawPaths:pg.drawPaths||[],cleanPaths:pg.cleanPaths||[],
+      measureScale:pg.measureScale!=null?pg.measureScale:null
+    }));
+    currentPageIdx=project.currentPageIdx||0;
+  }else{
+    pages=[{planImgSrc:project.planImgSrc,planW:project.planW||1200,planH:project.planH||800,
+      elements:(project.elements||[]).map(el=>{el.id=el.id||Date.now()+Math.random();return el;}),
+      drawPaths:project.drawPaths||[],cleanPaths:project.cleanPaths||[],
+      measureScale:project.measureScale!=null?project.measureScale:null}];
+    currentPageIdx=0;
+  }
+  const pg=pages[currentPageIdx];
+  planImgSrc=pg.planImgSrc;planW=pg.planW;planH=pg.planH;
+  elements=pg.elements;drawPaths=pg.drawPaths;cleanPaths=pg.cleanPaths;
+  measureScale=pg.measureScale;
   const $img=document.getElementById('plan-img');
   $img.style.display='block';$img.src=planImgSrc;
   $img.onload=function(){
     document.getElementById('empty-state').style.display='none';
     resizeDrawCanvas();
-    elements=(project.elements||[]).map(el=>{el.id=el.id||Date.now()+Math.random();return el;});
-    if(project.measureScale!=null){measureScale=project.measureScale;updateMeasureScaleDisplay();}else{measureScale=null;}
-    drawPaths=project.drawPaths||[];cleanPaths=project.cleanPaths||[];
+    if(measureScale!=null)updateMeasureScaleDisplay();
     if(project.photos)photos=project.photos.map(p=>({dataUrl:p.dataUrl||p.src||'',timestamp:p.timestamp||'',name:p.name||'',checked:p.checked!==false}));
     renderPhotos();
     if(project.sondages)sondages=project.sondages;
     if(project.niveauRefs)niveauRefs=project.niveauRefs;
     if(window.importScan3DFromProject)window.importScan3DFromProject(project.scan3d||null);
     clearSelection();redrawCanvas();redrawCleanCanvas();renderElements();resetView();
+    updatePageBar();
     setTimeout(()=>{resizeDrawCanvas();resetView();},100);
     if(typeof showToast==='function')showToast('Projet restaur\u00e9 depuis la sauvegarde locale');
   };
@@ -2353,6 +2384,89 @@ function selectOnly(id){selectedIds.clear();selectedIds.add(id);}
 let drawColor='#1A1A1A',brushSize=4,drawOpacity=1,eraserSize=20,mrPropreSize=30,textColor='#1A1A1A';
 let drawPaths=[],cleanPaths=[],currentPathPts=[],isDrawing=false,photos=[],cameraStream=null;
 let savedFileHandle=null,autoSaveInterval=null;
+// --- Multi-pages ---
+let pages=[],currentPageIdx=0;
+
+function saveCurrentPage(){
+  if(pages.length===0)return;
+  pages[currentPageIdx]={
+    planImgSrc:planImgSrc,planW:planW,planH:planH,
+    elements:elements,drawPaths:drawPaths,cleanPaths:cleanPaths,
+    measureScale:measureScale
+  };
+}
+
+function loadPage(idx){
+  if(idx<0||idx>=pages.length)return;
+  const p=pages[idx];
+  planImgSrc=p.planImgSrc;planW=p.planW;planH=p.planH;
+  elements=p.elements||[];drawPaths=p.drawPaths||[];cleanPaths=p.cleanPaths||[];
+  measureScale=p.measureScale!=null?p.measureScale:null;
+  currentPageIdx=idx;
+  const $img=document.getElementById('plan-img');
+  if(planImgSrc){
+    $img.src=planImgSrc;$img.style.display='block';
+    $img.onload=function(){
+      resizeDrawCanvas();clearSelection();redrawCanvas();redrawCleanCanvas();renderElements();resetView();
+      if(measureScale!=null)updateMeasureScaleDisplay();
+    };
+  }else{
+    $img.style.display='none';$img.src='';
+    resizeDrawCanvas();clearSelection();
+    const $dc=document.getElementById('draw-canvas');$dc.getContext('2d').clearRect(0,0,$dc.width,$dc.height);
+    const $cc=document.getElementById('clean-canvas');$cc.getContext('2d').clearRect(0,0,$cc.width,$cc.height);
+    document.getElementById('elements-layer').innerHTML='';
+  }
+  updatePageBar();
+}
+
+function goToPage(idx){
+  if(idx===currentPageIdx||idx<0||idx>=pages.length)return;
+  saveCurrentPage();
+  loadPage(idx);
+}
+
+function addNewPage(){
+  saveCurrentPage();
+  // Nouvelle page vide
+  const newIdx=pages.length;
+  pages.push({planImgSrc:null,planW:1200,planH:800,elements:[],drawPaths:[],cleanPaths:[],measureScale:null});
+  currentPageIdx=newIdx;
+  planImgSrc=null;planW=1200;planH=800;
+  elements=[];drawPaths=[];cleanPaths=[];measureScale=null;
+  clearSelection();
+  const $img=document.getElementById('plan-img');
+  $img.style.display='none';$img.src='';
+  const $dc=document.getElementById('draw-canvas');$dc.getContext('2d').clearRect(0,0,$dc.width,$dc.height);
+  const $cc=document.getElementById('clean-canvas');$cc.getContext('2d').clearRect(0,0,$cc.width,$cc.height);
+  document.getElementById('elements-layer').innerHTML='';
+  // Montrer l'ecran de chargement de plan pour cette page
+  document.getElementById('empty-state').style.display='';
+  document.getElementById('welcome-screen').style.display='none';
+  document.getElementById('load-plan-screen').style.display='';
+  updatePageBar();
+}
+
+function initFirstPage(){
+  if(pages.length===0){
+    pages=[{planImgSrc:planImgSrc,planW:planW,planH:planH,elements:elements,drawPaths:drawPaths,cleanPaths:cleanPaths,measureScale:measureScale}];
+    currentPageIdx=0;
+  }
+  updatePageBar();
+}
+
+function updatePageBar(){
+  const bar=document.getElementById('page-bar');
+  if(!bar)return;
+  if(pages.length<=0){bar.style.display='none';return;}
+  bar.style.display='flex';
+  const info=document.getElementById('page-info');
+  const prevBtn=document.getElementById('page-prev');
+  const nextBtn=document.getElementById('page-next');
+  info.textContent='Page '+(currentPageIdx+1)+' / '+pages.length;
+  prevBtn.disabled=currentPageIdx<=0;
+  nextBtn.disabled=currentPageIdx>=pages.length-1;
+}
 let sondages=[],editingSondageId=null,editingSondageType=null,sondageSnapshot=null;
 let czPoints=[],czPreview=null;
 let teEditingId=null,teOriginX=0,teOriginY=0;
@@ -2774,14 +2888,18 @@ async function loadPlanFromFile(file){
   if(file.type==='application/pdf'){
     const buf=await file.arrayBuffer();
     const pdf=await pdfjsLib.getDocument({data:buf}).promise;
-    if(pdf.numPages===1){await loadPdfPage(pdf,1);openCropTool();}
+    if(pdf.numPages===1){await loadPdfPage(pdf,1);syncPageAfterLoad();openCropTool();}
     else{pendingPdf=pdf;showPdfPageModal(pdf);}
   }else{
     const dataUrl=await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(file);});
     planImgSrc=dataUrl;const img=new Image();await new Promise(r=>{img.onload=r;img.src=planImgSrc;});planW=img.naturalWidth;planH=img.naturalHeight;
     $planImg.src=planImgSrc;$planImg.style.display='block';$empty.style.display='none';resetView();
-    openCropTool();
+    syncPageAfterLoad();openCropTool();
   }
+}
+function syncPageAfterLoad(){
+  if(pages.length===0){initFirstPage();}
+  else{saveCurrentPage();updatePageBar();}
 }
 async function loadPdfPage(pdf,num){
   const page=await pdf.getPage(num);const vp=page.getViewport({scale:2});
@@ -2811,6 +2929,7 @@ async function showPdfPageModal(pdf){
       document.querySelectorAll('.pdf-page-thumb').forEach(t=>t.classList.remove('selected'));
       thumb.classList.add('selected');
       await loadPdfPage(pendingPdf,pageNum);
+      syncPageAfterLoad();
       closePdfPageModal();
       openCropTool();
     };
@@ -5382,15 +5501,8 @@ function activateApp(){
   startAutoSave();
 }
 
-function buildProjectJSON(){
-  const refVal=document.getElementById('project-ref').value.trim();
-  const project={
-    version:2,
-    projectRef:refVal,
-    planImgSrc:planImgSrc,
-    planW:planW,
-    planH:planH,
-    elements:elements.map(el=>{
+function serializeElements(elArr){
+  return (elArr||[]).map(el=>{
       if(el.type==='sticker'){const o={type:'sticker',x:el.x,y:el.y,svgKey:el.svgKey,label:el.label,color:el.color,sScale:el.sScale||1,rotation:el.rotation||0};if(el.isText)o.isText=true;if(el.noBorder)o.noBorder=true;if(el.noLegend)o.noLegend=true;if(el.underline)o.underline=true;if(el.groupId)o.groupId=el.groupId;if(el.groupLocked)o.groupLocked=true;if(el.sondageId)o.sondageId=el.sondageId;if(el.sondageBg)o.sondageBg=true;if(el.nivRefId){o.nivRefId=el.nivRefId;o.nivRefAlt=el.nivRefAlt;if(el.sondageBg===false)o.sondageBg=false;}if(el.labelPos)o.labelPos=el.labelPos;if(el.showLabel)o.showLabel=true;if(el.isShape){o.isShape=true;o.shapeType=el.shapeType;o.filled=!!el.filled;o.shapeW=el.shapeW;o.shapeH=el.shapeH;o.strokeWidth=el.strokeWidth||2;o.opacity=el.opacity!=null?el.opacity:1;if(el.fillColor)o.fillColor=el.fillColor;}return o;}
       if(el.type==='text'){const o={type:'text',x:el.x,y:el.y,html:el.html||'',text:el.text||'',color:el.color};if(el.bordered)o.bordered=true;if(el.textW)o.textW=el.textW;return o;}
       if(el.type==='arrow')return{type:'arrow',x:el.x,y:el.y,x2:el.x2,y2:el.y2,color:el.color,doubleHead:el.doubleHead||false,lineOnly:el.lineOnly||false,dashed:el.dashed||false,opacity:el.opacity!=null?el.opacity:1,strokeWidth:el.strokeWidth||2};
@@ -5399,7 +5511,29 @@ function buildProjectJSON(){
       if(el.type==='legend')return{type:'legend',x:el.x,y:el.y,imgSrc:el.imgSrc,w:el.w,h:el.h};
       if(el.type==='image')return{type:'image',x:el.x,y:el.y,imgSrc:el.imgSrc,w:el.w,h:el.h,rotation:el.rotation||0};
       return el;
-    }),
+  });
+}
+
+function buildProjectJSON(){
+  const refVal=document.getElementById('project-ref').value.trim();
+  // Sauvegarder page courante dans pages[]
+  saveCurrentPage();
+  const project={
+    version:3,
+    projectRef:refVal,
+    // Rétrocompatibilité : page courante en racine
+    planImgSrc:planImgSrc,
+    planW:planW,
+    planH:planH,
+    // Toutes les pages
+    pages:pages.map((pg,i)=>({
+      planImgSrc:pg.planImgSrc,planW:pg.planW||1200,planH:pg.planH||800,
+      elements:serializeElements(pg.elements),
+      drawPaths:pg.drawPaths||[],cleanPaths:pg.cleanPaths||[],
+      measureScale:pg.measureScale!=null?pg.measureScale:null
+    })),
+    currentPageIdx:currentPageIdx,
+    elements:serializeElements(elements),
     drawPaths:drawPaths,
     cleanPaths:cleanPaths,
     photos:photos.map(p=>({dataUrl:p.dataUrl,timestamp:p.timestamp||'',name:p.name||'',checked:!!p.checked})),
@@ -5500,6 +5634,7 @@ async function closeProject(){
   measureDistStart=null;measureDistPreviewEnd=null;measureAreaPts=[];measureAreaPreview=null;
   measureColor='#E91E8C';measureLineStyle='dashed';measureApprox=false;measureFontSize=11;
   photos=[];sondages=[];niveauRefs=[];
+  pages=[];currentPageIdx=0;updatePageBar();
   planImgSrc='';planW=1200;planH=800;
   document.getElementById('project-ref').value='';
   // Masquer le plan
@@ -5552,27 +5687,43 @@ function importProject(e){
     const hLat0=document.getElementById('ia-geo-lat');if(hLat0&&projectLat)hLat0.value=projectLat;
     const hLng0=document.getElementById('ia-geo-lng');if(hLng0&&projectLng)hLng0.value=projectLng;
     // Projet sans plan (nouveau projet vide)
-    if(!project.planImgSrc){
+    if(!project.planImgSrc&&!(project.pages&&project.pages.length>0)){
       if(window.importScan3DFromProject) window.importScan3DFromProject(project.scan3d||null);
+      // Restaurer pages vides
+      pages=[];currentPageIdx=0;updatePageBar();
       return;
     }
-    // Restore plan image
-    planImgSrc=project.planImgSrc;
-    planW=project.planW||1200;
-    planH=project.planH||800;
+    // Restore pages
+    if(project.pages&&project.pages.length>0){
+      pages=project.pages.map(pg=>({
+        planImgSrc:pg.planImgSrc,planW:pg.planW||1200,planH:pg.planH||800,
+        elements:(pg.elements||[]).map(el=>{el.id=el.id||Date.now()+Math.random();return el;}),
+        drawPaths:pg.drawPaths||[],cleanPaths:pg.cleanPaths||[],
+        measureScale:pg.measureScale!=null?pg.measureScale:null
+      }));
+      currentPageIdx=project.currentPageIdx||0;
+    }else{
+      // Ancien format sans pages : créer une seule page
+      pages=[{planImgSrc:project.planImgSrc,planW:project.planW||1200,planH:project.planH||800,
+        elements:(project.elements||[]).map(el=>{el.id=el.id||Date.now()+Math.random();return el;}),
+        drawPaths:project.drawPaths||[],cleanPaths:project.cleanPaths||[],
+        measureScale:project.measureScale!=null?project.measureScale:null}];
+      currentPageIdx=0;
+    }
+    // Charger la page courante
+    const pg=pages[currentPageIdx];
+    planImgSrc=pg.planImgSrc;
+    planW=pg.planW;
+    planH=pg.planH;
+    elements=pg.elements;drawPaths=pg.drawPaths;cleanPaths=pg.cleanPaths;
+    measureScale=pg.measureScale;
     const $img=document.getElementById('plan-img');
     $img.style.display='block';
     $img.src=planImgSrc;
     $img.onload=function(){
       document.getElementById('empty-state').style.display='none';
       resizeDrawCanvas();
-      // Restore elements
-      elements=(project.elements||[]).map(el=>{el.id=el.id||Date.now()+Math.random();return el;});
-      // Restore measure scale
-      if(project.measureScale!=null){measureScale=project.measureScale;updateMeasureScaleDisplay();}else{measureScale=null;}
-      // Restore draw paths
-      drawPaths=project.drawPaths||[];
-      cleanPaths=project.cleanPaths||[];
+      if(measureScale!=null)updateMeasureScaleDisplay();
       // Restore photos
       if(project.photos)photos=project.photos.map(p=>({dataUrl:p.dataUrl||p.src||'',timestamp:p.timestamp||'',name:p.name||'',checked:p.checked!==false}));
       renderPhotos();
@@ -5586,6 +5737,7 @@ function importProject(e){
       redrawCleanCanvas();
       renderElements();
       resetView();
+      updatePageBar();
       // Recentrer une seconde fois après stabilisation du layout
       setTimeout(()=>{resizeDrawCanvas();resetView();},100);
     };
