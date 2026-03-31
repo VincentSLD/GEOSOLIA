@@ -3760,6 +3760,8 @@ function updateStudyMarker(lat,lng,flyTo){
   if(!studyMap)return;
   document.getElementById('new-study-lat').value=lat.toFixed(6);
   document.getElementById('new-study-lng').value=lng.toFixed(6);
+  document.getElementById('gps-lat-input').value=lat.toFixed(6);
+  document.getElementById('gps-lng-input').value=lng.toFixed(6);
   if(studyMarker){studyMarker.setLatLng([lat,lng]);}
   else{
     const icon=L.divIcon({html:'<div style="width:20px;height:20px;background:var(--red,#D94040);border:3px solid #fff;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.5)"></div>',className:'',iconSize:[20,20],iconAnchor:[10,10]});
@@ -3768,6 +3770,8 @@ function updateStudyMarker(lat,lng,flyTo){
       const pos=e.target.getLatLng();
       document.getElementById('new-study-lat').value=pos.lat.toFixed(6);
       document.getElementById('new-study-lng').value=pos.lng.toFixed(6);
+      document.getElementById('gps-lat-input').value=pos.lat.toFixed(6);
+      document.getElementById('gps-lng-input').value=pos.lng.toFixed(6);
       reverseGeocodeStudy(pos.lat,pos.lng);
       updateStudyCoords(pos.lat,pos.lng);
       reverseCadastreStudy(pos.lat,pos.lng);
