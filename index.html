@@ -151,6 +151,16 @@
   .del-btn{position:absolute;top:-9px;right:-9px;background:var(--red);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:12px;line-height:20px;text-align:center;font-weight:800;display:none;box-shadow:0 2px 6px rgba(217,64,64,0.4)}
   .edit-btn{position:absolute;top:-9px;left:-9px;background:var(--yellow);color:var(--black);border:none;border-radius:50%;width:20px;height:20px;font-size:10px;line-height:20px;text-align:center;font-weight:800;display:none;box-shadow:0 2px 6px var(--yellow-glow);cursor:pointer}
   .plan-element.selected .del-btn{display:block}
+  .ia-draw-btn{position:absolute;top:-9px;left:-9px;background:var(--yellow);color:var(--black);border:none;border-radius:50%;width:20px;height:20px;font-size:8px;line-height:20px;text-align:center;font-weight:900;display:none;box-shadow:0 2px 6px rgba(0,0,0,0.3);cursor:pointer}
+  .plan-element.selected .ia-draw-btn{display:block}
+  #ia-draw-popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--white);border-radius:var(--radius-lg);padding:18px;width:340px;max-width:90vw;box-shadow:0 8px 32px rgba(0,0,0,0.4);z-index:960;border-top:3px solid var(--yellow);display:none}
+  #ia-draw-popup.open{display:block}
+  #ia-draw-popup h3{font-size:14px;font-weight:900;margin:0 0 10px;color:var(--black)}
+  #ia-draw-popup textarea{width:100%;padding:8px 10px;border:2px solid var(--gray-200);border-radius:var(--radius);font-size:12px;font-family:inherit;resize:vertical;min-height:60px;box-sizing:border-box;outline:none}
+  #ia-draw-popup textarea:focus{border-color:var(--yellow)}
+  #ia-draw-popup .ia-draw-actions{display:flex;gap:8px;margin-top:10px;justify-content:flex-end}
+  #ia-draw-popup button{padding:6px 14px;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+  #ia-draw-status{font-size:11px;color:var(--gray-500);margin-top:8px;display:none}
   .plan-element.selected .edit-btn{display:block}
   .lock-btn{position:absolute;top:56px;left:-9px;background:#888;color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:11px;line-height:20px;text-align:center;display:none;box-shadow:0 2px 6px rgba(0,0,0,0.3);cursor:pointer}
   .lock-btn.unlocked{background:#aaa}
@@ -1599,6 +1609,15 @@
         <button class="plan-choice-btn" onclick="closePlanChoiceModal();addPlanToRight()"><div class="pci">➕</div><div><strong>Ajouter un fond de plan</strong><span>Ajouter un nouveau plan à droite du plan actuel</span></div></button>
       </div>
       <button class="plan-choice-cancel" onclick="closePlanChoiceModal()">Annuler</button>
+    </div>
+  </div>
+  <div id="ia-draw-popup">
+    <h3>Ameliorer le dessin avec l'IA</h3>
+    <textarea id="ia-draw-prompt" placeholder="Decrivez ce que represente le dessin ou comment l'ameliorer... (ex: transformer en fleche propre, redresser le cercle, nettoyer le trait)"></textarea>
+    <div id="ia-draw-status"></div>
+    <div class="ia-draw-actions">
+      <button onclick="closeIADrawPopup()" style="background:var(--gray-100);color:var(--black)">Annuler</button>
+      <button onclick="submitIADrawing()" style="background:var(--yellow);color:var(--black)">Ameliorer</button>
     </div>
   </div>
   <div id="pdf-page-modal" onclick="closePdfPageModal()">
@@ -3304,7 +3323,7 @@ function renderElements(){
       div.innerHTML=`<svg width="${svgW}" height="${svgH}" style="overflow:visible;display:block" xmlns="http://www.w3.org/2000/svg">
         <path d="${pathD}" fill="none" stroke="transparent" stroke-width="${hitSize}" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:stroke;cursor:move"/>
         <path d="${pathD}" fill="none" stroke="${el.color}" stroke-width="${el.size}" stroke-linecap="round" stroke-linejoin="round" opacity="${el.opacity!=null?el.opacity:1}" style="pointer-events:none"/>
-      </svg><button class="del-btn" data-action="del" data-eid="${el.id}">×</button>`;
+      </svg><button class="del-btn" data-action="del" data-eid="${el.id}">×</button><button class="ia-draw-btn" data-action="iaDrawing" data-eid="${el.id}">IA</button>`;
     }else if(el.type==='image'){
       const iw=el.w||150,ih=el.h||100;const irot=el.rotation||0;
       div.innerHTML=`<div class="image-wrap" style="transform:rotate(${irot}deg)"><img src="${el.imgSrc}" style="width:${iw}px;height:${ih}px;pointer-events:none;display:block;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,0.3)"></div><button class="del-btn" data-action="del" data-eid="${el.id}">×</button><button class="edit-btn" data-action="editImage" data-eid="${el.id}">✏️</button><button class="rotate-btn" data-action="rotate" data-eid="${el.id}">↻</button><div class="resize-handle" data-resize="1"></div>`;
@@ -3322,6 +3341,7 @@ function renderElements(){
         else if(action==='duplicate') duplicateElement(eid);
         else if(action==='toggleLock') toggleGroupLock(eid);
         else if(action==='editImage') editImageOnPlan(eid);
+        else if(action==='iaDrawing') openIADrawPopup(eid);
         else if(action==='openSondage'){const sEl=elements.find(e=>e.id===eid);if(sEl&&sEl.sondageId)editSondage(sEl.sondageId);}
         else if(action==='toggleSondageBg'){const sEl=elements.find(e=>e.id===eid);if(sEl){sEl.sondageBg=sEl.nivRefId?(sEl.sondageBg===false?true:false):!sEl.sondageBg;renderElements();}}
         else if(action==='cycleLabelPos'){const sEl=elements.find(e=>e.id===eid);if(sEl){const positions=['top','right','bottom','left'];const idx=positions.indexOf(sEl.labelPos||'top');sEl.labelPos=positions[(idx+1)%4];renderElements();}}
@@ -3762,6 +3782,118 @@ function mergeDrawings(){
   elements.push(merged);
   clearSelection();selectOnly(merged.id);
   renderElements();
+}
+
+// --- IA Drawing Improvement ---
+let iaDrawTargetId=null;
+
+function openIADrawPopup(eid){
+  iaDrawTargetId=eid;
+  document.getElementById('ia-draw-prompt').value='';
+  document.getElementById('ia-draw-status').style.display='none';
+  document.getElementById('ia-draw-popup').classList.add('open');
+  setTimeout(()=>document.getElementById('ia-draw-prompt').focus(),50);
+}
+
+function closeIADrawPopup(){
+  document.getElementById('ia-draw-popup').classList.remove('open');
+  iaDrawTargetId=null;
+}
+
+function drawingToImage(el){
+  const pad=Math.max(el.size*2,12);
+  const w=(el.w||1)+pad*2,h=(el.h||1)+pad*2;
+  const c=document.createElement('canvas');c.width=Math.round(w);c.height=Math.round(h);
+  const ctx=c.getContext('2d');
+  ctx.fillStyle='#FFFFFF';ctx.fillRect(0,0,c.width,c.height);
+  ctx.lineCap='round';ctx.lineJoin='round';
+  ctx.strokeStyle=el.color;ctx.lineWidth=el.size;
+  ctx.globalAlpha=el.opacity!=null?el.opacity:1;
+  ctx.beginPath();
+  el.points.forEach((p,i)=>{
+    if(i===0||p.break)ctx.moveTo(p.x+pad,p.y+pad);
+    else ctx.lineTo(p.x+pad,p.y+pad);
+  });
+  ctx.stroke();
+  return c.toDataURL('image/png');
+}
+
+async function submitIADrawing(){
+  const el=elements.find(e=>e.id===iaDrawTargetId);
+  if(!el||el.type!=='drawing')return;
+  const prompt=document.getElementById('ia-draw-prompt').value.trim();
+  if(!prompt){document.getElementById('ia-draw-prompt').style.borderColor='#D94040';return;}
+
+  const status=document.getElementById('ia-draw-status');
+  status.textContent='Analyse du dessin en cours...';status.style.display='block';status.style.color='var(--gray-500)';
+  // Desactiver le bouton
+  const btns=document.querySelectorAll('#ia-draw-popup button');
+  btns.forEach(b=>b.disabled=true);
+
+  try{
+    const imgDataUrl=drawingToImage(el);
+    const base64=imgDataUrl.replace(/^data:image\/png;base64,/,'');
+    const w=Math.round((el.w||1)+Math.max(el.size*4,24));
+    const h=Math.round((el.h||1)+Math.max(el.size*4,24));
+
+    const sysMsg=`Tu es un assistant de dessin vectoriel. L'utilisateur te montre un dessin a main levee et te demande de l'ameliorer.
+Tu dois repondre UNIQUEMENT avec un bloc JSON valide, sans aucun autre texte, sans markdown.
+Le format est : {"segments":[[{"x":0,"y":0},{"x":10,"y":5},...],[{"x":20,"y":30},...]]}
+Chaque segment est un trait continu (polyline). Les coordonnees sont en pixels dans un canvas de ${w}x${h}.
+Le dessin original occupe ce meme espace. Ameliore-le selon les instructions de l'utilisateur tout en gardant la meme position et taille approximative.
+Trace des lignes nettes, regulieres, bien formees. Si c'est un cercle, fais un vrai cercle. Si c'est une fleche, fais une vraie fleche. Etc.`;
+
+    const messages=[{role:'user',content:[
+      {type:'image',source:{type:'base64',media_type:'image/png',data:base64}},
+      {type:'text',text:prompt+'\n\n[SYSTEM] '+sysMsg}
+    ]}];
+
+    status.textContent='L\'IA ameliore le dessin...';
+
+    const resp=await fetch(IA_PROXY_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({messages:messages})
+    });
+    const data=await resp.json();
+    if(data.error){throw new Error(data.error.message||data.error);}
+
+    const text=(data.content&&data.content[0]&&data.content[0].text)||'';
+    // Extraire le JSON de la reponse
+    const jsonMatch=text.match(/\{[\s\S]*"segments"[\s\S]*\}/);
+    if(!jsonMatch)throw new Error('Reponse IA invalide (pas de JSON)');
+    const parsed=JSON.parse(jsonMatch[0]);
+    if(!parsed.segments||!Array.isArray(parsed.segments))throw new Error('Format de reponse invalide');
+
+    // Convertir en points relatifs
+    const pad=Math.max(el.size*2,12);
+    const allPts=[];
+    parsed.segments.forEach(seg=>{
+      if(!Array.isArray(seg)||seg.length<2)return;
+      seg.forEach((p,i)=>{
+        allPts.push({x:p.x-pad,y:p.y-pad,break:i===0});
+      });
+    });
+    if(allPts.length<2)throw new Error('Dessin ameliore trop court');
+
+    // Recalculer le bounding box
+    let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+    allPts.forEach(p=>{if(p.x<minX)minX=p.x;if(p.y<minY)minY=p.y;if(p.x>maxX)maxX=p.x;if(p.y>maxY)maxY=p.y;});
+    const relPts=allPts.map(p=>({x:p.x-minX,y:p.y-minY,break:p.break}));
+
+    // Remplacer le dessin
+    el.points=relPts;
+    el.x=el.x+minX;el.y=el.y+minY;
+    el.w=maxX-minX;el.h=maxY-minY;
+
+    closeIADrawPopup();
+    renderElements();
+    if(typeof showToast==='function')showToast('Dessin ameliore par l\'IA');
+  }catch(err){
+    status.textContent='Erreur : '+err.message;status.style.color='#D94040';
+  }finally{
+    btns.forEach(b=>b.disabled=false);
+  }
 }
 
 function deleteElement(id){if(!confirm('Supprimer cet élément ?'))return;const el=elements.find(e=>e.id===id);if(el&&el.groupId&&el.groupLocked){elements=elements.filter(e=>e.groupId!==el.groupId);}else{elements=elements.filter(e=>e.id!==id);}selectedIds.delete(id);renderElements();}
