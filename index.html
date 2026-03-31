@@ -3927,22 +3927,40 @@ async function submitIADrawing(){
       else styleInst+='Ajoute un fond blanc. ';
       if(useProportions)styleInst+='CRITIQUE : Le croquis fait '+w+'x'+h+'px. Trace PAR-DESSUS le croquis en gardant exactement sa silhouette. ';
 
-      const gptPrompt='Create a beautiful SVG illustration for a top-down map. '
-        +'The shape is: "'+prompt+'"\n\n'
-        +'The outline is defined by these coordinates (x,y in pixels, canvas '+w+'x'+h+'):\n'+pathStr+'\n\n'
-        +'Output ONLY raw SVG code. No markdown, no explanation.\n'
-        +'Use width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'".\n'
+      // Construire le path SVG a partir des coordonnees
+      const svgPathD=sampledPts.map((p,i)=>(i===0?'M':'L')+Math.round(p.x+pad)+' '+Math.round(p.y+pad)).join(' ')+'Z';
+
+      const gptPrompt='Generate a single SVG illustration. Output ONLY the raw SVG. No markdown, no text, no explanation.\n\n'
+        +'Subject: "'+prompt+'" — top-down aerial view for a site map.\n'
+        +'Canvas: width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'".\n'
         +styleInst+'\n'
-        +'Style rules:\n'
-        +'- Define 3+ gradients (radialGradient for organic, linearGradient for structures) with 3+ color stops each.\n'
-        +'- Add drop shadow filter: feGaussianBlur stdDeviation=3 + feOffset dx=4 dy=4.\n'
-        +'- Layer: shadow, base fill with gradient, inner details, edge highlights.\n'
-        +'- Add 8+ detail shapes inside for texture (ripples for water, leaf clusters for trees, etc).\n'
-        +'- Use darker stroke on outline + inner white semi-transparent stroke for 3D bevel.\n'
-        +'- Use 6+ colors/shades minimum. No flat fills, always gradients.\n'
-        +'- Use cubic Bezier curves (C) for organic shapes.\n'
-        +'- Follow the outline coordinates for the main shape.\n'
-        +'- Target 15-25 SVG elements total.';
+        +'The main shape boundary path is: '+svgPathD+'\n\n'
+        +'EXAMPLE of the quality level expected (for a pond — adapt colors/style to the actual subject):\n'
+        +'<svg width="200" height="150" viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg">'
+        +'<defs>'
+        +'<radialGradient id="g1" cx="45%" cy="40%" r="55%"><stop offset="0%" stop-color="#1a6b8a"/><stop offset="40%" stop-color="#2591b5"/><stop offset="75%" stop-color="#3db8d9"/><stop offset="100%" stop-color="#7dcde6"/></radialGradient>'
+        +'<radialGradient id="g2" cx="30%" cy="30%" r="30%"><stop offset="0%" stop-color="rgba(255,255,255,0.4)"/><stop offset="100%" stop-color="rgba(255,255,255,0)"/></radialGradient>'
+        +'<filter id="sh"><feGaussianBlur in="SourceAlpha" stdDeviation="4"/><feOffset dx="5" dy="5"/><feComponentTransfer><feFuncA type="linear" slope="0.3"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>'
+        +'<filter id="glow"><feGaussianBlur stdDeviation="2"/></filter>'
+        +'</defs>'
+        +'<path d="M40,30 C60,10 140,10 160,35 C175,55 170,100 145,120 C120,135 70,130 45,115 C20,100 15,55 40,30Z" fill="url(#g1)" filter="url(#sh)" stroke="#0d5570" stroke-width="2"/>'
+        +'<path d="M50,40 C65,25 130,22 150,42 C162,58 158,95 138,110 C118,122 75,120 55,108 C35,95 30,60 50,40Z" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>'
+        +'<ellipse cx="80" cy="55" rx="25" ry="12" fill="url(#g2)"/>'
+        +'<ellipse cx="120" cy="75" rx="15" ry="8" fill="rgba(255,255,255,0.15)" transform="rotate(-15,120,75)"/>'
+        +'<ellipse cx="70" cy="85" rx="18" ry="6" fill="rgba(255,255,255,0.1)" transform="rotate(10,70,85)"/>'
+        +'<path d="M90,45 Q95,42 100,45" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>'
+        +'<path d="M60,70 Q68,67 75,71" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"/>'
+        +'<path d="M110,90 Q118,87 125,91" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"/>'
+        +'<ellipse cx="55" cy="35" rx="8" ry="10" fill="#2d8a3e" opacity="0.6"/>'
+        +'<ellipse cx="48" cy="32" rx="6" ry="8" fill="#3da34f" opacity="0.5"/>'
+        +'<ellipse cx="155" cy="105" rx="7" ry="9" fill="#2d8a3e" opacity="0.5"/>'
+        +'<ellipse cx="35" cy="90" rx="5" ry="7" fill="#4ab85e" opacity="0.4"/>'
+        +'<circle cx="90" cy="60" r="2" fill="rgba(255,255,255,0.35)"/>'
+        +'<circle cx="130" cy="50" r="1.5" fill="rgba(255,255,255,0.25)"/>'
+        +'</svg>\n\n'
+        +'NOW generate the SVG for the actual subject using the EXACT boundary path provided above. '
+        +'Match or exceed this quality level. Adapt colors and details to the subject. '
+        +'Use the boundary path coordinates as the main shape. Add gradients, shadows, inner details, highlights.';
 
       const resp=await fetch('/api/draw',{
         method:'POST',
