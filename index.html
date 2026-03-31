@@ -3295,7 +3295,7 @@ function renderElements(){
     }else if(el.type==='drawing'){
       const dw=el.w||1,dh=el.h||1;const pad=el.size*2;
       const svgW=dw+pad*2,svgH=dh+pad*2;
-      const pathD=el.points.map((p,i)=>(i===0?'M':'L')+(p.x+pad).toFixed(1)+','+(p.y+pad).toFixed(1)).join(' ');
+      const pathD=el.points.map((p,i)=>((i===0||p.break)?'M':'L')+(p.x+pad).toFixed(1)+','+(p.y+pad).toFixed(1)).join(' ');
       div.style.left=(el.x*scale+offX)+'px';div.style.top=(el.y*scale+offY)+'px';
       div.style.transform='translate('+(-pad*scale)+'px,'+(-pad*scale)+'px) scale('+scale+')';
       div.style.transformOrigin='0 0';
@@ -3635,6 +3635,17 @@ function renderElements(){
     snapDiv.innerHTML=`<svg width="100%" height="100%" style="position:absolute;inset:0;overflow:visible;pointer-events:none" xmlns="http://www.w3.org/2000/svg"><circle cx="${sx}" cy="${sy}" r="8" fill="rgba(76,175,80,0.35)" stroke="#4CAF50" stroke-width="2"/><line x1="${sx-5}" y1="${sy}" x2="${sx+5}" y2="${sy}" stroke="#4CAF50" stroke-width="1.5"/><line x1="${sx}" y1="${sy-5}" x2="${sx}" y2="${sy+5}" stroke="#4CAF50" stroke-width="1.5"/></svg>`;
     $elemLayer.appendChild(snapDiv);
   }
+  // Bouton Fusionner si 2+ dessins sélectionnés
+  const selDrawings=[...selectedIds].map(id=>elements.find(e=>e.id===id)).filter(e=>e&&e.type==='drawing');
+  if(selDrawings.length>=2){
+    let cx=0,cy=0;selDrawings.forEach(d=>{cx+=d.x+(d.w||0)/2;cy+=d.y+(d.h||0)/2;});
+    cx=cx/selDrawings.length*scale+offX;cy=cy/selDrawings.length*scale+offY;
+    const btn=document.createElement('button');
+    btn.textContent='Fusionner';
+    btn.style.cssText='position:absolute;left:'+cx+'px;top:'+(cy-20)+'px;transform:translate(-50%,-100%);z-index:100;background:var(--yellow);color:var(--black);border:none;border-radius:6px;padding:4px 12px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(0,0,0,0.3);pointer-events:auto';
+    btn.onclick=function(ev){ev.stopPropagation();mergeDrawings();};
+    $elemLayer.appendChild(btn);
+  }
   mepAutoRefresh();
   // Show arrow-options when an arrow is selected
   const selArrow=getSelectedId()?elements.find(e=>e.id===getSelectedId()&&e.type==='arrow'):null;
@@ -3718,6 +3729,37 @@ function mepAutoRefresh(){
     mepRenderPreview();
   },300);
 }
+function mergeDrawings(){
+  const ids=[...selectedIds];
+  const drawings=ids.map(id=>elements.find(e=>e.id===id)).filter(e=>e&&e.type==='drawing');
+  if(drawings.length<2)return;
+  // Calculer le bounding box global
+  let gMinX=Infinity,gMinY=Infinity,gMaxX=-Infinity,gMaxY=-Infinity;
+  drawings.forEach(d=>{
+    d.points.forEach(p=>{
+      const ax=d.x+p.x,ay=d.y+p.y;
+      if(ax<gMinX)gMinX=ax;if(ay<gMinY)gMinY=ay;if(ax>gMaxX)gMaxX=ax;if(ay>gMaxY)gMaxY=ay;
+    });
+  });
+  // Fusionner tous les points (relatifs au nouveau origin)
+  const allPts=[];
+  drawings.forEach(d=>{
+    // Ajouter un separateur (moveTo) entre les sous-chemins
+    d.points.forEach(p=>allPts.push({x:d.x+p.x-gMinX,y:d.y+p.y-gMinY,break:false}));
+    if(allPts.length>0)allPts[allPts.length-d.points.length].break=true;
+  });
+  // Utiliser la couleur et taille du premier dessin
+  const first=drawings[0];
+  const merged={id:Date.now()+Math.random(),type:'drawing',x:gMinX,y:gMinY,w:gMaxX-gMinX,h:gMaxY-gMinY,
+    points:allPts,color:first.color,size:first.size,opacity:first.opacity!=null?first.opacity:1};
+  // Supprimer les anciens dessins
+  const drawIds=new Set(drawings.map(d=>d.id));
+  elements=elements.filter(e=>!drawIds.has(e.id));
+  elements.push(merged);
+  clearSelection();selectOnly(merged.id);
+  renderElements();
+}
+
 function deleteElement(id){if(!confirm('Supprimer cet élément ?'))return;const el=elements.find(e=>e.id===id);if(el&&el.groupId&&el.groupLocked){elements=elements.filter(e=>e.groupId!==el.groupId);}else{elements=elements.filter(e=>e.id!==id);}selectedIds.delete(id);renderElements();}
 
 function editText(id){const el=elements.find(e=>e.id===id);if(!el)return;selectTool('text');openTextEditorForEdit(id);}
@@ -5532,7 +5574,7 @@ function serializeElements(elArr){
       if(el.type==='measureArea')return{type:'measureArea',points:el.points.map(p=>({x:p.x,y:p.y})),cx:el.cx,cy:el.cy,area:el.area,pxArea:el.pxArea,color:el.color||'#E91E8C',approx:!!el.approx,fontSize:el.fontSize||11};
       if(el.type==='legend')return{type:'legend',x:el.x,y:el.y,imgSrc:el.imgSrc,w:el.w,h:el.h};
       if(el.type==='image')return{type:'image',x:el.x,y:el.y,imgSrc:el.imgSrc,w:el.w,h:el.h,rotation:el.rotation||0};
-      if(el.type==='drawing')return{type:'drawing',x:el.x,y:el.y,w:el.w,h:el.h,points:el.points.map(p=>({x:p.x,y:p.y})),color:el.color,size:el.size,opacity:el.opacity!=null?el.opacity:1};
+      if(el.type==='drawing'){const o={type:'drawing',x:el.x,y:el.y,w:el.w,h:el.h,points:el.points.map(p=>{const r={x:p.x,y:p.y};if(p.break)r.break=true;return r;}),color:el.color,size:el.size,opacity:el.opacity!=null?el.opacity:1};return o;}
       return el;
   });
 }
@@ -5826,7 +5868,7 @@ function renderPlanToCanvas(cb){
     elements.filter(e=>e.type==='drawing').forEach(el=>{
       ctx.save();ctx.beginPath();ctx.lineCap='round';ctx.lineJoin='round';
       ctx.globalAlpha=el.opacity!=null?el.opacity:1;ctx.strokeStyle=el.color;ctx.lineWidth=el.size*scale;
-      el.points.forEach((p,i)=>{const sx=toX(el.x+p.x),sy=toY(el.y+p.y);if(i===0)ctx.moveTo(sx,sy);else ctx.lineTo(sx,sy);});
+      el.points.forEach((p,i)=>{const sx=toX(el.x+p.x),sy=toY(el.y+p.y);if(i===0||p.break)ctx.moveTo(sx,sy);else ctx.lineTo(sx,sy);});
       ctx.stroke();ctx.restore();
     });
     // Render arrows
