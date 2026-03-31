@@ -3910,18 +3910,29 @@ async function submitIADrawing(){
       const sampledPts=el.points.filter((_,i)=>i%step===0||i===el.points.length-1);
       const pathStr=sampledPts.map(p=>Math.round(p.x+pad)+','+Math.round(p.y+pad)).join(' ');
 
-      let styleInst='Utilise des couleurs riches et du remplissage (fill). Rends le dessin realiste et detaille avec ombres et degrades. ';
-      if(useTransparent)styleInst+='Fond SVG transparent (pas de rect blanc). ';
+      let styleInst='';
+      if(useTransparent)styleInst+='Fond SVG transparent (pas de rect blanc de fond). ';
       else styleInst+='Ajoute un fond blanc. ';
       if(useProportions)styleInst+='CRITIQUE : Le croquis fait '+w+'x'+h+'px. Trace PAR-DESSUS le croquis en gardant exactement sa silhouette. ';
 
-      const gptPrompt='Voici un croquis a main levee sur un plan de chantier. '+prompt+'\n\n'
+      const gptPrompt='Voici un croquis a main levee sur un plan de chantier geotechnique. '+prompt+'\n\n'
         +'COORDONNEES DU CONTOUR (x,y pixels, canvas '+w+'x'+h+') :\n'+pathStr+'\n\n'
+        +'Tu es un expert en illustration SVG photoréaliste. '
         +'Reponds UNIQUEMENT avec le code SVG brut (<svg>...</svg>). '
         +'width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'". '
-        +styleInst
-        +'Utilise des <path> avec courbes de Bezier pour suivre le contour. '
-        +'Couleurs adaptees au sujet. Pas de texte, pas de refs externes.';
+        +styleInst+'\n\n'
+        +'STYLE OBLIGATOIRE pour un rendu tres realiste :\n'
+        +'- Definis des <defs> avec des <linearGradient>, <radialGradient> et <filter> pour ombres portees (feDropShadow ou feGaussianBlur).\n'
+        +'- Utilise PLUSIEURS couches superposees : un fond/base, puis des details par dessus, puis des reflets/ombres.\n'
+        +'- Pour une mare : degrade bleu fonce au centre vers bleu-vert clair sur les bords, reflets blancs, contour organique irregulier, herbe/vegetation autour.\n'
+        +'- Pour un arbre : canopee avec plusieurs nuances de vert (radialGradient), ombre portee grise dessous decalee, tronc marron au centre.\n'
+        +'- Pour une haie : texture de feuillage dense avec variations de vert, ombre portee, bords irreguliers naturels.\n'
+        +'- Pour une maison : toit colore avec gradient, murs clairs, ombre portee.\n'
+        +'- Pour un talus : hachures ou gradient brun/vert avec relief.\n'
+        +'- Utilise des <path> avec courbes C/Q de Bezier pour des contours organiques lisses.\n'
+        +'- Minimum 5-10 elements SVG pour donner de la richesse au rendu.\n'
+        +'- Couleurs naturelles et realistes, pas de couleurs criardes.\n'
+        +'- Pas de texte, pas de refs externes, pas de <image>.';
 
       const resp=await fetch('/api/draw',{
         method:'POST',
