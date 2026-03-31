@@ -113,6 +113,7 @@
   #draw-canvas{position:absolute;top:0;left:0;pointer-events:none;z-index:3}
   #elements-layer{position:absolute;inset:0;z-index:5}
   #elements-layer.tools-active .plan-element,#elements-layer.tools-active .plan-element *{pointer-events:none!important}
+  #draw-canvas.drawing-active{z-index:6}
   #eraser-cursor{position:absolute;border:2px solid #D94040;border-radius:50%;pointer-events:none;z-index:60;display:none;transform:translate(-50%,-50%)}
   #mrpropre-cursor{position:absolute;border:2px solid #888;border-radius:50%;pointer-events:none;z-index:60;display:none;transform:translate(-50%,-50%);background:rgba(255,255,255,0.3);box-sizing:border-box}
   #mrpropre-cursor::after{content:'';position:absolute;top:50%;left:50%;width:6px;height:6px;background:#4CAF50;border-radius:50%;transform:translate(-50%,-50%)}
@@ -2563,6 +2564,7 @@ function selectTool(t){
   const realTool=t==='shape'?'sticker':t;
   currentTool=realTool;
   $elemLayer.classList.toggle('tools-active',realTool!=='select'&&realTool!=='measure');
+  $drawCanvas.classList.toggle('drawing-active',realTool==='draw'||realTool==='erase');
   document.querySelectorAll('.tool-btn[data-tool]').forEach(b=>{b.className='tool-btn';if(b.dataset.tool===t||(isMp&&b.dataset.tool==='mrpropre')||(isMeas&&b.dataset.tool==='measure')){const c={select:'active',sticker:'active-yellow',shape:'active-yellow',text:'active-dark',draw:'active-red',erase:'active-orange',mrpropre:'active',cleanzone:'active',arrow:'active-red',measureDist:'active',measureArea:'active'};b.classList.add(c[t]||'active');}});
   $area.style.cursor={select:'grab',draw:'crosshair',erase:'none',mrpropre:'none',cleanzone:'crosshair',sticker:'crosshair',text:'text',arrow:'crosshair',measureDist:'crosshair',measureArea:'crosshair'}[realTool]||'crosshair';
   document.getElementById('color-options').style.display=(t==='draw'||t==='text'||t==='erase')?'flex':'none';
