@@ -4704,6 +4704,43 @@ async function iaFetchGeologie(lat,lng){
   return {feuille,litho,notation,description};
 }
 
+async function iaFetchGeolNotations1km(lat,lng,mainNotation){
+  try{
+    const {x:cx,y:cy}=wgs84ToLambert93(lat,lng);
+    const radius=1000,steps=8;
+    const step=(radius*2)/(steps-1);
+    const points=[];
+    for(let i=0;i<steps&&points.length<35;i++){
+      for(let j=0;j<steps&&points.length<35;j++){
+        const px=cx-radius+i*step,py=cy-radius+j*step;
+        if(Math.hypot(px-cx,py-cy)<=radius)points.push({x:px,y:py});
+      }
+    }
+    const notations=new Set();
+    const batchSize=10;
+    for(let b=0;b<points.length;b+=batchSize){
+      const batch=points.slice(b,b+batchSize);
+      await Promise.all(batch.map(async(pt)=>{
+        try{
+          const d=50;
+          const bbox=(pt.x-d)+','+(pt.y-d)+','+(pt.x+d)+','+(pt.y+d);
+          const url='https://infoterre.brgm.fr/services/gfi?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetFeatureInfo'+
+            '&LAYERS=SCAN_GEOL50&QUERY_LAYERS=SCAN_GEOL50&SRS=EPSG:2154'+
+            '&BBOX='+bbox+'&WIDTH=3&HEIGHT=3&X=1&Y=1'+
+            '&INFO_FORMAT=application/vnd.ogc.gml&FEATURE_COUNT=1';
+          const resp=await fetch(url,{signal:AbortSignal.timeout(10000)});
+          if(!resp.ok)return;
+          const xml=await resp.text();
+          const re=/<(?:[A-Za-z0-9_]+:)?notation>([^<]*)<\/(?:[A-Za-z0-9_]+:)?notation>/i;
+          const m=xml.match(re);if(m&&m[1].trim())notations.add(m[1].trim());
+        }catch(e){}
+      }));
+    }
+    if(mainNotation)notations.delete(mainNotation);
+    return notations.size>0?[...notations].join(', '):'identique';
+  }catch(e){return '';}
+}
+
 async function iaFetchAltitude(lat,lng){
   try{
     const resp=await fetch('https://data.geopf.fr/altimetrie/1.0/calcul/alti/rest/elevation.json?lon='+lng+'&lat='+lat+'&resource=ign_rge_alti_wld&delimiter=|&indent=false&measures=false&zonly=true',{signal:AbortSignal.timeout(6000)});
@@ -4867,7 +4904,7 @@ async function iaGeoInvestigate(){
     iaFetchBSS(lat,lng).then(bss=>{gd.bss=bss;}),
     iaFetchNappes(lat,lng).then(label=>{gd.nappes=label;}),
     iaFetchArgiles(lat,lng).then(label=>{gd.argiles=label;}),
-    iaFetchGeologie(lat,lng).then(geo=>{gd.geologie=geo;}),
+    iaFetchGeologie(lat,lng).then(async geo=>{gd.geologie=geo;gd.notations1km=await iaFetchGeolNotations1km(lat,lng,geo.notation);}),
     iaFetchAltitude(lat,lng).then(alt=>{gd.altitude=alt;}),
     fetchRiskMaps(lat,lng).then(maps=>{gd.riskMaps=maps;}),
     reverseCadastrePromise
@@ -5019,8 +5056,9 @@ function renderGeocartoPanel(){
     if(g.geologie.notation){geoHtml+='<strong>Notation :</strong> '+g.geologie.notation+'<br>';geoBadge=g.geologie.notation;}
     if(g.geologie.description)geoHtml+='<strong>Description :</strong> '+g.geologie.description+'<br>';
     if(g.geologie.feuille)geoHtml+='<strong>Feuille :</strong> '+g.geologie.feuille+'<br>';
-    if(g.geologie.litho){geoHtml+='<strong>Lithologie :</strong> '+g.geologie.litho;if(!geoBadge)geoBadge=g.geologie.litho.length>20?g.geologie.litho.substring(0,18)+'…':g.geologie.litho;}
+    if(g.geologie.litho){geoHtml+='<strong>Lithologie :</strong> '+g.geologie.litho+'<br>';if(!geoBadge)geoBadge=g.geologie.litho.length>20?g.geologie.litho.substring(0,18)+'…':g.geologie.litho;}
   }
+  if(g.notations1km)geoHtml+='<strong>Notation &lt;1km :</strong> <span style="font-family:monospace;font-weight:600;color:#795548">'+g.notations1km+'</span>';
   html+=gcSection('Géologie / Lithologie','gc-badge-blue',geoBadge||'',geoHtml||'Donnée non disponible');
   // Risques (avec niveaux)
   function gcRiskLevel(r){
