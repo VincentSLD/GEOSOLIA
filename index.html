@@ -3942,9 +3942,11 @@ async function submitIADrawing(){
       const data=await resp.json();
       if(data.error)throw new Error(typeof data.error==='string'?data.error:data.error.message||JSON.stringify(data.error));
 
-      const text=data.text||'';
+      let text=data.text||'';
+      // Retirer les blocs markdown ```svg ... ``` ou ``` ... ```
+      text=text.replace(/```(?:svg|xml|html)?\s*\n?/gi,'').replace(/```/g,'');
       const svgMatch=text.match(/<svg[\s\S]*<\/svg>/i);
-      if(!svgMatch)throw new Error('GPT-4o n\'a pas retourne de SVG valide');
+      if(!svgMatch)throw new Error('GPT-4o n\'a pas retourne de SVG valide. Reponse: '+text.substring(0,200));
       let svgStr=svgMatch[0];
 
       if(useProportions){
@@ -4008,7 +4010,8 @@ async function submitIADrawing(){
       const data=await resp.json();
       if(data.error)throw new Error(data.error.message||JSON.stringify(data.error));
 
-      const text=(data.content&&data.content[0]&&data.content[0].text)||'';
+      let text=(data.content&&data.content[0]&&data.content[0].text)||'';
+      text=text.replace(/```(?:svg|xml|html)?\s*\n?/gi,'').replace(/```/g,'');
       const svgMatch=text.match(/<svg[\s\S]*<\/svg>/i);
       if(!svgMatch)throw new Error('L\'IA n\'a pas retourne de SVG valide');
       let svgStr=svgMatch[0];
