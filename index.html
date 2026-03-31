@@ -4638,7 +4638,7 @@ function parseBSSGml(xmlText,centerLat,centerLng){
   return features;
 }
 async function iaFetchBSS(lat,lng){
-  const dLat=0.045,dLng=0.065;
+  const dLat=0.009,dLng=0.013; // ~1km comme GEOCARTO
   const bboxStr=(lat-dLat)+','+(lng-dLng)+','+(lat+dLat)+','+(lng+dLng)+',urn:ogc:def:crs:EPSG::4326';
   const urlEau='https://geoservices.brgm.fr/geologie?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=ms:BSS_EAU_POINT&COUNT=200&BBOX='+bboxStr;
   const urlTotal='https://geoservices.brgm.fr/geologie?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=ms:BSS_TOTAL_AVEC_LABEL&COUNT=200&BBOX='+bboxStr;
