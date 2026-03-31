@@ -3027,6 +3027,7 @@ function onPD(e){
   if(e.button===1)return; // middle button handled separately for panning only
   if(e.target.closest('#empty-state'))return;
   if(e.target.closest('#btn-recadrer'))return;
+  if(e.target.closest('#page-bar'))return;
   // GPS calibration plan click intercept
   if(gpsCalibPlanClickTarget){const pt=gP(e);if(gpsCalibHandlePlanClick(pt.px,pt.py))return;}
   if(currentTool==='select'&&e.target.closest('.plan-element'))return;const pt=gP(e);
