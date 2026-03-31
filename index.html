@@ -3927,28 +3927,27 @@ async function submitIADrawing(){
       else styleInst+='Ajoute un fond blanc. ';
       if(useProportions)styleInst+='CRITIQUE : Le croquis fait '+w+'x'+h+'px. Trace PAR-DESSUS le croquis en gardant exactement sa silhouette. ';
 
-      const gptPrompt='You are a world-class SVG illustrator specializing in photorealistic top-down map illustrations. '
-        +'Convert this hand-drawn sketch into a beautiful, highly detailed SVG. The user describes it as: "'+prompt+'"\n\n'
-        +'Outline coordinates (x,y pixels in a '+w+'x'+h+' canvas):\n'+pathStr+'\n\n'
-        +'Reply with ONLY the raw SVG code (<svg>...</svg>). No markdown, no explanation, no backticks.\n'
-        +'SVG: width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'"\n'
+      const gptPrompt='Create a beautiful SVG illustration for a top-down map. '
+        +'The shape is: "'+prompt+'"\n\n'
+        +'The outline is defined by these coordinates (x,y in pixels, canvas '+w+'x'+h+'):\n'+pathStr+'\n\n'
+        +'Output ONLY raw SVG code. No markdown, no explanation.\n'
+        +'Use width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'".\n'
         +styleInst+'\n'
-        +'CRITICAL RENDERING RULES for photorealistic quality:\n'
-        +'1. GRADIENTS: Define at least 3-4 gradients in <defs>. Use radialGradient for organic shapes (water, trees) and linearGradient for structures. Each gradient must have 3+ stops with realistic color transitions.\n'
-        +'2. SHADOWS: Add a <filter id="shadow"> with feGaussianBlur stdDeviation="3" + feOffset dx="4" dy="4" + feComposite. Apply to main shape with filter="url(#shadow)".\n'
-        +'3. LAYERING (back to front): shadow layer → base fill with main gradient → inner detail shapes → edge highlights (semi-transparent white strokes) → subtle texture patterns.\n'
-        +'4. DETAIL SHAPES: Add 8-15 smaller shapes inside the main outline for texture. For water: ripple ellipses with white opacity 0.15. For trees: overlapping leaf clusters in varying greens. For vegetation: small organic blobs.\n'
-        +'5. EDGE TREATMENT: The main outline should use a darker shade stroke (2-3px) with rounded joins. Add an inner lighter stroke (1px, white opacity 0.3) offset by 2px for a 3D bevel effect.\n'
-        +'6. COLOR PALETTE: Use at minimum 6 different colors/shades. Never use flat single-color fills. Every shape must have a gradient or pattern fill.\n'
-        +'7. ORGANIC CURVES: All <path> elements must use C (cubic Bezier) curves, never straight lines for natural shapes.\n'
-        +'8. Follow the outline coordinates closely for the main shape boundary.\n'
-        +'9. No <text>, no <image>, no external references. Pure SVG shapes only.\n'
-        +'10. Target: 15-25 total SVG elements for a rich, layered result.';
+        +'Style rules:\n'
+        +'- Define 3+ gradients (radialGradient for organic, linearGradient for structures) with 3+ color stops each.\n'
+        +'- Add drop shadow filter: feGaussianBlur stdDeviation=3 + feOffset dx=4 dy=4.\n'
+        +'- Layer: shadow, base fill with gradient, inner details, edge highlights.\n'
+        +'- Add 8+ detail shapes inside for texture (ripples for water, leaf clusters for trees, etc).\n'
+        +'- Use darker stroke on outline + inner white semi-transparent stroke for 3D bevel.\n'
+        +'- Use 6+ colors/shades minimum. No flat fills, always gradients.\n'
+        +'- Use cubic Bezier curves (C) for organic shapes.\n'
+        +'- Follow the outline coordinates for the main shape.\n'
+        +'- Target 15-25 SVG elements total.';
 
       const resp=await fetch('/api/draw',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({prompt:gptPrompt,image_base64:base64,mode:'gpt4o'})
+        body:JSON.stringify({prompt:gptPrompt,mode:'gpt4o'})
       });
       const data=await resp.json();
       if(data.error)throw new Error(typeof data.error==='string'?data.error:data.error.message||JSON.stringify(data.error));
