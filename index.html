@@ -3915,24 +3915,18 @@ async function submitIADrawing(){
       else styleInst+='Ajoute un fond blanc. ';
       if(useProportions)styleInst+='CRITIQUE : Le croquis fait '+w+'x'+h+'px. Trace PAR-DESSUS le croquis en gardant exactement sa silhouette. ';
 
-      const gptPrompt='Voici un croquis a main levee sur un plan de chantier geotechnique. '+prompt+'\n\n'
-        +'COORDONNEES DU CONTOUR (x,y pixels, canvas '+w+'x'+h+') :\n'+pathStr+'\n\n'
-        +'Tu es un expert en illustration SVG photoréaliste. '
-        +'Reponds UNIQUEMENT avec le code SVG brut (<svg>...</svg>). '
-        +'width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'". '
-        +styleInst+'\n\n'
-        +'STYLE OBLIGATOIRE pour un rendu tres realiste :\n'
-        +'- Definis des <defs> avec des <linearGradient>, <radialGradient> et <filter> pour ombres portees (feDropShadow ou feGaussianBlur).\n'
-        +'- Utilise PLUSIEURS couches superposees : un fond/base, puis des details par dessus, puis des reflets/ombres.\n'
-        +'- Pour une mare : degrade bleu fonce au centre vers bleu-vert clair sur les bords, reflets blancs, contour organique irregulier, herbe/vegetation autour.\n'
-        +'- Pour un arbre : canopee avec plusieurs nuances de vert (radialGradient), ombre portee grise dessous decalee, tronc marron au centre.\n'
-        +'- Pour une haie : texture de feuillage dense avec variations de vert, ombre portee, bords irreguliers naturels.\n'
-        +'- Pour une maison : toit colore avec gradient, murs clairs, ombre portee.\n'
-        +'- Pour un talus : hachures ou gradient brun/vert avec relief.\n'
-        +'- Utilise des <path> avec courbes C/Q de Bezier pour des contours organiques lisses.\n'
-        +'- Minimum 5-10 elements SVG pour donner de la richesse au rendu.\n'
-        +'- Couleurs naturelles et realistes, pas de couleurs criardes.\n'
-        +'- Pas de texte, pas de refs externes, pas de <image>.';
+      const gptPrompt='Please convert this hand-drawn sketch into a clean, detailed SVG illustration. The user says: "'+prompt+'"\n\n'
+        +'Outline coordinates (x,y pixels in a '+w+'x'+h+' canvas):\n'+pathStr+'\n\n'
+        +'Reply with ONLY the raw SVG code, starting with <svg and ending with </svg>. No markdown, no explanation.\n'
+        +'SVG attributes: width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'"\n'
+        +styleInst+'\n'
+        +'Style guidelines:\n'
+        +'- Use <defs> with <linearGradient>, <radialGradient> and <filter> (feGaussianBlur for drop shadows)\n'
+        +'- Layer multiple elements: base shape, then details on top, then highlights/shadows\n'
+        +'- Use <path> with Bezier curves (C/Q) following the outline coordinates above\n'
+        +'- Rich natural colors with gradients for depth and realism\n'
+        +'- At least 5-10 SVG elements for a detailed render\n'
+        +'- No text, no external references, no <image> tags';
 
       const resp=await fetch('/api/draw',{
         method:'POST',
