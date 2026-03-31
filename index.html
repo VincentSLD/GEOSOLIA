@@ -173,6 +173,10 @@
   .text-label-edit-input{background:#fff;border:2px solid var(--yellow);border-radius:3px;color:#1A1A1A;font-family:'Nunito Sans',Arial,sans-serif;font-weight:700;white-space:nowrap;text-align:center;outline:none;box-shadow:0 0 0 3px var(--yellow-glow);line-height:1.2;min-width:60px}
   .rotate-btn{position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:#3D7AB5;color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:11px;line-height:20px;text-align:center;font-weight:800;display:none;box-shadow:0 2px 6px rgba(61,122,181,0.4);cursor:grab}
   .plan-element.selected .rotate-btn{display:block}
+  .img-opacity-bar{display:none;position:absolute;bottom:-28px;left:50%;transform:translateX(-50%);background:rgba(30,30,30,0.85);border-radius:10px;padding:2px 8px;align-items:center;gap:4px;white-space:nowrap;backdrop-filter:blur(4px)}
+  .img-opacity-bar span{font-size:9px;font-weight:700;color:rgba(255,255,255,0.8);min-width:28px;text-align:right}
+  .img-opacity-bar input[type="range"]{width:60px;height:12px;cursor:pointer;accent-color:var(--yellow)}
+  .plan-element.selected .img-opacity-bar{display:flex}
   .arrow-handle{position:absolute;width:14px;height:14px;border-radius:50%;background:#fff;border:2.5px solid;cursor:grab;transform:translate(-50%,-50%);display:none;z-index:15;box-shadow:0 1px 4px rgba(0,0,0,0.3)}
   .plan-element.selected .arrow-handle{display:block}
   /* arrow-edit-panel CSS removed - now using toolbar sub-menu */
@@ -1636,7 +1640,6 @@
       </label>
       <label style="font-size:10px;font-weight:700;color:var(--gray-500);display:flex;align-items:center;gap:4px"><input type="checkbox" id="ia-draw-transparent" checked> Fond transparent</label>
       <label style="font-size:10px;font-weight:700;color:var(--gray-500);display:flex;align-items:center;gap:4px"><input type="checkbox" id="ia-draw-proportions" checked> Garder les proportions</label>
-      <label style="font-size:10px;font-weight:700;color:var(--gray-500);display:flex;align-items:center;gap:4px">Opacite : <input type="range" id="ia-draw-opacity" min="0" max="100" value="100" style="width:60px;height:14px;cursor:pointer"><span id="ia-draw-opacity-val" style="min-width:24px;text-align:right">100</span>%</label>
     </div>
     <div id="ia-draw-status"></div>
     <div class="ia-draw-actions">
@@ -3350,8 +3353,17 @@ function renderElements(){
         <path d="${pathD}" fill="none" stroke="${el.color}" stroke-width="${el.size}" stroke-linecap="round" stroke-linejoin="round" opacity="${el.opacity!=null?el.opacity:1}" style="pointer-events:none"/>
       </svg><button class="del-btn" data-action="del" data-eid="${el.id}">×</button><button class="ia-draw-btn" data-action="iaDrawing" data-eid="${el.id}">IA</button>`;
     }else if(el.type==='image'){
-      const iw=el.w||150,ih=el.h||100;const irot=el.rotation||0;const iop=el.opacity!=null?el.opacity:1;
-      div.innerHTML=`<div class="image-wrap" style="transform:rotate(${irot}deg);opacity:${iop}"><img src="${el.imgSrc}" style="width:${iw}px;height:${ih}px;pointer-events:none;display:block;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,0.3)"></div><button class="del-btn" data-action="del" data-eid="${el.id}">×</button><button class="edit-btn" data-action="editImage" data-eid="${el.id}">✏️</button><button class="rotate-btn" data-action="rotate" data-eid="${el.id}">↻</button><div class="resize-handle" data-resize="1"></div>`;
+      const iw=el.w||150,ih=el.h||100;const irot=el.rotation||0;const iop=el.opacity!=null?el.opacity:1;const iopPct=Math.round(iop*100);
+      div.innerHTML=`<div class="image-wrap" style="transform:rotate(${irot}deg);opacity:${iop}"><img src="${el.imgSrc}" style="width:${iw}px;height:${ih}px;pointer-events:none;display:block;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,0.3)"></div><button class="del-btn" data-action="del" data-eid="${el.id}">×</button><button class="edit-btn" data-action="editImage" data-eid="${el.id}">✏️</button><button class="rotate-btn" data-action="rotate" data-eid="${el.id}">↻</button><div class="resize-handle" data-resize="1"></div><div class="img-opacity-bar" data-eid="${el.id}"><input type="range" min="0" max="100" value="${iopPct}" class="img-opacity-slider"><span>${iopPct}%</span></div>`;
+      const opSlider=div.querySelector('.img-opacity-slider');
+      if(opSlider){
+        opSlider.addEventListener('input',function(ev){ev.stopPropagation();
+          el.opacity=this.value/100;
+          this.nextElementSibling.textContent=this.value+'%';
+          div.querySelector('.image-wrap').style.opacity=el.opacity;
+        });
+        opSlider.addEventListener('pointerdown',function(ev){ev.stopPropagation();});
+      }
     }
     div.addEventListener('pointerdown',e=>{
       if(currentTool!=='select'){e.stopPropagation();e.preventDefault();onPD(e);return;}
@@ -3816,15 +3828,10 @@ function openIADrawPopup(eid){
   iaDrawTargetId=eid;
   document.getElementById('ia-draw-prompt').value='';
   document.getElementById('ia-draw-status').style.display='none';
-  document.getElementById('ia-draw-opacity').value=100;
-  document.getElementById('ia-draw-opacity-val').textContent='100';
   document.getElementById('ia-draw-popup').classList.add('open');
   // Afficher la preview
   const el=elements.find(e=>e.id===eid);
   if(el)drawPreviewCanvas(el);
-  // Binding slider opacite
-  const sl=document.getElementById('ia-draw-opacity');
-  sl.oninput=function(){document.getElementById('ia-draw-opacity-val').textContent=this.value;};
   setTimeout(()=>document.getElementById('ia-draw-prompt').focus(),50);
 }
 
@@ -4032,13 +4039,11 @@ async function submitIADrawing(){
     }
 
     // Remplacer le dessin par une image
-    const opacityVal=parseInt(document.getElementById('ia-draw-opacity').value)||100;
     const idx=elements.findIndex(e=>e.id===el.id);
     const newEl={
       id:Date.now()+Math.random(),type:'image',
       x:el.x+(el.w||0)/2,y:el.y+(el.h||0)/2,
-      imgSrc:imgDataUrl,w:w,h:h,rotation:0,
-      opacity:opacityVal/100
+      imgSrc:imgDataUrl,w:w,h:h,rotation:0
     };
     if(idx>=0)elements[idx]=newEl;
     else elements.push(newEl);
