@@ -3822,12 +3822,53 @@ function searchByGPS(){
   errEl.style.display='none';
   const latStr=document.getElementById('gps-lat-input').value.trim();
   const lngStr=document.getElementById('gps-lng-input').value.trim();
+  // Si champs vides : géolocalisation navigateur
+  if(!latStr&&!lngStr){
+    gpsGeolocate();
+    return;
+  }
   const lat=parseFloat(latStr),lng=parseFloat(lngStr);
   if(isNaN(lat)||isNaN(lng)||lat<-90||lat>90||lng<-180||lng>180){
     errEl.textContent='Coordonnées invalides. Format attendu : 46.867747 / -1.769058';
     errEl.style.display='block';
     return;
   }
+  applyGPSCoords(lat,lng);
+}
+
+function gpsGeolocate(){
+  const errEl=document.getElementById('new-study-gps-error');
+  if(!navigator.geolocation){
+    errEl.textContent='La géolocalisation n\'est pas supportée par votre navigateur.';
+    errEl.style.display='block';
+    return;
+  }
+  errEl.textContent='Localisation en cours...';
+  errEl.style.display='block';
+  errEl.style.color='var(--gray-500)';
+  navigator.geolocation.getCurrentPosition(
+    function(pos){
+      const lat=pos.coords.latitude,lng=pos.coords.longitude;
+      document.getElementById('gps-lat-input').value=lat.toFixed(6);
+      document.getElementById('gps-lng-input').value=lng.toFixed(6);
+      errEl.style.display='none';
+      errEl.style.color='#D94040';
+      applyGPSCoords(lat,lng);
+    },
+    function(err){
+      errEl.style.color='#D94040';
+      let msg='Impossible de récupérer votre position.';
+      if(err.code===1)msg='Accès à la géolocalisation refusé. Autorisez la localisation dans les paramètres du navigateur.';
+      else if(err.code===2)msg='Position indisponible. Vérifiez que le GPS est activé.';
+      else if(err.code===3)msg='Délai dépassé. Réessayez.';
+      errEl.textContent=msg;
+      errEl.style.display='block';
+    },
+    {enableHighAccuracy:true,timeout:10000,maximumAge:0}
+  );
+}
+
+function applyGPSCoords(lat,lng){
   updateStudyMarker(lat,lng,true);
   reverseGeocodeStudy(lat,lng);
   reverseCadastreStudy(lat,lng);
