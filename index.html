@@ -3893,19 +3893,24 @@ async function submitIADrawing(){
     if(useTransparent)styleInstructions+='Le fond du SVG doit etre transparent (pas de rectangle blanc de fond). ';
     else styleInstructions+='Ajoute un fond blanc au SVG. ';
     const ratio=(w/h).toFixed(2);
-    if(useProportions)styleInstructions+='REGLE CRITIQUE — PROPORTIONS : Le croquis fait '+w+'px de large sur '+h+'px de haut (ratio '+ratio+'). Tu DOIS produire un SVG avec EXACTEMENT viewBox="0 0 '+w+' '+h+'" et width="'+w+'" height="'+h+'". Le dessin ameliore DOIT remplir ce rectangle en gardant la silhouette originale. NE CHANGE PAS les proportions : une forme large reste large, une forme haute reste haute. ';
+    if(useProportions)styleInstructions+='REGLE CRITIQUE — CONTOUR ET PROPORTIONS : Le croquis fait '+w+'px de large sur '+h+'px de haut (ratio '+ratio+'). Tu DOIS produire un SVG avec EXACTEMENT viewBox="0 0 '+w+' '+h+'" et width="'+w+'" height="'+h+'". Tu dois TRACER PAR-DESSUS le croquis original : le contour/la silhouette de ton dessin ameliore doit suivre EXACTEMENT la forme dessinee par l\'utilisateur. Ne change PAS la forme, ne la simplifie pas en cercle ou en rectangle si ce n\'en est pas un. Si l\'utilisateur a dessine une mare irreguliere, trace une mare irreguliere avec le MEME contour. Si c\'est une forme oblongue, garde la forme oblongue. Ameliore la qualite (lisser les traits, ajouter couleurs/details) MAIS garde le trace original comme guide de contour. ';
 
     const sysMsg=`Tu es un illustrateur SVG expert. L'utilisateur te montre un croquis fait a main levee sur un plan de chantier et te demande de le transformer en un dessin SVG propre et ameliore.
 
-INSTRUCTIONS :
+METHODE DE TRAVAIL :
+1. Analyse attentivement la FORME EXACTE du croquis : son contour, ses courbes, ses angles, sa silhouette.
+2. Trace ton dessin ameliore EN SUIVANT ce contour comme guide. Le trace original est ton patron.
+3. Ameliore la qualite : lisse les traits tremblants, ajoute couleurs et details A L'INTERIEUR du contour.
+4. Ne remplace JAMAIS une forme irreguliere par une forme geometrique simple (pas de cercle si c'est une mare, pas de rectangle si c'est un nuage).
+
+REGLES STRICTES :
 - Reponds UNIQUEMENT avec le code SVG brut (commencant par <svg et finissant par </svg>).
 - Pas de markdown, pas de texte avant ou apres, pas de backticks.
 - Le SVG doit faire exactement ${w}x${h} pixels (viewBox="0 0 ${w} ${h}").
 - ${styleInstructions}
-- Utilise des <path>, <circle>, <rect>, <ellipse>, <polygon>, <line> etc.
+- Utilise des <path> avec des courbes de Bezier pour suivre fidelement le contour original.
 - Utilise des couleurs adaptees au sujet (pas seulement du noir).
-- Le dessin doit occuper la meme zone que l'original.
-- Garde les proportions du croquis original.
+- Le dessin ameliore doit occuper la MEME ZONE et avoir la MEME SILHOUETTE que l'original.
 - Pas de texte dans le SVG sauf si explicitement demande.
 - Pas de references externes (images, fonts).`;
 
