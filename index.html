@@ -1621,6 +1621,7 @@
       <label style="font-size:10px;font-weight:700;color:var(--gray-500);display:flex;align-items:center;gap:4px"><input type="checkbox" id="ia-draw-fill" checked> Remplissage / couleurs</label>
       <label style="font-size:10px;font-weight:700;color:var(--gray-500);display:flex;align-items:center;gap:4px"><input type="checkbox" id="ia-draw-realistic" checked> Realiste</label>
       <label style="font-size:10px;font-weight:700;color:var(--gray-500);display:flex;align-items:center;gap:4px"><input type="checkbox" id="ia-draw-transparent"> Fond transparent</label>
+      <label style="font-size:10px;font-weight:700;color:var(--gray-500);display:flex;align-items:center;gap:4px"><input type="checkbox" id="ia-draw-proportions" checked> Garder les proportions</label>
     </div>
     <div id="ia-draw-status"></div>
     <div class="ia-draw-actions">
@@ -3874,6 +3875,7 @@ async function submitIADrawing(){
   const useFill=document.getElementById('ia-draw-fill').checked;
   const useRealistic=document.getElementById('ia-draw-realistic').checked;
   const useTransparent=document.getElementById('ia-draw-transparent').checked;
+  const useProportions=document.getElementById('ia-draw-proportions').checked;
 
   const status=document.getElementById('ia-draw-status');
   status.textContent='Analyse du dessin en cours...';status.style.display='block';status.style.color='var(--gray-500)';
@@ -3890,6 +3892,7 @@ async function submitIADrawing(){
     if(useRealistic)styleInstructions+='Rends le dessin realiste et detaille, comme une illustration professionnelle. Ajoute des ombres legeres, des degrades si pertinent. ';
     if(useTransparent)styleInstructions+='Le fond du SVG doit etre transparent (pas de rectangle blanc de fond). ';
     else styleInstructions+='Ajoute un fond blanc au SVG. ';
+    if(useProportions)styleInstructions+='IMPORTANT : respecte EXACTEMENT les proportions et la forme du croquis original. La largeur fait '+w+'px et la hauteur '+h+'px, garde ce ratio. Le dessin ameliore doit occuper la meme zone et avoir la meme silhouette/forme que l\'original, simplement avec des traits propres et des details. Ne transforme PAS une forme allongee en forme carree, ne change PAS les proportions. ';
 
     const sysMsg=`Tu es un illustrateur SVG expert. L'utilisateur te montre un croquis fait a main levee sur un plan de chantier et te demande de le transformer en un dessin SVG propre et ameliore.
 
