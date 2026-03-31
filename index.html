@@ -1630,7 +1630,8 @@
     <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center">
       <label style="font-size:10px;font-weight:700;color:var(--gray-500);display:flex;align-items:center;gap:4px">Moteur :
         <select id="ia-draw-engine" style="font-size:10px;padding:2px 4px;border:1px solid var(--gray-200);border-radius:4px;font-family:inherit">
-          <option value="dalle" selected>DALL-E 3 (image realiste)</option>
+          <option value="gpt4o" selected>GPT-4o (SVG realiste)</option>
+          <option value="dalle">DALL-E 3 (image bitmap)</option>
           <option value="claude">Claude (SVG vectoriel)</option>
         </select>
       </label>
@@ -3902,7 +3903,50 @@ async function submitIADrawing(){
     const w=Math.round((el.w||1)+pad*2),h=Math.round((el.h||1)+pad*2);
     let imgDataUrl;
 
-    if(engine==='dalle'){
+    if(engine==='gpt4o'){
+      // === GPT-4o via OpenAI ===
+      status.textContent='GPT-4o analyse et ameliore le dessin...';
+      const step=Math.max(1,Math.floor(el.points.length/80));
+      const sampledPts=el.points.filter((_,i)=>i%step===0||i===el.points.length-1);
+      const pathStr=sampledPts.map(p=>Math.round(p.x+pad)+','+Math.round(p.y+pad)).join(' ');
+
+      let styleInst='Utilise des couleurs riches et du remplissage (fill). Rends le dessin realiste et detaille avec ombres et degrades. ';
+      if(useTransparent)styleInst+='Fond SVG transparent (pas de rect blanc). ';
+      else styleInst+='Ajoute un fond blanc. ';
+      if(useProportions)styleInst+='CRITIQUE : Le croquis fait '+w+'x'+h+'px. Trace PAR-DESSUS le croquis en gardant exactement sa silhouette. ';
+
+      const gptPrompt='Voici un croquis a main levee sur un plan de chantier. '+prompt+'\n\n'
+        +'COORDONNEES DU CONTOUR (x,y pixels, canvas '+w+'x'+h+') :\n'+pathStr+'\n\n'
+        +'Reponds UNIQUEMENT avec le code SVG brut (<svg>...</svg>). '
+        +'width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'". '
+        +styleInst
+        +'Utilise des <path> avec courbes de Bezier pour suivre le contour. '
+        +'Couleurs adaptees au sujet. Pas de texte, pas de refs externes.';
+
+      const resp=await fetch('/api/draw',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({prompt:gptPrompt,image_base64:base64,mode:'gpt4o'})
+      });
+      const data=await resp.json();
+      if(data.error)throw new Error(typeof data.error==='string'?data.error:data.error.message||JSON.stringify(data.error));
+
+      const text=data.text||'';
+      const svgMatch=text.match(/<svg[\s\S]*<\/svg>/i);
+      if(!svgMatch)throw new Error('GPT-4o n\'a pas retourne de SVG valide');
+      let svgStr=svgMatch[0];
+
+      if(useProportions){
+        svgStr=svgStr.replace(/<svg([^>]*)>/i,(m,attrs)=>{
+          attrs=attrs.replace(/width\s*=\s*["'][^"']*["']/gi,'').replace(/height\s*=\s*["'][^"']*["']/gi,'').replace(/viewBox\s*=\s*["'][^"']*["']/gi,'');
+          return `<svg${attrs} width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet">`;
+        });
+      }
+
+      status.textContent='Rendu de l\'image...';
+      imgDataUrl=await svgToImage(svgStr,w,h,useTransparent);
+
+    }else if(engine==='dalle'){
       // === DALL-E 3 ===
       status.textContent='DALL-E 3 genere l\'image...';
       const aspectDesc=w>h*1.3?'format paysage (plus large que haut)':h>w*1.3?'format portrait (plus haut que large)':'format carre';
@@ -3982,7 +4026,7 @@ async function submitIADrawing(){
 
     closeIADrawPopup();
     renderElements();
-    if(typeof showToast==='function')showToast('Dessin ameliore par l\'IA ('+(engine==='dalle'?'DALL-E 3':'Claude')+')');
+    if(typeof showToast==='function')showToast('Dessin ameliore par l\'IA ('+({gpt4o:'GPT-4o',dalle:'DALL-E 3',claude:'Claude'}[engine])+')');
   }catch(err){
     status.textContent='Erreur : '+err.message;status.style.color='#D94040';
   }finally{
