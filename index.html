@@ -3028,6 +3028,7 @@ function onPD(e){
   if(e.target.closest('#empty-state'))return;
   if(e.target.closest('#btn-recadrer'))return;
   if(e.target.closest('#page-bar'))return;
+  if(e.target.closest('#btn-merge-drawings'))return;
   // GPS calibration plan click intercept
   if(gpsCalibPlanClickTarget){const pt=gP(e);if(gpsCalibHandlePlanClick(pt.px,pt.py))return;}
   if(currentTool==='select'&&e.target.closest('.plan-element'))return;const pt=gP(e);
@@ -3644,8 +3645,9 @@ function renderElements(){
     cx=cx/selDrawings.length*scale+offX;cy=cy/selDrawings.length*scale+offY;
     const btn=document.createElement('button');
     btn.textContent='Fusionner';
+    btn.id='btn-merge-drawings';
     btn.style.cssText='position:absolute;left:'+cx+'px;top:'+(cy-20)+'px;transform:translate(-50%,-100%);z-index:100;background:var(--yellow);color:var(--black);border:none;border-radius:6px;padding:4px 12px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(0,0,0,0.3);pointer-events:auto';
-    btn.onclick=function(ev){ev.stopPropagation();mergeDrawings();};
+    btn.addEventListener('pointerdown',function(ev){ev.stopPropagation();ev.preventDefault();mergeDrawings();});
     $elemLayer.appendChild(btn);
   }
   mepAutoRefresh();
