@@ -5061,14 +5061,13 @@ function renderGeocartoPanel(){
   html+='<button type="button" onclick="gcFillEmprise()" style="padding:4px 8px;background:#8E24AA;color:#fff;border:none;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer" title="Remplir avec la surface mesurée">📐</button>';
   html+='</div>';
   // --- Typologie et Niveaux ---
-  const typoDefault=projectMission==='G1_ES'?'terrain_seul':'maison_individuelle';
-  const typoVal=g.typologie||typoDefault;
-  if(!g.typologie){g.typologie=typoVal;}
+  const typoVal=g.typologie||'';
   const nivVal=g.nombreNiveaux||'';
   html+='<div style="margin:4px 0 8px;padding:10px 12px;background:#E8EAF6;border-radius:8px;border-left:4px solid #3F51B5">';
   html+='<table style="width:100%;border-collapse:separate;border-spacing:0 6px">';
   html+='<tr><td style="font-weight:700;font-size:12px;color:#1A237E;padding-right:10px;white-space:nowrap">Typologie</td>';
   html+='<td><select id="gc-typologie" style="width:100%;padding:5px 8px;border:1px solid #ccc;border-radius:4px;font-size:12px;font-weight:700;font-family:inherit" onchange="gcMissionField(\'typologie\',this.value)">';
+  html+='<option value=""'+(typoVal===''?' selected':'')+'>— À choisir —</option>';
   html+='<option value="terrain_seul"'+(typoVal==='terrain_seul'?' selected':'')+'>Terrain seul</option>';
   html+='<option value="maison_individuelle"'+(typoVal==='maison_individuelle'?' selected':'')+'>Maison individuelle</option>';
   html+='<option value="autres_batiment"'+(typoVal==='autres_batiment'?' selected':'')+'>Autres bâtiment</option>';
@@ -5205,11 +5204,13 @@ function gcSyncMission(val){
   const rptSel=document.getElementById('rpt-mission-select');
   if(rptSel)rptSel.value=val;
   if(typeof rptChangeMission==='function')rptChangeMission(val);
-  // Si G1 REGAR, basculer la typologie sur Terrain seul
+  // Basculer la typologie selon la mission
   const typoSel=document.getElementById('gc-typologie');
-  if(typoSel&&val==='G1_ES'&&!geocartoData?.typologie){
-    typoSel.value='terrain_seul';
-    gcMissionField('typologie','terrain_seul');
+  if(typoSel){
+    const typoMap={G1_ES:'terrain_seul',G1_PGC:'terrain_seul',G2_AVP:'maison_individuelle',G2_PRO:'maison_individuelle',G5:'maison_individuelle'};
+    const newTypo=typoMap[val]||'';
+    typoSel.value=newTypo;
+    gcMissionField('typologie',newTypo);
   }
 }
 function gcMissionField(field,val){
