@@ -1073,6 +1073,7 @@
     <div id="brush-options" class="sub-options" style="display:none">
       <div class="arr-opt-group"><label>Épaisseur</label><input type="number" class="arr-input" id="draw-width" min="1" max="24" step="1" value="4" onchange="brushSize=Math.min(24,Math.max(1,+this.value));this.value=brushSize"></div>
       <div class="arr-opt-group"><label>Opacité %</label><input type="number" class="arr-input" id="draw-opacity" min="10" max="100" step="5" value="100" onchange="drawOpacity=Math.min(100,Math.max(10,+this.value))/100;this.value=Math.round(drawOpacity*100)"></div>
+      <div class="arr-opt-group"><label style="display:flex;align-items:center;gap:4px;cursor:pointer;white-space:nowrap"><input type="checkbox" id="draw-straight" onchange="drawStraight=this.checked"> Trait droit</label></div>
       <div class="tool-sep" style="height:auto;margin:0 4px"></div>
       <button class="tool-btn" data-tool="erase" onclick="selectTool('erase')" style="padding:4px 8px;font-size:11px"><span class="icon" style="font-size:14px;line-height:1"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H7L3 16c-.8-.8-.8-2 0-2.8L14.6 1.6c.8-.8 2-.8 2.8 0l4 4c.8.8.8 2 0 2.8L12 18"/><path d="M7 20l-4-4"/></svg></span><span class="label">Gomme</span></button>
       <div id="erase-size-group" class="arr-opt-group" style="display:none"><label>Taille gomme</label><input type="number" class="arr-input" id="erase-width" min="5" max="80" step="1" value="20" onchange="eraserSize=Math.min(80,Math.max(5,+this.value));this.value=eraserSize;updateEraserCursor()"></div>
@@ -2428,7 +2429,7 @@ function getSelectedId(){return selectedIds.size>=1?selectedIds.values().next().
 function isSelected(id){return selectedIds.has(id);}
 function clearSelection(){selectedIds.clear();}
 function selectOnly(id){selectedIds.clear();selectedIds.add(id);}
-let drawColor='#1A1A1A',brushSize=4,drawOpacity=1,eraserSize=20,mrPropreSize=30,textColor='#1A1A1A';
+let drawColor='#1A1A1A',brushSize=4,drawOpacity=1,eraserSize=20,mrPropreSize=30,textColor='#1A1A1A',drawStraight=false;
 let drawPaths=[],cleanPaths=[],currentPathPts=[],isDrawing=false,photos=[],cameraStream=null;
 let savedFileHandle=null,autoSaveInterval=null;
 // --- Multi-pages ---
@@ -3134,7 +3135,7 @@ function onPM(e){
   if(measureAreaPts.length>0&&currentTool==='measureArea'){const pt=gP(e);let mx=pt.px,my=pt.py;const snp=applySnap(mx,my);mx=snp.x;my=snp.y;const lp=measureAreaPts[measureAreaPts.length-1];if((e.shiftKey||constraintMode)){const adx=mx-lp.x,ady=my-lp.y;const dist=Math.sqrt(adx*adx+ady*ady);const ang=Math.round(Math.atan2(ady,adx)/(Math.PI/12))*(Math.PI/12);measureAreaPreview={x:lp.x+dist*Math.cos(ang),y:lp.y+dist*Math.sin(ang)};}else{measureAreaPreview={x:mx,y:my};}renderElements();return;}
   if(isDrawing&&currentTool==='mrpropre'){const pt=gP(e);if((e.shiftKey||constraintMode)&&currentPathPts.length>0){const sp=currentPathPts[0];const adx=pt.px-sp.x,ady=pt.py-sp.y;const dist=Math.sqrt(adx*adx+ady*ady);const ang=Math.round(Math.atan2(ady,adx)/(Math.PI/12))*(Math.PI/12);currentPathPts=[sp,{x:sp.x+dist*Math.cos(ang),y:sp.y+dist*Math.sin(ang)}];}else{currentPathPts.push({x:pt.px,y:pt.py});}redrawCleanCanvas();return;}
   if(czPoints.length>0&&currentTool==='cleanzone'){const pt=gP(e);const lp=czPoints[czPoints.length-1];if((e.shiftKey||constraintMode)){const adx=pt.px-lp.x,ady=pt.py-lp.y;const dist=Math.sqrt(adx*adx+ady*ady);const ang=Math.round(Math.atan2(ady,adx)/(Math.PI/12))*(Math.PI/12);czPreview={x:lp.x+dist*Math.cos(ang),y:lp.y+dist*Math.sin(ang)};}else{czPreview={x:pt.px,y:pt.py};}redrawCleanCanvas();return;}
-  if(isDrawing){const pt=gP(e);currentPathPts.push({x:pt.px,y:pt.py});redrawCanvas();}
+  if(isDrawing){const pt=gP(e);if(drawStraight&&currentPathPts.length>0){currentPathPts=[currentPathPts[0],{x:pt.px,y:pt.py}];}else{currentPathPts.push({x:pt.px,y:pt.py});}redrawCanvas();}
 }
 function onPU(e){
   if(isMidPanning){isMidPanning=false;return;}
