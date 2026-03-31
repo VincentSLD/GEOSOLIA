@@ -1613,11 +1613,19 @@
   </div>
   <div id="ia-draw-popup">
     <h3>Ameliorer le dessin avec l'IA</h3>
-    <textarea id="ia-draw-prompt" placeholder="Decrivez ce que represente le dessin ou comment l'ameliorer... (ex: transformer en fleche propre, redresser le cercle, nettoyer le trait)"></textarea>
+    <div id="ia-draw-preview" style="text-align:center;margin-bottom:10px;background:var(--gray-50);border-radius:var(--radius);padding:8px;border:1px solid var(--gray-200)">
+      <canvas id="ia-draw-canvas" style="max-width:100%;max-height:120px;border-radius:4px"></canvas>
+    </div>
+    <textarea id="ia-draw-prompt" placeholder="Que represente ce dessin ? Comment l'ameliorer ?&#10;Ex: C'est un arbre, le rendre realiste avec des couleurs&#10;Ex: Transformer en fleche propre rouge&#10;Ex: C'est une maison, ajouter des details"></textarea>
+    <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+      <label style="font-size:10px;font-weight:700;color:var(--gray-500);display:flex;align-items:center;gap:4px"><input type="checkbox" id="ia-draw-fill" checked> Remplissage / couleurs</label>
+      <label style="font-size:10px;font-weight:700;color:var(--gray-500);display:flex;align-items:center;gap:4px"><input type="checkbox" id="ia-draw-realistic" checked> Realiste</label>
+      <label style="font-size:10px;font-weight:700;color:var(--gray-500);display:flex;align-items:center;gap:4px"><input type="checkbox" id="ia-draw-transparent"> Fond transparent</label>
+    </div>
     <div id="ia-draw-status"></div>
     <div class="ia-draw-actions">
       <button onclick="closeIADrawPopup()" style="background:var(--gray-100);color:var(--black)">Annuler</button>
-      <button onclick="submitIADrawing()" style="background:var(--yellow);color:var(--black)">Ameliorer</button>
+      <button id="ia-draw-submit" onclick="submitIADrawing()" style="background:var(--yellow);color:var(--black)">Ameliorer</button>
     </div>
   </div>
   <div id="pdf-page-modal" onclick="closePdfPageModal()">
@@ -3792,6 +3800,9 @@ function openIADrawPopup(eid){
   document.getElementById('ia-draw-prompt').value='';
   document.getElementById('ia-draw-status').style.display='none';
   document.getElementById('ia-draw-popup').classList.add('open');
+  // Afficher la preview
+  const el=elements.find(e=>e.id===eid);
+  if(el)drawPreviewCanvas(el);
   setTimeout(()=>document.getElementById('ia-draw-prompt').focus(),50);
 }
 
@@ -3800,12 +3811,13 @@ function closeIADrawPopup(){
   iaDrawTargetId=null;
 }
 
-function drawingToImage(el){
+function drawPreviewCanvas(el){
   const pad=Math.max(el.size*2,12);
-  const w=(el.w||1)+pad*2,h=(el.h||1)+pad*2;
-  const c=document.createElement('canvas');c.width=Math.round(w);c.height=Math.round(h);
+  const w=Math.round((el.w||1)+pad*2),h=Math.round((el.h||1)+pad*2);
+  const c=document.getElementById('ia-draw-canvas');
+  c.width=w;c.height=h;
   const ctx=c.getContext('2d');
-  ctx.fillStyle='#FFFFFF';ctx.fillRect(0,0,c.width,c.height);
+  ctx.fillStyle='#FFFFFF';ctx.fillRect(0,0,w,h);
   ctx.lineCap='round';ctx.lineJoin='round';
   ctx.strokeStyle=el.color;ctx.lineWidth=el.size;
   ctx.globalAlpha=el.opacity!=null?el.opacity:1;
@@ -3815,7 +3827,42 @@ function drawingToImage(el){
     else ctx.lineTo(p.x+pad,p.y+pad);
   });
   ctx.stroke();
-  return c.toDataURL('image/png');
+}
+
+function drawingToBase64(el){
+  const pad=Math.max(el.size*2,12);
+  const w=Math.round((el.w||1)+pad*2),h=Math.round((el.h||1)+pad*2);
+  const c=document.createElement('canvas');c.width=w;c.height=h;
+  const ctx=c.getContext('2d');
+  ctx.fillStyle='#FFFFFF';ctx.fillRect(0,0,w,h);
+  ctx.lineCap='round';ctx.lineJoin='round';
+  ctx.strokeStyle=el.color;ctx.lineWidth=el.size;
+  ctx.globalAlpha=el.opacity!=null?el.opacity:1;
+  ctx.beginPath();
+  el.points.forEach((p,i)=>{
+    if(i===0||p.break)ctx.moveTo(p.x+pad,p.y+pad);
+    else ctx.lineTo(p.x+pad,p.y+pad);
+  });
+  ctx.stroke();
+  return c.toDataURL('image/png').replace(/^data:image\/png;base64,/,'');
+}
+
+function svgToImage(svgStr,w,h,transparent){
+  return new Promise((resolve,reject)=>{
+    const blob=new Blob([svgStr],{type:'image/svg+xml;charset=utf-8'});
+    const url=URL.createObjectURL(blob);
+    const img=new Image();
+    img.onload=()=>{
+      const c=document.createElement('canvas');c.width=w*2;c.height=h*2;
+      const ctx=c.getContext('2d');
+      if(!transparent){ctx.fillStyle='#FFFFFF';ctx.fillRect(0,0,c.width,c.height);}
+      ctx.drawImage(img,0,0,c.width,c.height);
+      URL.revokeObjectURL(url);
+      resolve(c.toDataURL('image/png'));
+    };
+    img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('Erreur de rendu SVG'));};
+    img.src=url;
+  });
 }
 
 async function submitIADrawing(){
@@ -3824,31 +3871,46 @@ async function submitIADrawing(){
   const prompt=document.getElementById('ia-draw-prompt').value.trim();
   if(!prompt){document.getElementById('ia-draw-prompt').style.borderColor='#D94040';return;}
 
+  const useFill=document.getElementById('ia-draw-fill').checked;
+  const useRealistic=document.getElementById('ia-draw-realistic').checked;
+  const useTransparent=document.getElementById('ia-draw-transparent').checked;
+
   const status=document.getElementById('ia-draw-status');
   status.textContent='Analyse du dessin en cours...';status.style.display='block';status.style.color='var(--gray-500)';
-  // Desactiver le bouton
   const btns=document.querySelectorAll('#ia-draw-popup button');
   btns.forEach(b=>b.disabled=true);
 
   try{
-    const imgDataUrl=drawingToImage(el);
-    const base64=imgDataUrl.replace(/^data:image\/png;base64,/,'');
-    const w=Math.round((el.w||1)+Math.max(el.size*4,24));
-    const h=Math.round((el.h||1)+Math.max(el.size*4,24));
+    const base64=drawingToBase64(el);
+    const pad=Math.max(el.size*2,12);
+    const w=Math.round((el.w||1)+pad*2),h=Math.round((el.h||1)+pad*2);
 
-    const sysMsg=`Tu es un assistant de dessin vectoriel. L'utilisateur te montre un dessin a main levee et te demande de l'ameliorer.
-Tu dois repondre UNIQUEMENT avec un bloc JSON valide, sans aucun autre texte, sans markdown.
-Le format est : {"segments":[[{"x":0,"y":0},{"x":10,"y":5},...],[{"x":20,"y":30},...]]}
-Chaque segment est un trait continu (polyline). Les coordonnees sont en pixels dans un canvas de ${w}x${h}.
-Le dessin original occupe ce meme espace. Ameliore-le selon les instructions de l'utilisateur tout en gardant la meme position et taille approximative.
-Trace des lignes nettes, regulieres, bien formees. Si c'est un cercle, fais un vrai cercle. Si c'est une fleche, fais une vraie fleche. Etc.`;
+    let styleInstructions='';
+    if(useFill)styleInstructions+='Utilise des couleurs riches et du remplissage (fill) pour les formes. ';
+    if(useRealistic)styleInstructions+='Rends le dessin realiste et detaille, comme une illustration professionnelle. Ajoute des ombres legeres, des degrades si pertinent. ';
+    if(useTransparent)styleInstructions+='Le fond du SVG doit etre transparent (pas de rectangle blanc de fond). ';
+    else styleInstructions+='Ajoute un fond blanc au SVG. ';
+
+    const sysMsg=`Tu es un illustrateur SVG expert. L'utilisateur te montre un croquis fait a main levee sur un plan de chantier et te demande de le transformer en un dessin SVG propre et ameliore.
+
+INSTRUCTIONS :
+- Reponds UNIQUEMENT avec le code SVG brut (commencant par <svg et finissant par </svg>).
+- Pas de markdown, pas de texte avant ou apres, pas de backticks.
+- Le SVG doit faire exactement ${w}x${h} pixels (viewBox="0 0 ${w} ${h}").
+- ${styleInstructions}
+- Utilise des <path>, <circle>, <rect>, <ellipse>, <polygon>, <line> etc.
+- Utilise des couleurs adaptees au sujet (pas seulement du noir).
+- Le dessin doit occuper la meme zone que l'original.
+- Garde les proportions du croquis original.
+- Pas de texte dans le SVG sauf si explicitement demande.
+- Pas de references externes (images, fonts).`;
 
     const messages=[{role:'user',content:[
       {type:'image',source:{type:'base64',media_type:'image/png',data:base64}},
-      {type:'text',text:prompt+'\n\n[SYSTEM] '+sysMsg}
+      {type:'text',text:'Voici mon croquis a main levee. '+prompt+'\n\n'+sysMsg}
     ]}];
 
-    status.textContent='L\'IA ameliore le dessin...';
+    status.textContent='L\'IA dessine...';
 
     const resp=await fetch(IA_PROXY_URL,{
       method:'POST',
@@ -3856,35 +3918,29 @@ Trace des lignes nettes, regulieres, bien formees. Si c'est un cercle, fais un v
       body:JSON.stringify({messages:messages})
     });
     const data=await resp.json();
-    if(data.error){throw new Error(data.error.message||data.error);}
+    if(data.error)throw new Error(data.error.message||JSON.stringify(data.error));
 
     const text=(data.content&&data.content[0]&&data.content[0].text)||'';
-    // Extraire le JSON de la reponse
-    const jsonMatch=text.match(/\{[\s\S]*"segments"[\s\S]*\}/);
-    if(!jsonMatch)throw new Error('Reponse IA invalide (pas de JSON)');
-    const parsed=JSON.parse(jsonMatch[0]);
-    if(!parsed.segments||!Array.isArray(parsed.segments))throw new Error('Format de reponse invalide');
+    // Extraire le SVG de la reponse
+    const svgMatch=text.match(/<svg[\s\S]*<\/svg>/i);
+    if(!svgMatch)throw new Error('L\'IA n\'a pas retourne de SVG valide');
+    const svgStr=svgMatch[0];
 
-    // Convertir en points relatifs
-    const pad=Math.max(el.size*2,12);
-    const allPts=[];
-    parsed.segments.forEach(seg=>{
-      if(!Array.isArray(seg)||seg.length<2)return;
-      seg.forEach((p,i)=>{
-        allPts.push({x:p.x-pad,y:p.y-pad,break:i===0});
-      });
-    });
-    if(allPts.length<2)throw new Error('Dessin ameliore trop court');
+    status.textContent='Rendu de l\'image...';
 
-    // Recalculer le bounding box
-    let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
-    allPts.forEach(p=>{if(p.x<minX)minX=p.x;if(p.y<minY)minY=p.y;if(p.x>maxX)maxX=p.x;if(p.y>maxY)maxY=p.y;});
-    const relPts=allPts.map(p=>({x:p.x-minX,y:p.y-minY,break:p.break}));
+    // Convertir SVG en image PNG
+    const imgDataUrl=await svgToImage(svgStr,w,h,useTransparent);
 
-    // Remplacer le dessin
-    el.points=relPts;
-    el.x=el.x+minX;el.y=el.y+minY;
-    el.w=maxX-minX;el.h=maxY-minY;
+    // Remplacer le dessin par une image
+    const idx=elements.findIndex(e=>e.id===el.id);
+    const newEl={
+      id:Date.now()+Math.random(),type:'image',
+      x:el.x+(el.w||0)/2,y:el.y+(el.h||0)/2,
+      imgSrc:imgDataUrl,w:w,h:h,rotation:0
+    };
+    if(idx>=0)elements[idx]=newEl;
+    else elements.push(newEl);
+    clearSelection();selectOnly(newEl.id);
 
     closeIADrawPopup();
     renderElements();
