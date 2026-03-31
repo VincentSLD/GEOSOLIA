@@ -4561,8 +4561,8 @@ async function iaFetchBSS(lat,lng){
     const key=f.props.code_bss||f.props.bss_id||f.props.reference||(f.lat+','+f.lng);
     if(!seen.has(key)){seen.add(key);merged.push(f);}
   }
-  // Filtrer à 5km et trier par distance
-  const maxDist=2.0;
+  // Filtrer à 1km et trier par distance
+  const maxDist=1.0;
   const results=merged.filter(f=>{
     if(isNaN(f.lat)||isNaN(f.lng))return false;
     f.dist=haversineKm(lat,lng,f.lat,f.lng);
@@ -4861,9 +4861,9 @@ async function iaGeoInvestigate(){
       const items=d.data||[];items.sort((a,b)=>(b.date_debut_evt||'').localeCompare(a.date_debut_evt||''));gd.catnat=items;
     }),
     iaFetchJSON('https://georisques.gouv.fr/api/v1/zonage_sismique?latlon='+lng+','+lat+'&rayon=100').then(d=>{gd.sismique=(d.data&&d.data[0])?d.data[0].code_zone:null;}),
-    iaFetchJSON('https://georisques.gouv.fr/api/v1/cavites?latlon='+lng+','+lat+'&rayon=2000&page=1&page_size=50').then(d=>{gd.cavites=d.data||[];}),
-    iaFetchJSON('https://georisques.gouv.fr/api/v1/installations_classees?latlon='+lng+','+lat+'&rayon=2000&page=1&page_size=50').then(d=>{gd.icpe=d.data||[];}),
-    iaFetchJSON('https://georisques.gouv.fr/api/v1/mvt?latlon='+lng+','+lat+'&rayon=2000&page=1&page_size=50').then(d=>{gd.mvt=d.data||[];}),
+    iaFetchJSON('https://georisques.gouv.fr/api/v1/cavites?latlon='+lng+','+lat+'&rayon=1000&page=1&page_size=50').then(d=>{gd.cavites=d.data||[];}),
+    iaFetchJSON('https://georisques.gouv.fr/api/v1/installations_classees?latlon='+lng+','+lat+'&rayon=1000&page=1&page_size=50').then(d=>{gd.icpe=d.data||[];}),
+    iaFetchJSON('https://georisques.gouv.fr/api/v1/mvt?latlon='+lng+','+lat+'&rayon=1000&page=1&page_size=50').then(d=>{gd.mvt=d.data||[];}),
     iaFetchBSS(lat,lng).then(bss=>{gd.bss=bss;}),
     iaFetchNappes(lat,lng).then(label=>{gd.nappes=label;}),
     iaFetchArgiles(lat,lng).then(label=>{gd.argiles=label;}),
@@ -5050,7 +5050,7 @@ function renderGeocartoPanel(){
   // Mouvements terrain
   html+=gcListSection('Mouvements de terrain',g.mvt,m=>(m.type_mvt||'?')+' ('+(m.date_debut||'')+')'+(m.commune?' · '+m.commune:''), 'orange');
   // BSS
-  html+=gcListSection('Sondages BSS proches (2 km)',g.bss,b=>{
+  html+=gcListSection('Sondages BSS proches (1 km)',g.bss,b=>{
     let t='<strong>'+(b.code_bss||'?')+'</strong> ('+(b.nature||'')+')';
     if(b.dist_km)t+=' <span style="font-size:10px;color:#888;font-weight:700">'+b.dist_km+' km</span>';
     if(b.profondeur)t+=' \u2014 prof='+b.profondeur+'m';
@@ -6470,8 +6470,8 @@ function rptAutoRisques(){
     g.risques.forEach(r=>{t+='  - '+(r.libelle_risque_long||r.libelle_risque_jo||'?')+'\n';});
   }
   if(g.catnat&&g.catnat.length>0)t+='Arrêtés CatNat : '+g.catnat.length+' arrêté(s) recensé(s).\n';
-  if(g.cavites&&g.cavites.length>0)t+='Cavités souterraines : '+g.cavites.length+' dans un rayon de 2 km.\n';
-  if(g.mvt&&g.mvt.length>0)t+='Mouvements de terrain : '+g.mvt.length+' dans un rayon de 2 km.\n';
+  if(g.cavites&&g.cavites.length>0)t+='Cavités souterraines : '+g.cavites.length+' dans un rayon de 1 km.\n';
+  if(g.mvt&&g.mvt.length>0)t+='Mouvements de terrain : '+g.mvt.length+' dans un rayon de 1 km.\n';
   return t.trim();
 }
 
