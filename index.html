@@ -4665,7 +4665,7 @@ async function iaFetchBSS(lat,lng){
     altitude:f.props.altitude||f.props.zsol||'',
     commune:f.props.commune_actuelle||f.props.nom_commune||'',
     nb_piezo:f.props.nb_mesures_piezo||'',
-    lien:(f.props.code_bss||f.props.bss_id||f.props.reference)?'http://ficheinfoterre.brgm.fr/InfoterreFiche/ficheBss.action?id='+encodeURIComponent(f.props.code_bss||f.props.bss_id||f.props.reference):'',
+    lien:'',
     dist_km:f.dist?f.dist.toFixed(1):''
   }));
   return results;
@@ -5186,7 +5186,6 @@ function renderGeocartoPanel(){
     if(b.altitude)t+=' alt='+b.altitude+'m';
     if(b.commune)t+=' · '+b.commune;
     if(b.nb_piezo)t+=' · Piézo : '+b.nb_piezo+' mes.';
-    if(b.lien)t+=' <a href="'+b.lien+'" target="_blank" rel="noopener" style="color:var(--accent-blue,#1976d2);font-size:0.85em">Fiche InfoTerre →</a>';
     return t;
   },'blue');
   html+='</div></details>';
