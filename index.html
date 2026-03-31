@@ -5063,6 +5063,7 @@ function renderGeocartoPanel(){
   // --- Typologie et Niveaux ---
   const typoDefault=projectMission==='G1_ES'?'terrain_seul':'maison_individuelle';
   const typoVal=g.typologie||typoDefault;
+  if(!g.typologie){g.typologie=typoVal;}
   const nivVal=g.nombreNiveaux||'';
   html+='<div style="margin:4px 0 8px;padding:10px 12px;background:#E8EAF6;border-radius:8px;border-left:4px solid #3F51B5">';
   html+='<table style="width:100%;border-collapse:separate;border-spacing:0 6px">';
@@ -5204,6 +5205,12 @@ function gcSyncMission(val){
   const rptSel=document.getElementById('rpt-mission-select');
   if(rptSel)rptSel.value=val;
   if(typeof rptChangeMission==='function')rptChangeMission(val);
+  // Si G1 REGAR, basculer la typologie sur Terrain seul
+  const typoSel=document.getElementById('gc-typologie');
+  if(typoSel&&val==='G1_ES'&&!geocartoData?.typologie){
+    typoSel.value='terrain_seul';
+    gcMissionField('typologie','terrain_seul');
+  }
 }
 function gcMissionField(field,val){
   if(!geocartoData)return;
