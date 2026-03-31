@@ -1636,6 +1636,7 @@
       </label>
       <label style="font-size:10px;font-weight:700;color:var(--gray-500);display:flex;align-items:center;gap:4px"><input type="checkbox" id="ia-draw-transparent" checked> Fond transparent</label>
       <label style="font-size:10px;font-weight:700;color:var(--gray-500);display:flex;align-items:center;gap:4px"><input type="checkbox" id="ia-draw-proportions" checked> Garder les proportions</label>
+      <label style="font-size:10px;font-weight:700;color:var(--gray-500);display:flex;align-items:center;gap:4px">Opacite : <input type="range" id="ia-draw-opacity" min="0" max="100" value="100" style="width:60px;height:14px;cursor:pointer"><span id="ia-draw-opacity-val" style="min-width:24px;text-align:right">100</span>%</label>
     </div>
     <div id="ia-draw-status"></div>
     <div class="ia-draw-actions">
@@ -3349,8 +3350,8 @@ function renderElements(){
         <path d="${pathD}" fill="none" stroke="${el.color}" stroke-width="${el.size}" stroke-linecap="round" stroke-linejoin="round" opacity="${el.opacity!=null?el.opacity:1}" style="pointer-events:none"/>
       </svg><button class="del-btn" data-action="del" data-eid="${el.id}">×</button><button class="ia-draw-btn" data-action="iaDrawing" data-eid="${el.id}">IA</button>`;
     }else if(el.type==='image'){
-      const iw=el.w||150,ih=el.h||100;const irot=el.rotation||0;
-      div.innerHTML=`<div class="image-wrap" style="transform:rotate(${irot}deg)"><img src="${el.imgSrc}" style="width:${iw}px;height:${ih}px;pointer-events:none;display:block;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,0.3)"></div><button class="del-btn" data-action="del" data-eid="${el.id}">×</button><button class="edit-btn" data-action="editImage" data-eid="${el.id}">✏️</button><button class="rotate-btn" data-action="rotate" data-eid="${el.id}">↻</button><div class="resize-handle" data-resize="1"></div>`;
+      const iw=el.w||150,ih=el.h||100;const irot=el.rotation||0;const iop=el.opacity!=null?el.opacity:1;
+      div.innerHTML=`<div class="image-wrap" style="transform:rotate(${irot}deg);opacity:${iop}"><img src="${el.imgSrc}" style="width:${iw}px;height:${ih}px;pointer-events:none;display:block;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,0.3)"></div><button class="del-btn" data-action="del" data-eid="${el.id}">×</button><button class="edit-btn" data-action="editImage" data-eid="${el.id}">✏️</button><button class="rotate-btn" data-action="rotate" data-eid="${el.id}">↻</button><div class="resize-handle" data-resize="1"></div>`;
     }
     div.addEventListener('pointerdown',e=>{
       if(currentTool!=='select'){e.stopPropagation();e.preventDefault();onPD(e);return;}
@@ -3815,10 +3816,15 @@ function openIADrawPopup(eid){
   iaDrawTargetId=eid;
   document.getElementById('ia-draw-prompt').value='';
   document.getElementById('ia-draw-status').style.display='none';
+  document.getElementById('ia-draw-opacity').value=100;
+  document.getElementById('ia-draw-opacity-val').textContent='100';
   document.getElementById('ia-draw-popup').classList.add('open');
   // Afficher la preview
   const el=elements.find(e=>e.id===eid);
   if(el)drawPreviewCanvas(el);
+  // Binding slider opacite
+  const sl=document.getElementById('ia-draw-opacity');
+  sl.oninput=function(){document.getElementById('ia-draw-opacity-val').textContent=this.value;};
   setTimeout(()=>document.getElementById('ia-draw-prompt').focus(),50);
 }
 
@@ -4026,11 +4032,13 @@ async function submitIADrawing(){
     }
 
     // Remplacer le dessin par une image
+    const opacityVal=parseInt(document.getElementById('ia-draw-opacity').value)||100;
     const idx=elements.findIndex(e=>e.id===el.id);
     const newEl={
       id:Date.now()+Math.random(),type:'image',
       x:el.x+(el.w||0)/2,y:el.y+(el.h||0)/2,
-      imgSrc:imgDataUrl,w:w,h:h,rotation:0
+      imgSrc:imgDataUrl,w:w,h:h,rotation:0,
+      opacity:opacityVal/100
     };
     if(idx>=0)elements[idx]=newEl;
     else elements.push(newEl);
@@ -5897,7 +5905,7 @@ function serializeElements(elArr){
       if(el.type==='measure')return{type:'measure',x:el.x,y:el.y,x2:el.x2,y2:el.y2,distance:el.distance,pxDist:el.pxDist,color:el.color||'#E91E8C',lineStyle:el.lineStyle||'dashed',approx:!!el.approx,fontSize:el.fontSize||11};
       if(el.type==='measureArea')return{type:'measureArea',points:el.points.map(p=>({x:p.x,y:p.y})),cx:el.cx,cy:el.cy,area:el.area,pxArea:el.pxArea,color:el.color||'#E91E8C',approx:!!el.approx,fontSize:el.fontSize||11};
       if(el.type==='legend')return{type:'legend',x:el.x,y:el.y,imgSrc:el.imgSrc,w:el.w,h:el.h};
-      if(el.type==='image')return{type:'image',x:el.x,y:el.y,imgSrc:el.imgSrc,w:el.w,h:el.h,rotation:el.rotation||0};
+      if(el.type==='image'){const o={type:'image',x:el.x,y:el.y,imgSrc:el.imgSrc,w:el.w,h:el.h,rotation:el.rotation||0};if(el.opacity!=null&&el.opacity!==1)o.opacity=el.opacity;return o;}
       if(el.type==='drawing'){const o={type:'drawing',x:el.x,y:el.y,w:el.w,h:el.h,points:el.points.map(p=>{const r={x:p.x,y:p.y};if(p.break)r.break=true;return r;}),color:el.color,size:el.size,opacity:el.opacity!=null?el.opacity:1};return o;}
       return el;
   });
@@ -6399,7 +6407,7 @@ function renderPlanToCanvas(cb){
       const img=new Image();
       const iw=el.w||150,ih=el.h||100;
       const irot=(el.rotation||0)*Math.PI/180;
-      img.onload=()=>{const dx=toX(el.x),dy=toY(el.y);if(irot){ctx.save();ctx.translate(dx,dy);ctx.rotate(irot);ctx.drawImage(img,-iw/2,-ih/2,iw,ih);ctx.restore();}else{ctx.drawImage(img,dx-iw/2,dy-ih/2,iw,ih);}check();};
+      img.onload=()=>{const dx=toX(el.x),dy=toY(el.y);const iop=el.opacity!=null?el.opacity:1;ctx.save();ctx.globalAlpha=iop;if(irot){ctx.translate(dx,dy);ctx.rotate(irot);ctx.drawImage(img,-iw/2,-ih/2,iw,ih);}else{ctx.drawImage(img,dx-iw/2,dy-ih/2,iw,ih);}ctx.restore();check();};
       img.onerror=()=>{check();};
       img.src=el.imgSrc;
     });
