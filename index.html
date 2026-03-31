@@ -1172,8 +1172,7 @@
           <option value="G1_ES">G1 REGAR — Étude de Site</option>
           <option value="G1_PGC">G1 PGC — Principes Généraux de Construction</option>
           <option value="G2_AVP">G2 AVP — Avant-Projet</option>
-          <option value="G2_PRO">G2 PRO — Projet</option>
-          <option value="G2_DCE">G2 DCE/ACT — Dossier de Consultation</option>
+          <option value="G2_PRO">G2 AVP + PRO — Avant-Projet et Projet</option>
           <option value="G3">G3 — Suivi d'exécution</option>
           <option value="G4">G4 — Supervision</option>
           <option value="G5">G5 — Diagnostic</option>
@@ -5046,8 +5045,7 @@ function renderGeocartoPanel(){
   html+='<option value="G1_ES"'+(projectMission==='G1_ES'?' selected':'')+'>G1 REGAR</option>';
   html+='<option value="G1_PGC"'+(projectMission==='G1_PGC'?' selected':'')+'>G1 PGC</option>';
   html+='<option value="G2_AVP"'+(projectMission==='G2_AVP'?' selected':'')+'>G2 AVP</option>';
-  html+='<option value="G2_PRO"'+(projectMission==='G2_PRO'?' selected':'')+'>G2 PRO</option>';
-  html+='<option value="G2_DCE"'+(projectMission==='G2_DCE'?' selected':'')+'>G2 DCE/ACT</option>';
+  html+='<option value="G2_PRO"'+(projectMission==='G2_PRO'?' selected':'')+'>G2 AVP + PRO</option>';
   html+='<option value="G3"'+(projectMission==='G3'?' selected':'')+'>G3</option>';
   html+='<option value="G4"'+(projectMission==='G4'?' selected':'')+'>G4</option>';
   html+='<option value="G5"'+(projectMission==='G5'?' selected':'')+'>G5</option>';
@@ -5497,7 +5495,7 @@ function buildGeocartoContext(){
     if(g.parcelle.contenance)ctx+="  Contenance : "+g.parcelle.contenance+" m²\n";
   }
   // Type de mission
-  const missionLabels={G1_ES:'G1 REGAR (Étude de site)',G1_PGC:'G1 PGC (Principes Généraux de Construction)',G2_AVP:'G2 AVP (Avant-Projet)',G2_PRO:'G2 PRO (Projet)',G2_DCE:'G2 DCE/ACT',G3:'G3 (Études et suivi d\'exécution)',G4:'G4 (Supervision géotechnique)',G5:'G5 (Diagnostic géotechnique)'};
+  const missionLabels={G1_ES:'G1 REGAR (Étude de site)',G1_PGC:'G1 PGC (Principes Généraux de Construction)',G2_AVP:'G2 AVP (Avant-Projet)',G2_PRO:'G2 AVP + PRO (Avant-Projet et Projet)',G3:'G3 (Études et suivi d\'exécution)',G4:'G4 (Supervision géotechnique)',G5:'G5 (Diagnostic géotechnique)'};
   if(projectMission)ctx+="\nTYPE DE MISSION : "+(missionLabels[projectMission]||projectMission)+"\n";
   // Typologie du projet
   const typoLabels={maison_individuelle:'Maison individuelle',autres_batiment:'Autres bâtiment'};
@@ -6503,8 +6501,8 @@ const RPT_TEMPLATES={
     {id:'terrassement',title:'Terrassements et soutènements',hint:'Conditions de terrassement, réutilisation des matériaux, soutènements.'},
     {id:'aleas',title:'Aléas résiduels et recommandations',hint:'Aléas identifiés, mesures de prévention, réserves.'}
   ]},
-  G2_PRO:{label:'G2 PRO — Projet',chapters:[
-    {id:'objet',title:'Objet de l\'étude',hint:'Cadre de la mission G2 PRO.'},
+  G2_PRO:{label:'G2 AVP + PRO — Avant-Projet et Projet',chapters:[
+    {id:'objet',title:'Objet de l\'étude',hint:'Cadre de la mission G2 AVP + PRO.'},
     {id:'docs',title:'Documents de référence',hint:'Documents et normes.'},
     {id:'projet',title:'Description du projet',hint:'Description détaillée du projet.',},
     {id:'site',title:'Description du site',auto:'site',hint:'Localisation, topographie.'},
@@ -6519,13 +6517,6 @@ const RPT_TEMPLATES={
     {id:'terrassement',title:'Terrassements et soutènements',hint:'Conditions, réutilisation.'},
     {id:'execution',title:'Dispositions d\'exécution',hint:'Contrôles, suivi, adaptations à prévoir.'},
     {id:'aleas',title:'Aléas résiduels et recommandations',hint:'Réserves et mesures de prévention.'}
-  ]},
-  G2_DCE:{label:'G2 DCE/ACT',chapters:[
-    {id:'objet',title:'Objet',hint:'Cadre de la mission G2 DCE/ACT.'},
-    {id:'synthese_geo',title:'Synthèse géotechnique',hint:'Rappel du modèle géotechnique et des résultats.'},
-    {id:'cctp',title:'Éléments pour le CCTP',hint:'Prescriptions techniques pour les lots fondations / terrassements.'},
-    {id:'quantites',title:'Quantités estimatives',hint:'Métrés prévisionnels fondations, terrassements.'},
-    {id:'criteres',title:'Critères de sélection',hint:'Critères pour l\'analyse des offres.'}
   ]},
   G3:{label:'G3 — Suivi d\'exécution',chapters:[
     {id:'objet',title:'Objet de la mission',hint:'Cadre du suivi géotechnique G3.'},
