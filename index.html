@@ -5325,11 +5325,9 @@ async function createProjectFolder(){
   const refField=document.getElementById('project-ref').value.trim();
   if(!refField){alert('Renseignez d\'abord un N° de dossier.');return;}
 
-  // Construire le nom du dossier : ref_nom
-  const refParts=refField.split(/\s+/);
-  const refNum=refParts[0]||'';
-  const refNom=refParts.slice(1).join(' ')||'';
-  const folderName=(refNum+(refNom?'_'+refNom:'')).replace(/[\\/:*?"<>|]/g,'_');
+  // Construire le nom du dossier : numRef_nomProjet (sans duplication)
+  const refNum=projectName&&refField.endsWith(projectName)?refField.slice(0,refField.length-projectName.length).trim():refField;
+  const folderName=(refNum+(projectName?'_'+projectName:'')).replace(/[\\/:*?"<>|]/g,'_');
 
   // Charger les handles sauvegardés
   let tplHandle=await loadFolderHandle('template');
@@ -6083,7 +6081,9 @@ function serializeElements(elArr){
 }
 
 function buildProjectJSON(){
-  const refVal=document.getElementById('project-ref').value.trim();
+  const refField=document.getElementById('project-ref').value.trim();
+  // Extraire la ref sans le nom du projet (éviter la duplication)
+  const refVal=projectName&&refField.endsWith(projectName)?refField.slice(0,refField.length-projectName.length).trim():refField;
   // Sauvegarder page courante dans pages[]
   saveCurrentPage();
   const project={
