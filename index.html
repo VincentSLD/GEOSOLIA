@@ -1033,9 +1033,10 @@
         <button onclick="configProjectFolders()" style="width:100%;padding:10px;background:#2E7D32;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px">⚙️ Configurer dossier modèle et destination</button>
         <div id="admin-folder-status" style="font-size:10px;color:var(--gray-500);margin-top:6px;text-align:center"></div>
         <div style="margin-top:12px">
-          <p style="font-size:11px;color:var(--gray-500);margin:0 0 6px">Dossiers de recherche pour ouvrir un projet :</p>
-          <button onclick="configSearchFolder(1)" style="width:100%;padding:8px;background:#1565C0;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:4px">Dossier recherche 1 : <span id="admin-search1-name">Non configuré</span></button>
-          <button onclick="configSearchFolder(2)" style="width:100%;padding:8px;background:#1565C0;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Dossier recherche 2 : <span id="admin-search2-name">Non configuré</span></button>
+          <p style="font-size:11px;color:var(--gray-500);margin:0 0 6px">Chemins réseau pour ouvrir les dossiers projet :<br><span style="font-size:10px;color:#888">(nécessite open-folder.py en local)</span></p>
+          <input type="text" id="admin-network-path1" placeholder="Chemin 1 (ex: \\SERVEUR\Affaires)" style="width:100%;padding:6px 8px;border:1px solid #ccc;border-radius:4px;font-size:11px;font-family:inherit;margin-bottom:4px;box-sizing:border-box">
+          <input type="text" id="admin-network-path2" placeholder="Chemin 2 (ex: \\NAS\Projets)" style="width:100%;padding:6px 8px;border:1px solid #ccc;border-radius:4px;font-size:11px;font-family:inherit;box-sizing:border-box">
+          <button onclick="saveNetworkPaths()" style="width:100%;margin-top:6px;padding:8px;background:#1565C0;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Enregistrer les chemins réseau</button>
         </div>
       </div>
     </div>
@@ -1975,15 +1976,11 @@ async function openAdminPanel() {
       else st.textContent='Non configuré';
     }
   }catch(e){}
-  // Charger les noms des dossiers de recherche
-  try{
-    const s1=await loadFolderHandle('search1');
-    const s2=await loadFolderHandle('search2');
-    const n1=document.getElementById('admin-search1-name');
-    const n2=document.getElementById('admin-search2-name');
-    if(n1)n1.textContent=s1?s1.name:'Non configuré';
-    if(n2)n2.textContent=s2?s2.name:'Non configuré';
-  }catch(e){}
+  // Charger les chemins réseau
+  const inp1=document.getElementById('admin-network-path1');
+  const inp2=document.getElementById('admin-network-path2');
+  if(inp1)inp1.value=localStorage.getItem('geosolia_network_path1')||'';
+  if(inp2)inp2.value=localStorage.getItem('geosolia_network_path2')||'';
 }
 
 function closeAdminPanel() {
@@ -5333,16 +5330,12 @@ async function copyDirectory(srcHandle,destHandle){
 
 let _lastCreatedDir=null;
 
-async function configSearchFolder(num){
-  try{
-    const handle=await window.showDirectoryPicker({mode:'read'});
-    await saveFolderHandle('search'+num,handle);
-    const span=document.getElementById('admin-search'+num+'-name');
-    if(span)span.textContent=handle.name;
-    if(typeof showToast==='function')showToast('Dossier recherche '+num+' : '+handle.name);
-  }catch(e){
-    if(e.name!=='AbortError')alert('Erreur : '+e.message);
-  }
+const FOLDER_SERVER='http://127.0.0.1:9876';
+
+function saveNetworkPaths(){
+  localStorage.setItem('geosolia_network_path1',document.getElementById('admin-network-path1').value.trim());
+  localStorage.setItem('geosolia_network_path2',document.getElementById('admin-network-path2').value.trim());
+  if(typeof showToast==='function')showToast('Chemins réseau enregistrés');
 }
 
 async function openProjectFolder(){
@@ -5350,40 +5343,47 @@ async function openProjectFolder(){
   if(!refField){alert('Renseignez d\'abord un N° de dossier.');return;}
 
   const refNum=projectName&&refField.endsWith(projectName)?refField.slice(0,refField.length-projectName.length).trim():refField;
+  const p1=localStorage.getItem('geosolia_network_path1')||'';
+  const p2=localStorage.getItem('geosolia_network_path2')||'';
+  const paths=[p1,p2].filter(Boolean);
 
-  // Charger les handles de recherche
-  const handles=[];
-  const s1=await loadFolderHandle('search1');
-  const s2=await loadFolderHandle('search2');
-  if(s1)handles.push(s1);
-  if(s2)handles.push(s2);
-
-  if(handles.length===0){
-    alert('Aucun dossier de recherche configuré.\nDemandez à l\'administrateur de les paramétrer dans le panneau Admin.');
+  if(paths.length===0){
+    alert('Aucun chemin réseau configuré.\nDemandez à l\'administrateur de les paramétrer dans le panneau Admin.');
     return;
   }
 
   if(typeof showToast==='function')showToast('Recherche du dossier...');
 
-  // Vérifier les permissions et chercher le dossier dans chaque handle
-  for(const handle of handles){
-    try{
-      const perm=await handle.queryPermission({mode:'read'});
-      if(perm!=='granted'){
-        const req=await handle.requestPermission({mode:'read'});
-        if(req!=='granted')continue;
-      }
-      for await(const [name,entry] of handle.entries()){
-        if(entry.kind==='directory'&&(name.startsWith(refNum+'_')||name===refNum)){
-          if(typeof showToast==='function')showToast('Dossier trouvé : '+name+' (dans '+handle.name+')');
-          try{await window.showDirectoryPicker({startIn:entry});}catch(e){}
-          return;
-        }
-      }
-    }catch(e){continue;}
-  }
+  try{
+    // Vérifier que le serveur local tourne
+    try{await fetch(FOLDER_SERVER+'/ping',{signal:AbortSignal.timeout(2000)});}
+    catch(e){
+      alert('Le service open-folder.py n\'est pas lancé.\n\nLancez-le en double-cliquant sur open-folder.py puis réessayez.');
+      return;
+    }
 
-  alert('Dossier avec la référence "'+refNum+'" non trouvé dans :\n\n'+handles.map(h=>'- '+h.name).join('\n')+'\n\nVérifiez que le dossier a été créé.');
+    // Chercher le dossier dans les chemins configurés
+    const resp=await fetch(FOLDER_SERVER+'/search',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({paths:paths,ref:refNum})
+    });
+    const data=await resp.json();
+
+    if(data.found){
+      // Ouvrir dans l'explorateur Windows
+      if(typeof showToast==='function')showToast('Ouverture de '+data.name+'...');
+      await fetch(FOLDER_SERVER+'/open',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({path:data.path})
+      });
+    }else{
+      alert('Dossier avec la référence "'+refNum+'" non trouvé dans :\n\n'+paths.map(p=>'- '+p).join('\n')+'\n\nVérifiez que le dossier a été créé.');
+    }
+  }catch(e){
+    alert('Erreur de communication avec le serveur local :\n'+e.message);
+  }
 }
 
 async function createProjectFolder(){
