@@ -5037,6 +5037,11 @@ function renderGeocartoPanel(){
     html+='</div>';
   }
   html+='</div>';
+  // --- Bouton Créer dossier ---
+  html+='<div style="margin:8px 0;display:flex;gap:6px;align-items:center">';
+  html+='<button onclick="createProjectFolder()" style="flex:1;padding:8px 12px;background:#2E7D32;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg> Créer le dossier projet</button>';
+  html+='<button onclick="configProjectFolders()" title="Configurer les dossiers" style="padding:8px;background:var(--gray-100);border:1px solid var(--gray-200);border-radius:6px;cursor:pointer;font-size:14px;line-height:1">⚙️</button>';
+  html+='</div>';
   // --- Type de mission ---
   html+='<div style="margin:12px 0 8px;padding:10px 12px;background:#FFF8E1;border-radius:8px;border-left:4px solid #F2B705">';
   html+='<label style="display:flex;align-items:center;justify-content:space-between;font-size:12px;color:#444"><span style="font-weight:700">Type de mission</span>';
@@ -5242,6 +5247,128 @@ function gcAutoCheckPelle(){
   const sel=document.getElementById('gc-pelle-oui');
   if(sel)sel.value=nb>=1?'oui':'non';
 }
+
+// --- Gestion dossier projet ---
+const FOLDER_DB_KEY='geosolia_folder_handles';
+
+async function saveFolderHandle(key,handle){
+  const db=await openGeoterDB();
+  return new Promise((res,rej)=>{
+    const tx=db.transaction('offlineQueue','readwrite');
+    tx.objectStore('offlineQueue').put({id:'folder_'+key,handle:handle},'folder_'+key);
+    tx.oncomplete=res;tx.onerror=rej;
+  });
+}
+
+async function loadFolderHandle(key){
+  const db=await openGeoterDB();
+  return new Promise((res)=>{
+    const tx=db.transaction('offlineQueue','readonly');
+    const req=tx.objectStore('offlineQueue').get('folder_'+key);
+    req.onsuccess=()=>res(req.result?.handle||null);
+    req.onerror=()=>res(null);
+  });
+}
+
+async function configProjectFolders(){
+  const msg='Configuration des dossiers :\n\n'
+    +'1. Dossier MODÈLE (template à copier)\n'
+    +'2. Dossier DESTINATION (où créer les projets)\n\n'
+    +'Cliquez OK pour sélectionner les dossiers.';
+  if(!confirm(msg))return;
+
+  try{
+    if(typeof showToast==='function')showToast('Sélectionnez le dossier MODÈLE...');
+    const tplHandle=await window.showDirectoryPicker({mode:'read',startIn:'documents'});
+    await saveFolderHandle('template',tplHandle);
+
+    if(typeof showToast==='function')showToast('Sélectionnez le dossier DESTINATION...');
+    const destHandle=await window.showDirectoryPicker({mode:'readwrite',startIn:'documents'});
+    await saveFolderHandle('destination',destHandle);
+
+    if(typeof showToast==='function')showToast('Dossiers configurés : modèle="'+tplHandle.name+'" / destination="'+destHandle.name+'"');
+  }catch(e){
+    if(e.name!=='AbortError')alert('Erreur : '+e.message);
+  }
+}
+
+async function copyDirectory(srcHandle,destHandle){
+  for await(const [name,entry] of srcHandle.entries()){
+    if(entry.kind==='file'){
+      const file=await entry.getFile();
+      const newFile=await destHandle.getFileHandle(name,{create:true});
+      const writable=await newFile.createWritable();
+      await writable.write(await file.arrayBuffer());
+      await writable.close();
+    }else if(entry.kind==='directory'){
+      const newDir=await destHandle.getDirectoryHandle(name,{create:true});
+      await copyDirectory(entry,newDir);
+    }
+  }
+}
+
+async function createProjectFolder(){
+  if(!window.showDirectoryPicker){
+    alert('Cette fonctionnalité nécessite un navigateur compatible (Chrome, Edge).');
+    return;
+  }
+
+  const ref=document.getElementById('project-ref').value.trim();
+  if(!ref){alert('Renseignez d\'abord un N° de dossier.');return;}
+
+  // Construire le nom du dossier
+  const folderName=ref.replace(/[\\/:*?"<>|]/g,'_');
+
+  // Charger les handles sauvegardés
+  let tplHandle=await loadFolderHandle('template');
+  let destHandle=await loadFolderHandle('destination');
+
+  // Vérifier les permissions
+  if(tplHandle){
+    try{
+      const perm=await tplHandle.queryPermission({mode:'read'});
+      if(perm!=='granted'){
+        const req=await tplHandle.requestPermission({mode:'read'});
+        if(req!=='granted')tplHandle=null;
+      }
+    }catch(e){tplHandle=null;}
+  }
+  if(destHandle){
+    try{
+      const perm=await destHandle.queryPermission({mode:'readwrite'});
+      if(perm!=='granted'){
+        const req=await destHandle.requestPermission({mode:'readwrite'});
+        if(req!=='granted')destHandle=null;
+      }
+    }catch(e){destHandle=null;}
+  }
+
+  if(!tplHandle||!destHandle){
+    alert('Les dossiers ne sont pas configurés.\nCliquez sur ⚙️ pour configurer le dossier modèle et le dossier destination.');
+    return;
+  }
+
+  try{
+    // Vérifier si le dossier existe déjà
+    try{
+      await destHandle.getDirectoryHandle(folderName);
+      if(!confirm('Le dossier "'+folderName+'" existe déjà. Voulez-vous écraser son contenu ?'))return;
+    }catch(e){/* n'existe pas, OK */}
+
+    if(typeof showToast==='function')showToast('Création du dossier "'+folderName+'"...');
+
+    // Créer le sous-dossier
+    const newDir=await destHandle.getDirectoryHandle(folderName,{create:true});
+
+    // Copier le contenu du modèle
+    await copyDirectory(tplHandle,newDir);
+
+    if(typeof showToast==='function')showToast('Dossier "'+folderName+'" créé avec succès !','#2E7D32');
+  }catch(e){
+    alert('Erreur lors de la création du dossier :\n'+e.message);
+  }
+}
+
 function gcSection(title,badgeClass,badgeText,content){
   let badge=badgeText?'<span class="gc-badge '+badgeClass+'">'+badgeText+'</span>':'<span class="gc-badge '+badgeClass+'">&bull;</span>';
   return '<details class="gc-section"><summary><span class="gc-arrow">&#9654;</span><span class="gc-title">'+title+'</span>'+badge+'</summary><div class="gc-content">'+content+'</div></details>';
