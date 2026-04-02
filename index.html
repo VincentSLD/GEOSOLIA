@@ -5322,11 +5322,14 @@ async function createProjectFolder(){
     return;
   }
 
-  const ref=document.getElementById('project-ref').value.trim();
-  if(!ref){alert('Renseignez d\'abord un N° de dossier.');return;}
+  const refField=document.getElementById('project-ref').value.trim();
+  if(!refField){alert('Renseignez d\'abord un N° de dossier.');return;}
 
-  // Construire le nom du dossier
-  const folderName=ref.replace(/[\\/:*?"<>|]/g,'_');
+  // Construire le nom du dossier : ref_nom
+  const refParts=refField.split(/\s+/);
+  const refNum=refParts[0]||'';
+  const refNom=refParts.slice(1).join(' ')||'';
+  const folderName=(refNum+(refNom?'_'+refNom:'')).replace(/[\\/:*?"<>|]/g,'_');
 
   // Charger les handles sauvegardés
   let tplHandle=await loadFolderHandle('template');
@@ -5372,7 +5375,9 @@ async function createProjectFolder(){
     // Copier le contenu du modèle
     await copyDirectory(tplHandle,newDir);
 
-    if(typeof showToast==='function')showToast('Dossier "'+folderName+'" créé avec succès !','#2E7D32');
+    if(typeof showToast==='function')showToast('Dossier "'+folderName+'" créé ! Ouverture...');
+    // Ouvrir le dossier créé dans l'explorateur
+    try{await window.showDirectoryPicker({startIn:newDir,mode:'readwrite'});}catch(e){}
   }catch(e){
     alert('Erreur lors de la création du dossier :\n'+e.message);
   }
