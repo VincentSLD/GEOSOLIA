@@ -5365,11 +5365,22 @@ async function createProjectFolder(){
   }
 
   try{
-    // Vérifier si le dossier existe déjà
+    // Vérifier si un dossier avec le même numéro de projet existe déjà
+    const existingDirs=[];
     try{
-      await destHandle.getDirectoryHandle(folderName);
-      if(!confirm('Le dossier "'+folderName+'" existe déjà. Voulez-vous écraser son contenu ?'))return;
-    }catch(e){/* n'existe pas, OK */}
+      for await(const [name,entry] of destHandle.entries()){
+        if(entry.kind==='directory'&&name.startsWith(refNum+'_')||name===refNum){
+          existingDirs.push(name);
+        }
+      }
+    }catch(e){}
+    if(existingDirs.length>0){
+      const exactMatch=existingDirs.includes(folderName);
+      const msg=exactMatch
+        ?'Le dossier "'+folderName+'" existe deja.\n\nVoulez-vous ecraser son contenu ?'
+        :'Un dossier avec le meme numero de projet existe deja :\n\n  - '+existingDirs.join('\n  - ')+'\n\nVoulez-vous quand meme creer "'+folderName+'" ?';
+      if(!confirm(msg))return;
+    }
 
     if(typeof showToast==='function')showToast('Création du dossier "'+folderName+'"...');
 
