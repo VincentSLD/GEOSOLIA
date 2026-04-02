@@ -5330,7 +5330,7 @@ async function copyDirectory(srcHandle,destHandle){
 
 let _lastCreatedDir=null;
 
-const FOLDER_SERVER='http://127.0.0.1:9876';
+const FOLDER_SERVER='http://localhost:9876';
 
 function saveNetworkPaths(){
   localStorage.setItem('geosolia_network_path1',document.getElementById('admin-network-path1').value.trim());
@@ -5338,12 +5338,11 @@ function saveNetworkPaths(){
   if(typeof showToast==='function')showToast('Chemins réseau enregistrés');
 }
 
-function openProjectFolder(){
+async function openProjectFolder(){
   const refField=document.getElementById('project-ref').value.trim();
   if(!refField){alert('Renseignez d\'abord un N° de dossier.');return;}
 
   const refNum=projectName&&refField.endsWith(projectName)?refField.slice(0,refField.length-projectName.length).trim():refField;
-  const folderName=(refNum+(projectName?'_'+projectName:'')).replace(/[\\/:*?"<>|]/g,'_');
   const p1=localStorage.getItem('geosolia_network_path1')||'';
   const p2=localStorage.getItem('geosolia_network_path2')||'';
   const paths=[p1,p2].filter(Boolean);
@@ -5353,19 +5352,34 @@ function openProjectFolder(){
     return;
   }
 
+  // Essayer via le serveur local (vérifie l'existence réelle du dossier)
+  try{
+    await fetch(FOLDER_SERVER+'/ping',{signal:AbortSignal.timeout(2000)});
+    if(typeof showToast==='function')showToast('Recherche du dossier...');
+
+    const resp=await fetch(FOLDER_SERVER+'/search',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({paths:paths,ref:refNum})
+    });
+    const data=await resp.json();
+
+    if(data.found){
+      navigator.clipboard.writeText(data.path).catch(()=>{});
+      if(typeof showToast==='function')showToast('Chemin copié !');
+      prompt('Dossier trouvé dans '+data.name+' :\n(copié dans le presse-papier — Ctrl+V dans l\'explorateur)',data.path);
+    }else{
+      alert('Dossier avec la référence "'+refNum+'" non trouvé dans :\n\n'+paths.map(p=>'- '+p).join('\n')+'\n\nVérifiez que le dossier a été créé.');
+    }
+    return;
+  }catch(e){/* serveur local non disponible, fallback */}
+
+  // Fallback sans serveur : proposer les chemins possibles
+  const folderName=(refNum+(projectName?'_'+projectName:'')).replace(/[\\/:*?"<>|]/g,'_');
   const fullPaths=paths.map(p=>p.replace(/[\/\\]+$/,'')+'\\'+folderName);
-  const pathText=fullPaths.join('\n');
-
-  // Copier le premier chemin
-  navigator.clipboard.writeText(fullPaths[0]).then(()=>{
-    if(typeof showToast==='function')showToast('Chemin copié !');
-  }).catch(()=>{});
-
-  // Afficher le popup avec le chemin prêt à copier
-  const msg=fullPaths.length>1
-    ?'Chemin 1 (copié) :\n'+fullPaths[0]+'\n\nChemin 2 :\n'+fullPaths[1]
-    :'Chemin (copié) :\n'+fullPaths[0];
-  prompt('Chemin du dossier projet :\n(déjà copié dans le presse-papier, collez avec Ctrl+V dans l\'explorateur)',fullPaths[0]);
+  navigator.clipboard.writeText(fullPaths[0]).catch(()=>{});
+  if(typeof showToast==='function')showToast('Chemin copié (non vérifié)');
+  prompt('Chemin probable du dossier :\n(non vérifié — lancez open-folder.py pour la vérification)\n\nCtrl+V dans l\'explorateur',fullPaths[0]);
 }
 
 async function createProjectFolder(){

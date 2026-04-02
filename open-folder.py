@@ -95,7 +95,7 @@ if __name__ == '__main__':
     print('  Ctrl+C pour arreter')
     print('=' * 50)
 
-    server = http.server.HTTPServer(('127.0.0.1', PORT), FolderHandler)
+    server = http.server.HTTPServer(('localhost', PORT), FolderHandler)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
