@@ -1033,10 +1033,9 @@
         <button onclick="configProjectFolders()" style="width:100%;padding:10px;background:#2E7D32;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px">⚙️ Configurer dossier modèle et destination</button>
         <div id="admin-folder-status" style="font-size:10px;color:var(--gray-500);margin-top:6px;text-align:center"></div>
         <div style="margin-top:12px">
-          <p style="font-size:11px;color:var(--gray-500);margin:0 0 6px">Chemins réseau pour ouvrir les dossiers projet :</p>
-          <input type="text" id="admin-network-path1" placeholder="Chemin 1 (ex: \\SERVEUR\Affaires)" style="width:100%;padding:6px 8px;border:1px solid #ccc;border-radius:4px;font-size:11px;font-family:inherit;margin-bottom:4px;box-sizing:border-box">
-          <input type="text" id="admin-network-path2" placeholder="Chemin 2 (ex: \\NAS\Projets)" style="width:100%;padding:6px 8px;border:1px solid #ccc;border-radius:4px;font-size:11px;font-family:inherit;box-sizing:border-box">
-          <button onclick="saveNetworkPaths()" style="width:100%;margin-top:6px;padding:8px;background:#1565C0;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Enregistrer les chemins réseau</button>
+          <p style="font-size:11px;color:var(--gray-500);margin:0 0 6px">Dossiers de recherche pour ouvrir un projet :</p>
+          <button onclick="configSearchFolder(1)" style="width:100%;padding:8px;background:#1565C0;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:4px">Dossier recherche 1 : <span id="admin-search1-name">Non configuré</span></button>
+          <button onclick="configSearchFolder(2)" style="width:100%;padding:8px;background:#1565C0;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Dossier recherche 2 : <span id="admin-search2-name">Non configuré</span></button>
         </div>
       </div>
     </div>
@@ -1976,12 +1975,15 @@ async function openAdminPanel() {
       else st.textContent='Non configuré';
     }
   }catch(e){}
-  // Charger les chemins réseau
-  const [np1,np2]=loadNetworkPaths();
-  const inp1=document.getElementById('admin-network-path1');
-  const inp2=document.getElementById('admin-network-path2');
-  if(inp1)inp1.value=np1;
-  if(inp2)inp2.value=np2;
+  // Charger les noms des dossiers de recherche
+  try{
+    const s1=await loadFolderHandle('search1');
+    const s2=await loadFolderHandle('search2');
+    const n1=document.getElementById('admin-search1-name');
+    const n2=document.getElementById('admin-search2-name');
+    if(n1)n1.textContent=s1?s1.name:'Non configuré';
+    if(n2)n2.textContent=s2?s2.name:'Non configuré';
+  }catch(e){}
 }
 
 function closeAdminPanel() {
@@ -5331,56 +5333,57 @@ async function copyDirectory(srcHandle,destHandle){
 
 let _lastCreatedDir=null;
 
-function saveNetworkPaths(){
-  const p1=document.getElementById('admin-network-path1').value.trim();
-  const p2=document.getElementById('admin-network-path2').value.trim();
-  localStorage.setItem('geosolia_network_path1',p1);
-  localStorage.setItem('geosolia_network_path2',p2);
-  if(typeof showToast==='function')showToast('Chemins réseau enregistrés');
+async function configSearchFolder(num){
+  try{
+    const handle=await window.showDirectoryPicker({mode:'read'});
+    await saveFolderHandle('search'+num,handle);
+    const span=document.getElementById('admin-search'+num+'-name');
+    if(span)span.textContent=handle.name;
+    if(typeof showToast==='function')showToast('Dossier recherche '+num+' : '+handle.name);
+  }catch(e){
+    if(e.name!=='AbortError')alert('Erreur : '+e.message);
+  }
 }
 
-function loadNetworkPaths(){
-  return [
-    localStorage.getItem('geosolia_network_path1')||'',
-    localStorage.getItem('geosolia_network_path2')||''
-  ];
-}
-
-function openProjectFolder(){
+async function openProjectFolder(){
   const refField=document.getElementById('project-ref').value.trim();
   if(!refField){alert('Renseignez d\'abord un N° de dossier.');return;}
 
   const refNum=projectName&&refField.endsWith(projectName)?refField.slice(0,refField.length-projectName.length).trim():refField;
-  const folderName=(refNum+(projectName?'_'+projectName:'')).replace(/[\\/:*?"<>|]/g,'_');
 
-  const [path1,path2]=loadNetworkPaths();
-  if(!path1&&!path2){
-    alert('Aucun chemin réseau configuré.\nDemandez à l\'administrateur de les paramétrer dans le panneau Admin.');
+  // Charger les handles de recherche
+  const handles=[];
+  const s1=await loadFolderHandle('search1');
+  const s2=await loadFolderHandle('search2');
+  if(s1)handles.push(s1);
+  if(s2)handles.push(s2);
+
+  if(handles.length===0){
+    alert('Aucun dossier de recherche configuré.\nDemandez à l\'administrateur de les paramétrer dans le panneau Admin.');
     return;
   }
 
-  // Construire les chemins complets à tester
-  const paths=[path1,path2].filter(Boolean);
-  const fullPaths=paths.map(p=>{
-    const base=p.replace(/[\/\\]+$/,'');
-    return base+'\\'+folderName;
-  });
+  if(typeof showToast==='function')showToast('Recherche du dossier...');
 
-  // Copier le premier chemin dans le presse-papier
-  const mainPath=fullPaths[0];
-  navigator.clipboard.writeText(mainPath).catch(()=>{});
-
-  // Tenter d'ouvrir dans l'explorateur Windows
-  // Méthode 1 : protocole file:// (fonctionne sur certains navigateurs/configs)
-  const fileUrl='file:///'+mainPath.replace(/\\/g,'/');
-  const w=window.open(fileUrl);
-
-  // Si l'ouverture a échoué (popup bloquée ou protocole refusé)
-  if(!w||w.closed){
-    if(typeof showToast==='function')showToast('Chemin copié ! Collez dans l\'explorateur (Win+E)');
-    // Afficher le chemin dans une alerte avec les deux chemins possibles
-    alert('Chemin copié dans le presse-papier :\n\n'+fullPaths.join('\n')+'\n\nCollez-le dans la barre d\'adresse de l\'explorateur Windows (Win+E).');
+  // Vérifier les permissions et chercher le dossier dans chaque handle
+  for(const handle of handles){
+    try{
+      const perm=await handle.queryPermission({mode:'read'});
+      if(perm!=='granted'){
+        const req=await handle.requestPermission({mode:'read'});
+        if(req!=='granted')continue;
+      }
+      for await(const [name,entry] of handle.entries()){
+        if(entry.kind==='directory'&&(name.startsWith(refNum+'_')||name===refNum)){
+          if(typeof showToast==='function')showToast('Dossier trouvé : '+name+' (dans '+handle.name+')');
+          try{await window.showDirectoryPicker({startIn:entry});}catch(e){}
+          return;
+        }
+      }
+    }catch(e){continue;}
   }
+
+  alert('Dossier avec la référence "'+refNum+'" non trouvé dans :\n\n'+handles.map(h=>'- '+h.name).join('\n')+'\n\nVérifiez que le dossier a été créé.');
 }
 
 async function createProjectFolder(){
