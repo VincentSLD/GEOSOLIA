@@ -5346,7 +5346,7 @@ function loadNetworkPaths(){
   ];
 }
 
-async function openProjectFolder(){
+function openProjectFolder(){
   const refField=document.getElementById('project-ref').value.trim();
   if(!refField){alert('Renseignez d\'abord un N° de dossier.');return;}
 
@@ -5359,51 +5359,27 @@ async function openProjectFolder(){
     return;
   }
 
-  // Chercher le dossier dans les deux chemins réseau
+  // Construire les chemins complets à tester
   const paths=[path1,path2].filter(Boolean);
-  let found=false;
+  const fullPaths=paths.map(p=>{
+    const base=p.replace(/[\/\\]+$/,'');
+    return base+'\\'+folderName;
+  });
 
-  for(const basePath of paths){
-    // Essayer d'ouvrir le dossier via le handle destination sauvegardé
-    const destHandle=await loadFolderHandle('destination');
-    if(destHandle){
-      try{
-        const perm=await destHandle.queryPermission({mode:'read'});
-        if(perm!=='granted')await destHandle.requestPermission({mode:'read'});
-        // Chercher par numéro de projet
-        for await(const [name,entry] of destHandle.entries()){
-          if(entry.kind==='directory'&&(name===folderName||name.startsWith(refNum+'_')||name===refNum)){
-            _lastCreatedDir=entry;
-            found=true;
-            try{await window.showDirectoryPicker({startIn:entry});}catch(e){}
-            return;
-          }
-        }
-      }catch(e){}
-    }
-  }
+  // Copier le premier chemin dans le presse-papier
+  const mainPath=fullPaths[0];
+  navigator.clipboard.writeText(mainPath).catch(()=>{});
 
-  // Fallback : ouvrir le sélecteur sur le dossier destination
-  if(!found){
-    const destHandle=await loadFolderHandle('destination');
-    if(destHandle){
-      try{
-        await destHandle.requestPermission({mode:'read'});
-        // Chercher par numéro de projet
-        for await(const [name,entry] of destHandle.entries()){
-          if(entry.kind==='directory'&&(name===folderName||name.startsWith(refNum+'_')||name===refNum)){
-            try{await window.showDirectoryPicker({startIn:entry});}catch(e){}
-            return;
-          }
-        }
-        // Pas trouvé : ouvrir le dossier destination
-        alert('Dossier "'+folderName+'" non trouvé dans le dossier destination.\nVérifiez qu\'il a été créé.');
-      }catch(e){
-        alert('Impossible d\'accéder au dossier destination.\nVérifiez la configuration dans Admin.');
-      }
-    }else{
-      alert('Dossier destination non configuré.\nDemandez à l\'administrateur de le paramétrer dans Admin.');
-    }
+  // Tenter d'ouvrir dans l'explorateur Windows
+  // Méthode 1 : protocole file:// (fonctionne sur certains navigateurs/configs)
+  const fileUrl='file:///'+mainPath.replace(/\\/g,'/');
+  const w=window.open(fileUrl);
+
+  // Si l'ouverture a échoué (popup bloquée ou protocole refusé)
+  if(!w||w.closed){
+    if(typeof showToast==='function')showToast('Chemin copié ! Collez dans l\'explorateur (Win+E)');
+    // Afficher le chemin dans une alerte avec les deux chemins possibles
+    alert('Chemin copié dans le presse-papier :\n\n'+fullPaths.join('\n')+'\n\nCollez-le dans la barre d\'adresse de l\'explorateur Windows (Win+E).');
   }
 }
 
