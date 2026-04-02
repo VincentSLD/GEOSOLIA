@@ -1032,6 +1032,12 @@
         <p style="font-size:11px;color:var(--gray-500);margin:0 0 8px">Dossier modèle copié lors de la création d'un nouveau dossier projet.</p>
         <button onclick="configProjectFolders()" style="width:100%;padding:10px;background:#2E7D32;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px">⚙️ Configurer dossier modèle et destination</button>
         <div id="admin-folder-status" style="font-size:10px;color:var(--gray-500);margin-top:6px;text-align:center"></div>
+        <div style="margin-top:12px">
+          <p style="font-size:11px;color:var(--gray-500);margin:0 0 6px">Chemins réseau pour ouvrir les dossiers projet :</p>
+          <input type="text" id="admin-network-path1" placeholder="Chemin 1 (ex: \\SERVEUR\Affaires)" style="width:100%;padding:6px 8px;border:1px solid #ccc;border-radius:4px;font-size:11px;font-family:inherit;margin-bottom:4px;box-sizing:border-box">
+          <input type="text" id="admin-network-path2" placeholder="Chemin 2 (ex: \\NAS\Projets)" style="width:100%;padding:6px 8px;border:1px solid #ccc;border-radius:4px;font-size:11px;font-family:inherit;box-sizing:border-box">
+          <button onclick="saveNetworkPaths()" style="width:100%;margin-top:6px;padding:8px;background:#1565C0;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Enregistrer les chemins réseau</button>
+        </div>
       </div>
     </div>
     </div>
@@ -1970,6 +1976,12 @@ async function openAdminPanel() {
       else st.textContent='Non configuré';
     }
   }catch(e){}
+  // Charger les chemins réseau
+  const [np1,np2]=loadNetworkPaths();
+  const inp1=document.getElementById('admin-network-path1');
+  const inp2=document.getElementById('admin-network-path2');
+  if(inp1)inp1.value=np1;
+  if(inp2)inp2.value=np2;
 }
 
 function closeAdminPanel() {
@@ -5055,7 +5067,8 @@ function renderGeocartoPanel(){
   html+='</div>';
   // --- Bouton Créer dossier ---
   html+='<div style="margin:8px 0;display:flex;gap:6px;align-items:center">';
-  html+='<button id="btn-create-folder" onclick="createProjectFolder()" style="flex:1;padding:8px 12px;background:#2E7D32;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg> Créer le dossier projet</button>';
+  html+='<button id="btn-create-folder" onclick="createProjectFolder()" style="flex:1;padding:8px 12px;background:#2E7D32;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg> Créer</button>';
+  html+='<button id="btn-open-folder" onclick="openProjectFolder()" style="flex:1;padding:8px 12px;background:#1565C0;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> Ouvrir</button>';
   html+='</div>';
   // --- Type de mission ---
   html+='<div style="margin:12px 0 8px;padding:10px 12px;background:#FFF8E1;border-radius:8px;border-left:4px solid #F2B705">';
@@ -5317,9 +5330,81 @@ async function copyDirectory(srcHandle,destHandle){
 }
 
 let _lastCreatedDir=null;
-async function _openCreatedDir(){
-  if(!_lastCreatedDir)return;
-  try{await window.showDirectoryPicker({startIn:_lastCreatedDir});}catch(e){}
+
+function saveNetworkPaths(){
+  const p1=document.getElementById('admin-network-path1').value.trim();
+  const p2=document.getElementById('admin-network-path2').value.trim();
+  localStorage.setItem('geosolia_network_path1',p1);
+  localStorage.setItem('geosolia_network_path2',p2);
+  if(typeof showToast==='function')showToast('Chemins réseau enregistrés');
+}
+
+function loadNetworkPaths(){
+  return [
+    localStorage.getItem('geosolia_network_path1')||'',
+    localStorage.getItem('geosolia_network_path2')||''
+  ];
+}
+
+async function openProjectFolder(){
+  const refField=document.getElementById('project-ref').value.trim();
+  if(!refField){alert('Renseignez d\'abord un N° de dossier.');return;}
+
+  const refNum=projectName&&refField.endsWith(projectName)?refField.slice(0,refField.length-projectName.length).trim():refField;
+  const folderName=(refNum+(projectName?'_'+projectName:'')).replace(/[\\/:*?"<>|]/g,'_');
+
+  const [path1,path2]=loadNetworkPaths();
+  if(!path1&&!path2){
+    alert('Aucun chemin réseau configuré.\nDemandez à l\'administrateur de les paramétrer dans le panneau Admin.');
+    return;
+  }
+
+  // Chercher le dossier dans les deux chemins réseau
+  const paths=[path1,path2].filter(Boolean);
+  let found=false;
+
+  for(const basePath of paths){
+    // Essayer d'ouvrir le dossier via le handle destination sauvegardé
+    const destHandle=await loadFolderHandle('destination');
+    if(destHandle){
+      try{
+        const perm=await destHandle.queryPermission({mode:'read'});
+        if(perm!=='granted')await destHandle.requestPermission({mode:'read'});
+        // Chercher par numéro de projet
+        for await(const [name,entry] of destHandle.entries()){
+          if(entry.kind==='directory'&&(name===folderName||name.startsWith(refNum+'_')||name===refNum)){
+            _lastCreatedDir=entry;
+            found=true;
+            try{await window.showDirectoryPicker({startIn:entry});}catch(e){}
+            return;
+          }
+        }
+      }catch(e){}
+    }
+  }
+
+  // Fallback : ouvrir le sélecteur sur le dossier destination
+  if(!found){
+    const destHandle=await loadFolderHandle('destination');
+    if(destHandle){
+      try{
+        await destHandle.requestPermission({mode:'read'});
+        // Chercher par numéro de projet
+        for await(const [name,entry] of destHandle.entries()){
+          if(entry.kind==='directory'&&(name===folderName||name.startsWith(refNum+'_')||name===refNum)){
+            try{await window.showDirectoryPicker({startIn:entry});}catch(e){}
+            return;
+          }
+        }
+        // Pas trouvé : ouvrir le dossier destination
+        alert('Dossier "'+folderName+'" non trouvé dans le dossier destination.\nVérifiez qu\'il a été créé.');
+      }catch(e){
+        alert('Impossible d\'accéder au dossier destination.\nVérifiez la configuration dans Admin.');
+      }
+    }else{
+      alert('Dossier destination non configuré.\nDemandez à l\'administrateur de le paramétrer dans Admin.');
+    }
+  }
 }
 
 async function createProjectFolder(){
@@ -5394,16 +5479,6 @@ async function createProjectFolder(){
 
     if(btn){btn.disabled=false;btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg> Créer le dossier projet';}
 
-    // Afficher une notification avec bouton pour ouvrir le dossier
-    _lastCreatedDir=newDir;
-    const $gc=document.getElementById('gc-content');
-    if($gc){
-      const banner=document.createElement('div');
-      banner.style.cssText='margin:8px 0;padding:10px 12px;background:#E8F5E9;border:1px solid #4CAF50;border-radius:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap';
-      banner.innerHTML='<span style="font-size:12px;font-weight:700;color:#2E7D32;flex:1">Dossier "'+folderName+'" créé !</span>'
-        +'<button onclick="_openCreatedDir()" style="padding:5px 12px;background:#2E7D32;color:#fff;border:none;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Ouvrir le dossier</button>';
-      $gc.prepend(banner);
-    }
     if(typeof showToast==='function')showToast('Dossier "'+folderName+'" créé !');
   }catch(e){
     alert('Erreur lors de la création du dossier :\n'+e.message);
