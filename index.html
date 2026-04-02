@@ -5271,19 +5271,13 @@ async function loadFolderHandle(key){
 }
 
 async function configProjectFolders(){
-  const msg='Configuration des dossiers :\n\n'
-    +'1. Dossier MODÈLE (template à copier)\n'
-    +'2. Dossier DESTINATION (où créer les projets)\n\n'
-    +'Cliquez OK pour sélectionner les dossiers.';
-  if(!confirm(msg))return;
-
   try{
-    if(typeof showToast==='function')showToast('Sélectionnez le dossier MODÈLE...');
-    const tplHandle=await window.showDirectoryPicker({mode:'read',startIn:'documents'});
+    if(typeof showToast==='function')showToast('1/2 — Sélectionnez le dossier MODÈLE...');
+    const tplHandle=await window.showDirectoryPicker({mode:'read'});
     await saveFolderHandle('template',tplHandle);
 
-    if(typeof showToast==='function')showToast('Sélectionnez le dossier DESTINATION...');
-    const destHandle=await window.showDirectoryPicker({mode:'readwrite',startIn:'documents'});
+    if(typeof showToast==='function')showToast('2/2 — Sélectionnez le dossier DESTINATION...');
+    const destHandle=await window.showDirectoryPicker({mode:'readwrite'});
     await saveFolderHandle('destination',destHandle);
 
     if(typeof showToast==='function')showToast('Dossiers configurés : modèle="'+tplHandle.name+'" / destination="'+destHandle.name+'"');
