@@ -5343,43 +5343,37 @@ async function openProjectFolder(){
   if(!refField){alert('Renseignez d\'abord un N° de dossier.');return;}
 
   const refNum=projectName&&refField.endsWith(projectName)?refField.slice(0,refField.length-projectName.length).trim():refField;
-  const p1=localStorage.getItem('geosolia_network_path1')||'';
-  const p2=localStorage.getItem('geosolia_network_path2')||'';
-  const paths=[p1,p2].filter(Boolean);
 
-  if(paths.length===0){
-    alert('Aucun chemin réseau configuré.\nDemandez à l\'administrateur de les paramétrer dans le panneau Admin.');
+  // Chercher le dossier via File System Access API dans le dossier destination
+  const destHandle=await loadFolderHandle('destination');
+  if(!destHandle){
+    alert('Dossier destination non configuré.\nDemandez à l\'administrateur de le paramétrer dans Admin (⚙️).');
     return;
   }
 
-  // Essayer via le serveur local (vérifie l'existence réelle du dossier)
   try{
-    await fetch(FOLDER_SERVER+'/ping',{signal:AbortSignal.timeout(2000)});
-    if(typeof showToast==='function')showToast('Recherche du dossier...');
-
-    const resp=await fetch(FOLDER_SERVER+'/search',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({paths:paths,ref:refNum})
-    });
-    const data=await resp.json();
-
-    if(data.found){
-      navigator.clipboard.writeText(data.path).catch(()=>{});
-      if(typeof showToast==='function')showToast('Chemin copié !');
-      prompt('Dossier trouvé dans '+data.name+' :\n(copié dans le presse-papier — Ctrl+V dans l\'explorateur)',data.path);
-    }else{
-      alert('Dossier avec la référence "'+refNum+'" non trouvé dans :\n\n'+paths.map(p=>'- '+p).join('\n')+'\n\nVérifiez que le dossier a été créé.');
+    const perm=await destHandle.queryPermission({mode:'read'});
+    if(perm!=='granted'){
+      const req=await destHandle.requestPermission({mode:'read'});
+      if(req!=='granted'){alert('Permission refusée.');return;}
     }
-    return;
-  }catch(e){/* serveur local non disponible, fallback */}
+  }catch(e){alert('Impossible d\'accéder au dossier destination.');return;}
 
-  // Fallback sans serveur : proposer les chemins possibles
-  const folderName=(refNum+(projectName?'_'+projectName:'')).replace(/[\\/:*?"<>|]/g,'_');
-  const fullPaths=paths.map(p=>p.replace(/[\/\\]+$/,'')+'\\'+folderName);
-  navigator.clipboard.writeText(fullPaths[0]).catch(()=>{});
-  if(typeof showToast==='function')showToast('Chemin copié (non vérifié)');
-  prompt('Chemin probable du dossier :\n(non vérifié — lancez open-folder.py pour la vérification)\n\nCtrl+V dans l\'explorateur',fullPaths[0]);
+  if(typeof showToast==='function')showToast('Recherche du dossier...');
+
+  // Parcourir le dossier destination pour trouver le projet
+  try{
+    for await(const [name,entry] of destHandle.entries()){
+      if(entry.kind==='directory'&&(name.startsWith(refNum+'_')||name===refNum)){
+        if(typeof showToast==='function')showToast('Dossier trouvé : '+name);
+        try{await window.showDirectoryPicker({startIn:entry});}catch(e){}
+        return;
+      }
+    }
+    alert('Dossier avec la référence "'+refNum+'" non trouvé dans "'+destHandle.name+'".\nVérifiez que le dossier a été créé.');
+  }catch(e){
+    alert('Erreur lors de la recherche :\n'+e.message);
+  }
 }
 
 async function createProjectFolder(){
