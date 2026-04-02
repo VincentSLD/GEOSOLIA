@@ -1027,6 +1027,12 @@
     <div id="admin-panel">
       <div class="admin-title">Gestion des utilisateurs</div>
       <div id="admin-list"></div>
+      <div style="margin-top:18px;padding-top:14px;border-top:2px solid var(--gray-200)">
+        <div class="admin-title" style="font-size:14px;margin-bottom:8px">Configuration dossiers projet</div>
+        <p style="font-size:11px;color:var(--gray-500);margin:0 0 8px">Dossier modèle copié lors de la création d'un nouveau dossier projet.</p>
+        <button onclick="configProjectFolders()" style="width:100%;padding:10px;background:#2E7D32;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px">⚙️ Configurer dossier modèle et destination</button>
+        <div id="admin-folder-status" style="font-size:10px;color:var(--gray-500);margin-top:6px;text-align:center"></div>
+      </div>
     </div>
     </div>
   </div>
@@ -1954,6 +1960,16 @@ async function openAdminPanel() {
   } catch (e) {
     document.getElementById('admin-list').innerHTML = '<div class="admin-empty">Erreur: ' + e.message + '</div>';
   }
+  // Afficher statut dossiers configurés
+  try{
+    const tpl=await loadFolderHandle('template');
+    const dest=await loadFolderHandle('destination');
+    const st=document.getElementById('admin-folder-status');
+    if(st){
+      if(tpl&&dest)st.textContent='Modèle : '+tpl.name+' | Destination : '+dest.name;
+      else st.textContent='Non configuré';
+    }
+  }catch(e){}
 }
 
 function closeAdminPanel() {
@@ -5040,7 +5056,6 @@ function renderGeocartoPanel(){
   // --- Bouton Créer dossier ---
   html+='<div style="margin:8px 0;display:flex;gap:6px;align-items:center">';
   html+='<button onclick="createProjectFolder()" style="flex:1;padding:8px 12px;background:#2E7D32;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg> Créer le dossier projet</button>';
-  html+='<button onclick="configProjectFolders()" title="Configurer les dossiers" style="padding:8px;background:var(--gray-100);border:1px solid var(--gray-200);border-radius:6px;cursor:pointer;font-size:14px;line-height:1">⚙️</button>';
   html+='</div>';
   // --- Type de mission ---
   html+='<div style="margin:12px 0 8px;padding:10px 12px;background:#FFF8E1;border-radius:8px;border-left:4px solid #F2B705">';
