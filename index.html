@@ -5373,9 +5373,14 @@ async function createProjectFolder(){
     // Copier le contenu du modèle
     await copyDirectory(tplHandle,newDir);
 
-    if(typeof showToast==='function')showToast('Dossier "'+folderName+'" créé ! Ouverture...');
-    // Ouvrir le dossier créé dans l'explorateur
-    try{await window.showDirectoryPicker({startIn:newDir,mode:'readwrite'});}catch(e){}
+    if(typeof showToast==='function')showToast('Dossier "'+folderName+'" créé avec succès !');
+    // Ouvrir un fichier du dossier pour pointer l'explorateur dessus
+    try{
+      // Lire un fichier dans le nouveau dossier pour déclencher l'accès
+      for await(const [name] of newDir.entries()){break;}
+      // Ouvrir le sélecteur pointé sur le dossier créé
+      await window.showDirectoryPicker({startIn:newDir});
+    }catch(e){/* L'utilisateur a annulé le dialogue, c'est OK */}
   }catch(e){
     alert('Erreur lors de la création du dossier :\n'+e.message);
   }
