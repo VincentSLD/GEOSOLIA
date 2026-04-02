@@ -5376,10 +5376,11 @@ async function createProjectFolder(){
     }catch(e){}
     if(existingDirs.length>0){
       const exactMatch=existingDirs.includes(folderName);
-      const msg=exactMatch
-        ?'Le dossier "'+folderName+'" existe deja.\n\nVoulez-vous ecraser son contenu ?'
-        :'Un dossier avec le meme numero de projet existe deja :\n\n  - '+existingDirs.join('\n  - ')+'\n\nVoulez-vous quand meme creer "'+folderName+'" ?';
-      if(!confirm(msg))return;
+      if(exactMatch){
+        alert('Le dossier "'+folderName+'" existe deja.\nCréation impossible.');
+        return;
+      }
+      if(!confirm('Un dossier avec le meme numero de projet existe deja :\n\n  - '+existingDirs.join('\n  - ')+'\n\nVoulez-vous quand meme creer "'+folderName+'" ?'))return;
     }
 
     if(typeof showToast==='function')showToast('Création du dossier "'+folderName+'"...');
