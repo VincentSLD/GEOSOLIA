@@ -5316,6 +5316,12 @@ async function copyDirectory(srcHandle,destHandle){
   }
 }
 
+let _lastCreatedDir=null;
+async function _openCreatedDir(){
+  if(!_lastCreatedDir)return;
+  try{await window.showDirectoryPicker({startIn:_lastCreatedDir});}catch(e){}
+}
+
 async function createProjectFolder(){
   if(!window.showDirectoryPicker){
     alert('Cette fonctionnalité nécessite un navigateur compatible (Chrome, Edge).');
@@ -5373,14 +5379,17 @@ async function createProjectFolder(){
     // Copier le contenu du modèle
     await copyDirectory(tplHandle,newDir);
 
-    if(typeof showToast==='function')showToast('Dossier "'+folderName+'" créé avec succès !');
-    // Ouvrir un fichier du dossier pour pointer l'explorateur dessus
-    try{
-      // Lire un fichier dans le nouveau dossier pour déclencher l'accès
-      for await(const [name] of newDir.entries()){break;}
-      // Ouvrir le sélecteur pointé sur le dossier créé
-      await window.showDirectoryPicker({startIn:newDir});
-    }catch(e){/* L'utilisateur a annulé le dialogue, c'est OK */}
+    // Afficher une notification avec bouton pour ouvrir le dossier
+    _lastCreatedDir=newDir;
+    const $gc=document.getElementById('gc-content');
+    if($gc){
+      const banner=document.createElement('div');
+      banner.style.cssText='margin:8px 0;padding:10px 12px;background:#E8F5E9;border:1px solid #4CAF50;border-radius:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap';
+      banner.innerHTML='<span style="font-size:12px;font-weight:700;color:#2E7D32;flex:1">Dossier "'+folderName+'" créé !</span>'
+        +'<button onclick="_openCreatedDir()" style="padding:5px 12px;background:#2E7D32;color:#fff;border:none;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Ouvrir le dossier</button>';
+      $gc.prepend(banner);
+    }
+    if(typeof showToast==='function')showToast('Dossier "'+folderName+'" créé !');
   }catch(e){
     alert('Erreur lors de la création du dossier :\n'+e.message);
   }
