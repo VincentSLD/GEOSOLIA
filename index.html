@@ -5255,7 +5255,7 @@ async function saveFolderHandle(key,handle){
   const db=await openGeoterDB();
   return new Promise((res,rej)=>{
     const tx=db.transaction('offlineQueue','readwrite');
-    tx.objectStore('offlineQueue').put({id:'folder_'+key,handle:handle},'folder_'+key);
+    tx.objectStore('offlineQueue').put({id:'folder_'+key,handle:handle});
     tx.oncomplete=res;tx.onerror=rej;
   });
 }
