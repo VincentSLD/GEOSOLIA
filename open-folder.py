@@ -11,134 +11,90 @@ import http.server
 import json
 import subprocess
 import os
-import sys
-import urllib.parse
 
 PORT = 9876
 
 class FolderHandler(http.server.BaseHTTPRequestHandler):
-    def do_OPTIONS(self):
-        self.send_response(200)
+
+    def _send(self, code, data):
+        self.send_response(code)
         self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.send_header('Content-Type', 'application/json')
         self.end_headers()
+        self.wfile.write(json.dumps(data).encode())
+
+    def do_OPTIONS(self):
+        self._send(200, {'ok': True})
+
+    def do_GET(self):
+        self._send(200, {'ok': True, 'service': 'GeoSolia Folder Opener', 'version': '1.0'})
 
     def do_POST(self):
-        self.send_header('Access-Control-Allow-Origin', '*')
+        length = int(self.headers.get('Content-Length', 0))
+        body = self.rfile.read(length).decode('utf-8')
 
-        if self.path == '/open':
-            length = int(self.headers.get('Content-Length', 0))
-            body = self.rfile.read(length).decode('utf-8')
+        try:
+            data = json.loads(body) if body else {}
+        except:
+            self._send(400, {'error': 'JSON invalide'})
+            return
 
-            try:
-                data = json.loads(body)
-                folder_path = data.get('path', '')
+        if self.path == '/ping':
+            self._send(200, {'ok': True, 'version': '1.0'})
 
-                if not folder_path:
-                    self.send_response(400)
-                    self.send_header('Content-Type', 'application/json')
-                    self.end_headers()
-                    self.wfile.write(json.dumps({'error': 'Chemin requis'}).encode())
-                    return
-
-                # Normaliser le chemin
-                folder_path = os.path.normpath(folder_path)
-
-                # Verifier que le dossier existe
-                if os.path.isdir(folder_path):
-                    subprocess.Popen(['explorer', folder_path])
-                    self.send_response(200)
-                    self.send_header('Content-Type', 'application/json')
-                    self.end_headers()
-                    self.wfile.write(json.dumps({'ok': True, 'path': folder_path}).encode())
-                    print(f'  Ouvert : {folder_path}')
-                else:
-                    self.send_response(404)
-                    self.send_header('Content-Type', 'application/json')
-                    self.end_headers()
-                    self.wfile.write(json.dumps({'error': 'Dossier non trouve', 'path': folder_path}).encode())
-                    print(f'  Non trouve : {folder_path}')
-
-            except Exception as e:
-                self.send_response(500)
-                self.send_header('Content-Type', 'application/json')
-                self.end_headers()
-                self.wfile.write(json.dumps({'error': str(e)}).encode())
+        elif self.path == '/open':
+            folder_path = data.get('path', '')
+            if not folder_path:
+                self._send(400, {'error': 'Chemin requis'})
+                return
+            folder_path = os.path.normpath(folder_path)
+            if os.path.isdir(folder_path):
+                subprocess.Popen(['explorer', folder_path])
+                self._send(200, {'ok': True, 'path': folder_path})
+                print(f'  Ouvert : {folder_path}')
+            else:
+                self._send(404, {'error': 'Dossier non trouve', 'path': folder_path})
+                print(f'  Non trouve : {folder_path}')
 
         elif self.path == '/search':
-            length = int(self.headers.get('Content-Length', 0))
-            body = self.rfile.read(length).decode('utf-8')
-
-            try:
-                data = json.loads(body)
-                base_paths = data.get('paths', [])
-                ref_num = data.get('ref', '')
-
-                if not ref_num or not base_paths:
-                    self.send_response(400)
-                    self.send_header('Content-Type', 'application/json')
-                    self.end_headers()
-                    self.wfile.write(json.dumps({'error': 'Ref et paths requis'}).encode())
-                    return
-
-                # Chercher dans chaque chemin
-                for base_path in base_paths:
-                    base_path = os.path.normpath(base_path)
-                    if not os.path.isdir(base_path):
-                        continue
+            base_paths = data.get('paths', [])
+            ref_num = data.get('ref', '')
+            if not ref_num or not base_paths:
+                self._send(400, {'error': 'Ref et paths requis'})
+                return
+            for base_path in base_paths:
+                base_path = os.path.normpath(base_path)
+                if not os.path.isdir(base_path):
+                    continue
+                try:
                     for name in os.listdir(base_path):
                         full = os.path.join(base_path, name)
                         if os.path.isdir(full) and (name.startswith(ref_num + '_') or name == ref_num):
-                            self.send_response(200)
-                            self.send_header('Content-Type', 'application/json')
-                            self.end_headers()
-                            self.wfile.write(json.dumps({'found': True, 'path': full, 'name': name}).encode())
+                            self._send(200, {'found': True, 'path': full, 'name': name})
                             print(f'  Trouve : {full}')
                             return
-
-                self.send_response(200)
-                self.send_header('Content-Type', 'application/json')
-                self.end_headers()
-                self.wfile.write(json.dumps({'found': False}).encode())
-                print(f'  Non trouve : ref={ref_num} dans {base_paths}')
-
-            except Exception as e:
-                self.send_response(500)
-                self.send_header('Content-Type', 'application/json')
-                self.end_headers()
-                self.wfile.write(json.dumps({'error': str(e)}).encode())
-
-        elif self.path == '/ping':
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps({'ok': True, 'version': '1.0'}).encode())
+                except PermissionError:
+                    continue
+            self._send(200, {'found': False})
+            print(f'  Non trouve : ref={ref_num} dans {base_paths}')
 
         else:
-            self.send_response(404)
-            self.end_headers()
-
-    def do_GET(self):
-        self.send_response(200)
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Content-Type', 'application/json')
-        self.end_headers()
-        self.wfile.write(json.dumps({'ok': True, 'service': 'GeoSolia Folder Opener', 'version': '1.0'}).encode())
+            self._send(404, {'error': 'Endpoint inconnu'})
 
     def log_message(self, format, *args):
         print(f'[GeoSolia] {args[0]}')
 
 
 if __name__ == '__main__':
-    print('='*50)
+    print('=' * 50)
     print('  GeoSolia - Ouverture de dossiers')
     print(f'  Serveur local sur le port {PORT}')
     print('  Ctrl+C pour arreter')
-    print('='*50)
+    print('=' * 50)
 
     server = http.server.HTTPServer(('127.0.0.1', PORT), FolderHandler)
-
     try:
         server.serve_forever()
     except KeyboardInterrupt:
