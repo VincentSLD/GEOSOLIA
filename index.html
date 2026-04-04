@@ -6546,23 +6546,28 @@ function startAutoSave(){
 }
 
 async function openProjectWithHandle(){
-  if(window.showOpenFilePicker){
-    try{
-      const [handle]=await window.showOpenFilePicker({types:[{description:'Projet GéoSolia',accept:{'application/json':['.geosolia']}}]});
-      const file=await handle.getFile();
-      // Sauvegarder le handle pour pouvoir re-enregistrer au même endroit
-      savedFileHandle=handle;
-      saveFolderHandle('savedFile',handle).catch(()=>{});
-      // Simuler un import
-      const input=document.getElementById('projectInput');
-      const dt=new DataTransfer();
-      dt.items.add(new File([await file.arrayBuffer()],file.name,{type:file.type}));
-      input.files=dt.files;
-      input.dispatchEvent(new Event('change'));
-    }catch(e){if(e.name!=='AbortError')console.error(e);}
-  }else{
+  // Sur mobile/tablette (pas de File System API) : proposer cloud ou fichier local
+  if(!window.showOpenFilePicker){
+    const token=await getAuthToken();
+    if(token&&navigator.onLine){
+      // Proposer le choix
+      const choice=confirm('Ouvrir depuis le cloud ?\n\nOK = Projets cloud\nAnnuler = Fichier local');
+      if(choice){openCloudProjects();return;}
+    }
     document.getElementById('projectInput').click();
+    return;
   }
+  try{
+    const [handle]=await window.showOpenFilePicker({types:[{description:'Projet GéoSolia',accept:{'application/json':['.geosolia']}}]});
+    const file=await handle.getFile();
+    savedFileHandle=handle;
+    saveFolderHandle('savedFile',handle).catch(()=>{});
+    const input=document.getElementById('projectInput');
+    const dt=new DataTransfer();
+    dt.items.add(new File([await file.arrayBuffer()],file.name,{type:file.type}));
+    input.files=dt.files;
+    input.dispatchEvent(new Event('change'));
+  }catch(e){if(e.name!=='AbortError')console.error(e);}
 }
 
 async function saveAndOpenCloud(){
