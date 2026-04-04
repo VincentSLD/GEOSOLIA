@@ -1075,6 +1075,7 @@
       <div id="file-menu" style="display:none;position:fixed;background:var(--white);border:1px solid var(--gray-200);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.15);z-index:999;min-width:140px;padding:4px 0">
         <button onclick="exportProjectAs();toggleFileMenu()" style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 14px;border:none;background:none;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit"><span>📥</span> Enreg. sous...</button>
         <button onclick="document.getElementById('projectInput').click();toggleFileMenu()" style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 14px;border:none;background:none;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit"><span>📂</span> Ouvrir</button>
+        <button onclick="saveAndOpenCloud();toggleFileMenu()" style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 14px;border:none;background:none;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit;color:var(--accent-blue,#1976d2)"><span>☁️</span> Ouvrir projet cloud</button>
         <div style="height:1px;background:var(--gray-200);margin:4px 8px"></div>
         <button onclick="closeProject();toggleFileMenu()" style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 14px;border:none;background:none;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;color:var(--red);font-family:inherit"><span>✕</span> Fermer</button>
       </div>
@@ -6523,7 +6524,12 @@ function startAutoSave(){
 }
 
 async function saveAndOpenCloud(){
-  await exportProject();
+  // Demander d'enregistrer le projet en cours s'il y a un plan chargé
+  const hasProject=planImgSrc||(pages&&pages.length>0);
+  if(hasProject){
+    const choice=confirm('Voulez-vous enregistrer le projet en cours avant d\'ouvrir un projet cloud ?');
+    if(choice)await exportProject();
+  }
   openCloudProjects();
 }
 
