@@ -1024,7 +1024,7 @@
 </div>
 <div id="app">
   <div id="header">
-    <div class="logo">
+    <div class="logo" onclick="saveAndOpenCloud()" style="cursor:pointer" title="Enregistrer et ouvrir les projets cloud">
       <div class="logo-text">Géo<span class="highlight">Solia'</span><span style="font-size:0.35em;font-weight:400;color:rgba(255,255,255,0.65);font-family:'Space Grotesk',sans-serif;letter-spacing:0.05em;margin-left:0.6em;vertical-align:baseline">by GPH</span></div>
       <span id="net-dot" class="online"></span>
     </div>
@@ -6520,6 +6520,11 @@ async function cloudDeleteProject(projectId){
 function startAutoSave(){
   if(autoSaveInterval)clearInterval(autoSaveInterval);
   autoSaveInterval=setInterval(silentSave,120000); // 2 minutes
+}
+
+async function saveAndOpenCloud(){
+  await exportProject();
+  openCloudProjects();
 }
 
 async function exportProject(){
