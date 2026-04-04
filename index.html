@@ -2388,17 +2388,12 @@ async function restoreCloudProject(id){
   const project=await cloudLoadProject(id);
   if(!project){alert('Impossible de charger le projet.');return;}
   document.getElementById('cloud-projects-modal').style.display='none';
-  // Simuler un import de fichier
-  const fakeEvent={target:{files:[new Blob([JSON.stringify(project)],{type:'application/json'})],value:'cloud'}};
-  const file=fakeEvent.target.files[0];
-  const reader=new FileReader();
-  reader.onload=function(ev){
-    document.getElementById('projectInput').dispatchEvent(Object.assign(new Event('change'),{target:{files:[new File([file],'cloud.geosolia')],value:'cloud'}}));
-  };
-  // Utiliser directement importProject
+  _cloudLastSyncAt=new Date().toISOString();
+  _cloudConflictPending=false;
+  const file=new File([JSON.stringify(project)],'cloud.geosolia',{type:'application/json'});
   const input=document.getElementById('projectInput');
   const dt=new DataTransfer();
-  dt.items.add(new File([file],'cloud.geosolia',{type:'application/json'}));
+  dt.items.add(file);
   input.files=dt.files;
   input.dispatchEvent(new Event('change'));
 }
@@ -6281,19 +6276,47 @@ async function getAuthToken(){
   try{const{data}=await sbAuth.auth.getSession();return data?.session?.access_token||null;}catch(e){return null;}
 }
 
-async function cloudSaveProject(project){
-  if(!navigator.onLine)return;
+let _cloudLastSyncAt=null; // horodatage de la dernière sync cloud réussie
+let _cloudConflictPending=false; // flag pour éviter les popups en boucle
+
+async function cloudCheckConflict(ref){
+  if(!navigator.onLine)return null;
   const token=await getAuthToken();
-  if(!token)return; // pas connecté
+  if(!token)return null;
+  try{
+    const resp=await fetch('/api/projects?action=check',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body:JSON.stringify({projectRef:ref,localUpdatedAt:_cloudLastSyncAt})
+    });
+    if(!resp.ok)return null;
+    return await resp.json();
+  }catch(e){return null;}
+}
+
+async function cloudSaveProject(project){
+  if(!navigator.onLine||_cloudConflictPending)return;
+  const token=await getAuthToken();
+  if(!token)return;
 
   const ref=project.projectRef||'';
   if(!ref)return;
+
+  // Vérifier les conflits avant de sauvegarder
+  if(_cloudLastSyncAt){
+    const check=await cloudCheckConflict(ref);
+    if(check&&check.conflict){
+      _cloudConflictPending=true;
+      const cloudDate=new Date(check.cloudUpdatedAt).toLocaleString('fr-FR');
+      showCloudConflict(ref,check.id,cloudDate);
+      return;
+    }
+  }
 
   // Séparer planImgSrc des données (trop gros pour la table)
   const dataWithoutPlan=JSON.parse(JSON.stringify(project));
   const mainPlan=dataWithoutPlan.planImgSrc||null;
   delete dataWithoutPlan.planImgSrc;
-  // Retirer aussi les planImgSrc des pages
   if(dataWithoutPlan.pages){
     dataWithoutPlan.pages.forEach(p=>{delete p.planImgSrc;});
   }
@@ -6309,8 +6332,60 @@ async function cloudSaveProject(project){
         planImgSrc:mainPlan
       })
     });
-    if(!resp.ok){const e=await resp.json();console.warn('Cloud save error:',e);}
+    if(resp.ok){
+      _cloudLastSyncAt=new Date().toISOString();
+    }else{const e=await resp.json();console.warn('Cloud save error:',e);}
   }catch(e){console.warn('Cloud save network error:',e);}
+}
+
+function showCloudConflict(ref,cloudId,cloudDate){
+  // Créer le popup de conflit
+  let overlay=document.getElementById('cloud-conflict-overlay');
+  if(overlay)overlay.remove();
+  overlay=document.createElement('div');
+  overlay.id='cloud-conflict-overlay';
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:9999;backdrop-filter:blur(4px)';
+  overlay.innerHTML=`<div style="background:#fff;border-radius:12px;padding:22px;max-width:420px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.4);border-top:4px solid #E88D00">
+    <div style="font-size:16px;font-weight:900;color:#E88D00;margin-bottom:10px">Conflit de version</div>
+    <p style="font-size:13px;color:#333;margin:0 0 8px;line-height:1.5">Ce projet a été modifié depuis un autre poste le <strong>${cloudDate}</strong>.</p>
+    <p style="font-size:12px;color:#666;margin:0 0 16px">Que souhaitez-vous faire ?</p>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <button onclick="resolveConflict('local','${ref}')" style="padding:10px;background:#2E7D32;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer">Garder ma version locale (écraser le cloud)</button>
+      <button onclick="resolveConflict('cloud','${cloudId}')" style="padding:10px;background:#1565C0;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer">Charger la version cloud (perdre les modifs locales)</button>
+      <button onclick="resolveConflict('cancel')" style="padding:10px;background:#eee;color:#333;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer">Annuler (ne rien faire pour l'instant)</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+}
+
+async function resolveConflict(choice,param){
+  const overlay=document.getElementById('cloud-conflict-overlay');
+  if(overlay)overlay.remove();
+  _cloudConflictPending=false;
+
+  if(choice==='local'){
+    // Forcer la sauvegarde locale vers le cloud
+    _cloudLastSyncAt=null; // reset pour éviter le re-check
+    const project=buildProjectJSON();
+    await cloudSaveProject(project);
+    if(typeof showToast==='function')showToast('Version locale envoyée au cloud');
+  }else if(choice==='cloud'){
+    // Charger la version cloud
+    if(typeof showToast==='function')showToast('Chargement de la version cloud...');
+    const project=await cloudLoadProject(param);
+    if(project){
+      // Simuler un import
+      const input=document.getElementById('projectInput');
+      const dt=new DataTransfer();
+      dt.items.add(new File([JSON.stringify(project)],'cloud.geosolia',{type:'application/json'}));
+      input.files=dt.files;
+      input.dispatchEvent(new Event('change'));
+      _cloudLastSyncAt=new Date().toISOString();
+    }else{
+      alert('Impossible de charger la version cloud.');
+    }
+  }
+  // choice==='cancel' : ne rien faire
 }
 
 async function cloudListProjects(){

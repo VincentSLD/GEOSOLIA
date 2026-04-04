@@ -94,6 +94,26 @@ export default async function handler(req, res) {
 
       return res.status(200).json({ ok: true, id: projectId });
 
+    } else if (action === 'check') {
+      // Vérifier si le projet cloud est plus récent que la version locale
+      const { projectRef, localUpdatedAt } = req.body;
+      if (!projectRef) return res.status(400).json({ error: 'projectRef requis' });
+
+      const r = await sbFetch(
+        `geosolia_projects?user_id=eq.${userId}&project_ref=eq.${encodeURIComponent(projectRef)}&select=id,updated_at`
+      );
+      const data = await r.json();
+      if (!r.ok || !data.length) return res.status(200).json({ exists: false });
+
+      const cloudDate = data[0].updated_at;
+      const conflict = localUpdatedAt && cloudDate && new Date(cloudDate) > new Date(localUpdatedAt);
+      return res.status(200).json({
+        exists: true,
+        id: data[0].id,
+        cloudUpdatedAt: cloudDate,
+        conflict: !!conflict
+      });
+
     } else if (action === 'list') {
       const r = await sbFetch(
         `geosolia_projects?user_id=eq.${userId}&select=id,project_ref,project_name,updated_at&order=updated_at.desc`
