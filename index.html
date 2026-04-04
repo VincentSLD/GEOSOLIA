@@ -1027,6 +1027,7 @@
     <div class="logo">
       <div class="logo-text">Géo<span class="highlight">Solia'</span><span style="font-size:0.35em;font-weight:400;color:rgba(255,255,255,0.65);font-family:'Space Grotesk',sans-serif;letter-spacing:0.05em;margin-left:0.6em;vertical-align:baseline">by GPH</span></div>
       <span id="net-dot" class="online"></span>
+      <span id="cloud-sync-dot" title="Sync cloud" style="font-size:10px;opacity:0.5;margin-left:4px">☁️</span>
     </div>
     <div class="actions">
       <label for="project-ref" style="color:rgba(255,255,255,0.6);font-size:11px;font-weight:700;white-space:nowrap;margin-right:4px">Ref. Dossier :</label><input type="text" id="project-ref" placeholder="N° réf. projet" spellcheck="false" readonly>
@@ -6368,6 +6369,7 @@ async function cloudSaveProject(project){
   }
 
   try{
+    // 1. Sauvegarder les métadonnées (sans images)
     const resp=await fetch('/api/projects?action=save',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
@@ -6375,13 +6377,33 @@ async function cloudSaveProject(project){
         projectRef:ref,
         projectName:project.projectName||'',
         projectData:dataClean,
-        files:files
+        files:[] // pas de fichiers dans la première requête
       })
     });
-    if(resp.ok){
-      _cloudLastSyncAt=new Date().toISOString();
-    }else{const e=await resp.json();console.warn('Cloud save error:',e);}
-  }catch(e){console.warn('Cloud save network error:',e);}
+    if(!resp.ok){const e=await resp.json();console.warn('Cloud save meta error:',e);return;}
+    const saveResult=await resp.json();
+    const projectId=saveResult.id;
+
+    // 2. Envoyer chaque fichier séparément (évite la limite de 4.5 Mo Vercel)
+    if(projectId&&files.length>0){
+      for(const f of files){
+        try{
+          await fetch('/api/projects?action=savefile',{
+            method:'POST',
+            headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+            body:JSON.stringify({projectId:projectId,fileKey:f.key,fileData:f.data})
+          });
+        }catch(e){console.warn('Cloud file upload failed:',f.key,e);}
+      }
+    }
+
+    _cloudLastSyncAt=new Date().toISOString();
+    console.log('[Cloud] Sync OK — '+files.length+' fichiers');
+    const dot=document.getElementById('cloud-sync-dot');if(dot){dot.style.opacity='1';dot.title='Sync cloud OK — '+new Date().toLocaleTimeString('fr-FR');setTimeout(()=>{dot.style.opacity='0.5';},3000);}
+  }catch(e){
+    console.warn('Cloud save network error:',e);
+    const dot=document.getElementById('cloud-sync-dot');if(dot){dot.textContent='⚠️';dot.title='Sync cloud echouee';setTimeout(()=>{dot.textContent='☁️';},5000);}
+  }
 }
 
 function showCloudConflict(ref,cloudId,cloudDate){

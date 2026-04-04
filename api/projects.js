@@ -97,6 +97,31 @@ export default async function handler(req, res) {
 
       return res.status(200).json({ ok: true, id: projectId });
 
+    } else if (action === 'savefile') {
+      // Sauvegarder un fichier individuel (plan, photo, image)
+      const { projectId, fileKey, fileData } = req.body;
+      if (!projectId || !fileKey || !fileData) {
+        return res.status(400).json({ error: 'projectId, fileKey et fileData requis' });
+      }
+      const r = await sbFetch(
+        `geosolia_project_files?on_conflict=project_id,file_key`,
+        {
+          method: 'POST',
+          prefer: 'resolution=merge-duplicates',
+          body: JSON.stringify({
+            project_id: projectId,
+            file_key: fileKey,
+            file_data: fileData,
+            updated_at: new Date().toISOString()
+          })
+        }
+      );
+      if (!r.ok) {
+        const data = await r.json();
+        return res.status(r.status).json({ error: data.message || JSON.stringify(data) });
+      }
+      return res.status(200).json({ ok: true });
+
     } else if (action === 'check') {
       // Vérifier si le projet cloud est plus récent que la version locale
       const { projectRef, localUpdatedAt } = req.body;
