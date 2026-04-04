@@ -6617,8 +6617,14 @@ async function exportProject(){
       await writable.close();
       if(typeof showToast==='function')showToast('Projet enregistré');
     }catch(e){if(e.name!=='AbortError')console.error(e);}
-  }else{
+  }else if(!navigator.onLine){
+    // Pas de File System Access API et pas de connexion : télécharger le fichier
     const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fileName;a.click();URL.revokeObjectURL(a.href);
+  }
+  // Toujours forcer la sync cloud si connecté
+  if(navigator.onLine){
+    if(typeof showToast==='function'&&!savedFileHandle&&!window.showSaveFilePicker)showToast('Enregistrement cloud...');
+    await cloudSaveProject(project);
   }
 }
 
