@@ -6313,12 +6313,57 @@ async function cloudSaveProject(project){
     }
   }
 
-  // Séparer planImgSrc des données (trop gros pour la table)
-  const dataWithoutPlan=JSON.parse(JSON.stringify(project));
-  const mainPlan=dataWithoutPlan.planImgSrc||null;
-  delete dataWithoutPlan.planImgSrc;
-  if(dataWithoutPlan.pages){
-    dataWithoutPlan.pages.forEach(p=>{delete p.planImgSrc;});
+  // Extraire toutes les images volumineuses dans un tableau files[]
+  const dataClean=JSON.parse(JSON.stringify(project));
+  const files=[];
+
+  // 1. Plan de la page courante
+  if(dataClean.planImgSrc){
+    files.push({key:'plan_current',data:dataClean.planImgSrc});
+    delete dataClean.planImgSrc;
+  }
+
+  // 2. Plans de chaque page
+  if(dataClean.pages){
+    dataClean.pages.forEach((p,i)=>{
+      if(p.planImgSrc){
+        files.push({key:'plan_page_'+i,data:p.planImgSrc});
+        delete p.planImgSrc;
+      }
+    });
+  }
+
+  // 3. Photos
+  if(dataClean.photos){
+    dataClean.photos.forEach((p,i)=>{
+      if(p.dataUrl){
+        files.push({key:'photo_'+i,data:p.dataUrl});
+        p.dataUrl='__cloud__photo_'+i; // placeholder
+      }
+    });
+  }
+
+  // 4. Images insérées dans les éléments
+  if(dataClean.elements){
+    dataClean.elements.forEach((el,i)=>{
+      if(el.type==='image'&&el.imgSrc&&el.imgSrc.startsWith('data:')){
+        files.push({key:'img_el_'+i,data:el.imgSrc});
+        el.imgSrc='__cloud__img_el_'+i;
+      }
+    });
+  }
+  // Idem dans les pages
+  if(dataClean.pages){
+    dataClean.pages.forEach((pg,pi)=>{
+      if(pg.elements){
+        pg.elements.forEach((el,ei)=>{
+          if(el.type==='image'&&el.imgSrc&&el.imgSrc.startsWith('data:')){
+            files.push({key:'img_p'+pi+'_e'+ei,data:el.imgSrc});
+            el.imgSrc='__cloud__img_p'+pi+'_e'+ei;
+          }
+        });
+      }
+    });
   }
 
   try{
@@ -6328,8 +6373,8 @@ async function cloudSaveProject(project){
       body:JSON.stringify({
         projectRef:ref,
         projectName:project.projectName||'',
-        projectData:dataWithoutPlan,
-        planImgSrc:mainPlan
+        projectData:dataClean,
+        files:files
       })
     });
     if(resp.ok){
@@ -6415,11 +6460,47 @@ async function cloudLoadProject(projectId){
     if(!resp.ok)return null;
     const data=await resp.json();
     if(!data.project)return null;
-    // Reconstruire le projet avec planImgSrc
+
     const project=data.project.project_data||{};
     const files=data.files||[];
-    const mainFile=files.find(f=>f.file_key==='plan_main');
-    if(mainFile)project.planImgSrc=mainFile.file_data;
+    const fileMap={};
+    files.forEach(f=>{fileMap[f.file_key]=f.file_data;});
+
+    // Restaurer plan courant
+    if(fileMap['plan_current'])project.planImgSrc=fileMap['plan_current'];
+
+    // Restaurer plans des pages
+    if(project.pages){
+      project.pages.forEach((p,i)=>{
+        if(fileMap['plan_page_'+i])p.planImgSrc=fileMap['plan_page_'+i];
+      });
+    }
+
+    // Restaurer photos
+    if(project.photos){
+      project.photos.forEach((p,i)=>{
+        if(p.dataUrl&&p.dataUrl.startsWith('__cloud__photo_')){
+          const key=p.dataUrl.replace('__cloud__','');
+          p.dataUrl=fileMap[key]||'';
+        }
+      });
+    }
+
+    // Restaurer images insérées dans les éléments
+    function restoreImgSrc(elements){
+      if(!elements)return;
+      elements.forEach(el=>{
+        if(el.type==='image'&&el.imgSrc&&el.imgSrc.startsWith('__cloud__')){
+          const key=el.imgSrc.replace('__cloud__','');
+          el.imgSrc=fileMap[key]||'';
+        }
+      });
+    }
+    restoreImgSrc(project.elements);
+    if(project.pages){
+      project.pages.forEach(pg=>restoreImgSrc(pg.elements));
+    }
+
     return project;
   }catch(e){return null;}
 }

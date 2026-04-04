@@ -49,19 +49,17 @@ export default async function handler(req, res) {
 
   try {
     if (action === 'save') {
-      const { projectRef, projectName, projectData, planImgSrc } = req.body;
+      const { projectRef, projectName, projectData, files } = req.body;
       if (!projectRef) return res.status(400).json({ error: 'projectRef requis' });
 
-      // Sauvegarder les métadonnées + données (sans planImgSrc pour la taille)
       const meta = {
         user_id: userId,
         project_ref: projectRef,
         project_name: projectName || '',
-        project_data: projectData, // JSON complet sans planImgSrc ni pages[].planImgSrc
+        project_data: projectData,
         updated_at: new Date().toISOString()
       };
 
-      // Upsert par user_id + project_ref
       const r = await sbFetch(
         `geosolia_projects?on_conflict=user_id,project_ref`,
         {
@@ -75,21 +73,26 @@ export default async function handler(req, res) {
 
       const projectId = Array.isArray(data) ? data[0]?.id : data.id;
 
-      // Sauvegarder les images de plan dans une table séparée (si fournies)
-      if (planImgSrc && projectId) {
-        await sbFetch(
-          `geosolia_project_files?on_conflict=project_id,file_key`,
-          {
-            method: 'POST',
-            prefer: 'resolution=merge-duplicates',
-            body: JSON.stringify({
-              project_id: projectId,
-              file_key: 'plan_main',
-              file_data: planImgSrc,
-              updated_at: new Date().toISOString()
-            })
-          }
-        );
+      // Sauvegarder les fichiers (plans, photos, images) un par un
+      if (projectId && files && Array.isArray(files)) {
+        // Supprimer les anciens fichiers
+        await sbFetch(`geosolia_project_files?project_id=eq.${projectId}`, { method: 'DELETE' });
+        // Insérer les nouveaux par batch de 1 (les base64 sont gros)
+        for (const f of files) {
+          if (!f.key || !f.data) continue;
+          await sbFetch(
+            `geosolia_project_files`,
+            {
+              method: 'POST',
+              body: JSON.stringify({
+                project_id: projectId,
+                file_key: f.key,
+                file_data: f.data,
+                updated_at: new Date().toISOString()
+              })
+            }
+          );
+        }
       }
 
       return res.status(200).json({ ok: true, id: projectId });
