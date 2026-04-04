@@ -1004,6 +1004,15 @@
   <button onclick="triggerInstall()" style="background:var(--yellow);color:var(--black);border:none;border-radius:8px;padding:8px 18px;font-size:12px;font-weight:800;cursor:pointer">Installer</button>
   <button onclick="dismissInstallBanner()" style="background:none;border:none;color:var(--gray-500);font-size:18px;cursor:pointer;padding:4px">&times;</button>
 </div>
+<div id="cloud-projects-modal" style="position:fixed;inset:0;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;z-index:950;backdrop-filter:blur(4px)">
+  <div style="background:var(--white);border-radius:var(--radius-lg);padding:22px;width:460px;max-width:92vw;max-height:80vh;overflow-y:auto;box-shadow:var(--shadow-lg);border-top:4px solid var(--accent-blue,#1976d2)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-weight:800;font-size:16px">☁️ Projets cloud</div>
+      <button onclick="document.getElementById('cloud-projects-modal').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--gray-500)">&times;</button>
+    </div>
+    <div id="cloud-projects-list"><div style="color:var(--gray-500);font-size:13px;text-align:center;padding:20px">Chargement...</div></div>
+  </div>
+</div>
 <div id="idb-recovery-modal">
   <div id="idb-recovery-content">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
@@ -1453,7 +1462,7 @@
     <div id="eraser-cursor"></div>
     <div id="mrpropre-cursor"></div>
     <div id="empty-state">
-      <div id="welcome-screen"><div class="big-icon">📐</div><div class="welcome-title">Géo<span class="highlight">Solia'</span></div><p>Application de relevé terrain</p><div class="welcome-btns"><button class="btn-load-center" onclick="openNewStudyModal()">📝 Nouveau Projet</button><button class="btn-load-center btn-open-project" onclick="document.getElementById('projectInput').click()">📂 Ouvrir un projet</button></div><button onclick="openIDBRecovery()" style="background:none;border:none;color:var(--gray-500);font-size:11px;font-weight:700;cursor:pointer;margin-top:10px;text-decoration:underline">Sauvegardes locales</button></div>
+      <div id="welcome-screen"><div class="big-icon">📐</div><div class="welcome-title">Géo<span class="highlight">Solia'</span></div><p>Application de relevé terrain</p><div class="welcome-btns"><button class="btn-load-center" onclick="openNewStudyModal()">📝 Nouveau Projet</button><button class="btn-load-center btn-open-project" onclick="document.getElementById('projectInput').click()">📂 Ouvrir un projet</button></div><div style="display:flex;gap:12px;margin-top:10px"><button onclick="openIDBRecovery()" style="background:none;border:none;color:var(--gray-500);font-size:11px;font-weight:700;cursor:pointer;text-decoration:underline">Sauvegardes locales</button><button onclick="openCloudProjects()" style="background:none;border:none;color:var(--accent-blue,#1976d2);font-size:11px;font-weight:700;cursor:pointer;text-decoration:underline">☁️ Projets cloud</button></div></div>
       <div id="load-plan-screen" style="display:none"><div class="big-icon">📐</div><p>Chargez un plan PDF ou une image<br>pour commencer à annoter</p><button class="btn-load-center" onclick="openPlanPicker()">📄 Charger un plan</button><div class="hint">PDF, JPG, PNG</div></div>
     </div>
     <button id="btn-recadrer" onclick="resetView()" title="Recadrer">🎯</button>
@@ -2350,6 +2359,54 @@ async function restoreFromIDB(id){
     setTimeout(()=>{resizeDrawCanvas();resetView();},100);
     if(typeof showToast==='function')showToast('Projet restaur\u00e9 depuis la sauvegarde locale');
   };
+}
+
+async function openCloudProjects(){
+  const modal=document.getElementById('cloud-projects-modal');
+  modal.style.display='flex';
+  const list=document.getElementById('cloud-projects-list');
+  list.innerHTML='<div style="color:var(--gray-500);font-size:13px;text-align:center;padding:20px">Chargement...</div>';
+
+  const projects=await cloudListProjects();
+  if(projects.length===0){
+    list.innerHTML='<div style="color:var(--gray-500);font-size:13px;text-align:center;padding:20px">Aucun projet sauvegardé dans le cloud.</div>';
+    return;
+  }
+  list.innerHTML=projects.map(p=>{
+    const date=p.updated_at?new Date(p.updated_at).toLocaleString('fr-FR'):'';
+    return '<div style="display:flex;align-items:center;gap:8px;padding:10px;border-bottom:1px solid var(--gray-100)">'
+      +'<div style="flex:1"><div style="font-weight:700;font-size:13px">'+(p.project_ref||'Sans ref')+(p.project_name?' — '+p.project_name:'')+'</div>'
+      +'<div style="font-size:10px;color:var(--gray-500)">'+date+'</div></div>'
+      +'<button onclick="restoreCloudProject(\''+p.id+'\')" style="padding:5px 12px;background:var(--accent-blue,#1976d2);color:#fff;border:none;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer">Ouvrir</button>'
+      +'<button onclick="deleteCloudProject(\''+p.id+'\')" style="padding:5px 8px;background:none;border:1px solid #ddd;border-radius:5px;font-size:11px;cursor:pointer;color:var(--gray-500)">🗑</button>'
+      +'</div>';
+  }).join('');
+}
+
+async function restoreCloudProject(id){
+  if(typeof showToast==='function')showToast('Chargement du projet cloud...');
+  const project=await cloudLoadProject(id);
+  if(!project){alert('Impossible de charger le projet.');return;}
+  document.getElementById('cloud-projects-modal').style.display='none';
+  // Simuler un import de fichier
+  const fakeEvent={target:{files:[new Blob([JSON.stringify(project)],{type:'application/json'})],value:'cloud'}};
+  const file=fakeEvent.target.files[0];
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    document.getElementById('projectInput').dispatchEvent(Object.assign(new Event('change'),{target:{files:[new File([file],'cloud.geosolia')],value:'cloud'}}));
+  };
+  // Utiliser directement importProject
+  const input=document.getElementById('projectInput');
+  const dt=new DataTransfer();
+  dt.items.add(new File([file],'cloud.geosolia',{type:'application/json'}));
+  input.files=dt.files;
+  input.dispatchEvent(new Event('change'));
+}
+
+async function deleteCloudProject(id){
+  if(!confirm('Supprimer ce projet du cloud ?'))return;
+  await cloudDeleteProject(id);
+  openCloudProjects();
 }
 
 async function deleteFromIDB(id){
@@ -6208,12 +6265,100 @@ async function silentSave(){
   const project=buildProjectJSON();
   // Sauvegarde IndexedDB (toujours, même sans handle fichier)
   idbSaveProject(project).catch(e=>console.warn('IDB backup failed:',e));
-  if(!savedFileHandle)return;
+  if(savedFileHandle){
+    try{
+      const writable=await savedFileHandle.createWritable();
+      await writable.write(new Blob([JSON.stringify(project)],{type:'application/json'}));
+      await writable.close();
+    }catch(e){console.warn('Auto-save échoué:',e);}
+  }
+  // Sync cloud Supabase
+  cloudSaveProject(project).catch(e=>console.warn('Cloud sync failed:',e));
+}
+
+// ═══ SYNC CLOUD SUPABASE ═══
+async function getAuthToken(){
+  try{const{data}=await sbAuth.auth.getSession();return data?.session?.access_token||null;}catch(e){return null;}
+}
+
+async function cloudSaveProject(project){
+  if(!navigator.onLine)return;
+  const token=await getAuthToken();
+  if(!token)return; // pas connecté
+
+  const ref=project.projectRef||'';
+  if(!ref)return;
+
+  // Séparer planImgSrc des données (trop gros pour la table)
+  const dataWithoutPlan=JSON.parse(JSON.stringify(project));
+  const mainPlan=dataWithoutPlan.planImgSrc||null;
+  delete dataWithoutPlan.planImgSrc;
+  // Retirer aussi les planImgSrc des pages
+  if(dataWithoutPlan.pages){
+    dataWithoutPlan.pages.forEach(p=>{delete p.planImgSrc;});
+  }
+
   try{
-    const writable=await savedFileHandle.createWritable();
-    await writable.write(new Blob([JSON.stringify(project)],{type:'application/json'}));
-    await writable.close();
-  }catch(e){console.warn('Auto-save échoué:',e);}
+    const resp=await fetch('/api/projects?action=save',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body:JSON.stringify({
+        projectRef:ref,
+        projectName:project.projectName||'',
+        projectData:dataWithoutPlan,
+        planImgSrc:mainPlan
+      })
+    });
+    if(!resp.ok){const e=await resp.json();console.warn('Cloud save error:',e);}
+  }catch(e){console.warn('Cloud save network error:',e);}
+}
+
+async function cloudListProjects(){
+  const token=await getAuthToken();
+  if(!token)return[];
+  try{
+    const resp=await fetch('/api/projects?action=list',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body:'{}'
+    });
+    if(!resp.ok)return[];
+    const data=await resp.json();
+    return data.projects||[];
+  }catch(e){return[];}
+}
+
+async function cloudLoadProject(projectId){
+  const token=await getAuthToken();
+  if(!token)return null;
+  try{
+    const resp=await fetch('/api/projects?action=load',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body:JSON.stringify({projectId:projectId})
+    });
+    if(!resp.ok)return null;
+    const data=await resp.json();
+    if(!data.project)return null;
+    // Reconstruire le projet avec planImgSrc
+    const project=data.project.project_data||{};
+    const files=data.files||[];
+    const mainFile=files.find(f=>f.file_key==='plan_main');
+    if(mainFile)project.planImgSrc=mainFile.file_data;
+    return project;
+  }catch(e){return null;}
+}
+
+async function cloudDeleteProject(projectId){
+  const token=await getAuthToken();
+  if(!token)return;
+  try{
+    await fetch('/api/projects?action=delete',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body:JSON.stringify({projectId:projectId})
+    });
+  }catch(e){}
 }
 
 function startAutoSave(){

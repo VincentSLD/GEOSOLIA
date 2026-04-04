@@ -2,6 +2,7 @@
   "rewrites": [
     { "source": "/api/chat", "destination": "/api/chat" },
     { "source": "/api/draw", "destination": "/api/draw" },
+    { "source": "/api/projects", "destination": "/api/projects" },
     { "source": "/api/approve-user", "destination": "/api/approve-user" },
     { "source": "/api/notify-admin", "destination": "/api/notify-admin" }
   ],
