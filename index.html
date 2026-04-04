@@ -6300,6 +6300,8 @@ async function cloudSaveProject(project){
   if(!navigator.onLine||_cloudConflictPending)return;
   const token=await getAuthToken();
   if(!token)return;
+  const _dot=document.getElementById('cloud-sync-dot');
+  if(_dot){_dot.textContent='⏳';_dot.style.opacity='1';_dot.title='Synchronisation en cours...';}
 
   const ref=project.projectRef||'';
   if(!ref)return;
@@ -6310,6 +6312,7 @@ async function cloudSaveProject(project){
     if(check&&check.conflict){
       _cloudConflictPending=true;
       const cloudDate=new Date(check.cloudUpdatedAt).toLocaleString('fr-FR');
+      if(_dot){_dot.textContent='⚠️';_dot.style.opacity='1';_dot.title='Conflit de version';}
       showCloudConflict(ref,check.id,cloudDate);
       return;
     }
@@ -6399,10 +6402,10 @@ async function cloudSaveProject(project){
 
     _cloudLastSyncAt=new Date().toISOString();
     console.log('[Cloud] Sync OK — '+files.length+' fichiers');
-    const dot=document.getElementById('cloud-sync-dot');if(dot){dot.style.opacity='1';dot.title='Sync cloud OK — '+new Date().toLocaleTimeString('fr-FR');setTimeout(()=>{dot.style.opacity='0.5';},3000);}
+    if(_dot){_dot.textContent='☁️';_dot.style.opacity='1';_dot.title='Sync cloud OK — '+new Date().toLocaleTimeString('fr-FR');setTimeout(()=>{_dot.style.opacity='0.5';},3000);}
   }catch(e){
     console.warn('Cloud save network error:',e);
-    const dot=document.getElementById('cloud-sync-dot');if(dot){dot.textContent='⚠️';dot.title='Sync cloud echouee';setTimeout(()=>{dot.textContent='☁️';},5000);}
+    if(_dot){_dot.textContent='⚠️';_dot.style.opacity='1';_dot.title='Sync cloud echouee';setTimeout(()=>{_dot.textContent='☁️';_dot.style.opacity='0.5';},5000);}
   }
 }
 
