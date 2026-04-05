@@ -6371,6 +6371,27 @@ async function cloudSaveProject(project){
     });
   }
 
+  // 5. Cartes de risques geocarto (riskMaps)
+  if(dataClean.geocartoData&&dataClean.geocartoData.riskMaps){
+    const rm=dataClean.geocartoData.riskMaps;
+    Object.keys(rm).forEach(k=>{
+      if(rm[k]&&rm[k].startsWith('data:')){
+        files.push({key:'riskmap_'+k,data:rm[k]});
+        rm[k]='__cloud__riskmap_'+k;
+      }
+    });
+  }
+
+  // 6. Légendes insérées (type legend avec imgSrc)
+  if(dataClean.elements){
+    dataClean.elements.forEach((el,i)=>{
+      if(el.type==='legend'&&el.imgSrc&&el.imgSrc.startsWith('data:')){
+        files.push({key:'legend_'+i,data:el.imgSrc});
+        el.imgSrc='__cloud__legend_'+i;
+      }
+    });
+  }
+
   try{
     // 1. Sauvegarder les métadonnées (sans images)
     const resp=await fetch('/api/projects?action=save',{
@@ -6516,7 +6537,7 @@ async function cloudLoadProject(projectId){
     function restoreImgSrc(elements){
       if(!elements)return;
       elements.forEach(el=>{
-        if(el.type==='image'&&el.imgSrc&&el.imgSrc.startsWith('__cloud__')){
+        if((el.type==='image'||el.type==='legend')&&el.imgSrc&&el.imgSrc.startsWith('__cloud__')){
           const key=el.imgSrc.replace('__cloud__','');
           el.imgSrc=fileMap[key]||'';
         }
@@ -6525,6 +6546,17 @@ async function cloudLoadProject(projectId){
     restoreImgSrc(project.elements);
     if(project.pages){
       project.pages.forEach(pg=>restoreImgSrc(pg.elements));
+    }
+
+    // Restaurer les cartes de risques geocarto
+    if(project.geocartoData&&project.geocartoData.riskMaps){
+      const rm=project.geocartoData.riskMaps;
+      Object.keys(rm).forEach(k=>{
+        if(rm[k]&&rm[k].startsWith('__cloud__')){
+          const key=rm[k].replace('__cloud__','');
+          rm[k]=fileMap[key]||'';
+        }
+      });
     }
 
     return project;
