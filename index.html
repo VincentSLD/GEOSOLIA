@@ -5300,7 +5300,7 @@ function gcSyncMission(val){
   }
 }
 function gcMissionField(field,val){
-  if(!geocartoData)return;
+  if(!geocartoData)geocartoData={};
   geocartoData[field]=val;
 }
 function gcFillEmprise(){
