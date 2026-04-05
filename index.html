@@ -6251,9 +6251,9 @@ function buildProjectJSON(){
     // Temps terrain en minutes au niveau racine pour Supabase
     if(geocartoData.tempsTerrain){
       const tt=geocartoData.tempsTerrain.toString().trim();
-      const hm=tt.match(/^(\d+)\s*[hH]\s*(\d+)?/);
+      const hm=tt.match(/^(\d+)\s*[hH]\s*(\d*)/);
       if(hm)project.estimatedTerrainMinutes=parseInt(hm[1])*60+(parseInt(hm[2])||0);
-      else{const n=parseFloat(tt);if(!isNaN(n))project.estimatedTerrainMinutes=Math.round(n*60);}
+      else{const n=parseInt(tt);if(!isNaN(n))project.estimatedTerrainMinutes=n;} // nombre seul = minutes
     }
   }
   if(projectMission)project.projectMission=projectMission;
