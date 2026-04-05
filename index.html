@@ -6250,17 +6250,34 @@ function buildProjectJSON(){
     project.geocartoData=geocartoData;
     // Temps en minutes au niveau racine pour Supabase
     function parseMinutes(val){
-      if(!val)return undefined;
+      if(!val)return 0;
       const t=val.toString().trim();
       const hm=t.match(/^(\d+)\s*[hH]\s*(\d*)/);
       if(hm)return parseInt(hm[1])*60+(parseInt(hm[2])||0);
-      const n=parseInt(t);return isNaN(n)?undefined:n;
+      const n=parseInt(t);return isNaN(n)?0:n;
     }
-    const tTerrain=parseMinutes(geocartoData.tempsTerrain);if(tTerrain!=null)project.estimatedTerrainMinutes=tTerrain;
-    const tRapport=parseMinutes(geocartoData.tempsRapport);if(tRapport!=null)project.estimatedReportMinutes=tRapport;
-    const tRelecture=parseMinutes(geocartoData.tempsRelecture);if(tRelecture!=null)project.estimatedReviewMinutes=tRelecture;
+    // Infos projet
+    project.projectEmprise=geocartoData.empriseAuSol||'';
+    project.projectTypologie=geocartoData.typologie||'';
+    project.projectNiveaux=geocartoData.nombreNiveaux||'';
+    // Programme de reconnaissance
+    project.programPenetros=geocartoData.nbPenetro||0;
+    project.programTarieres=geocartoData.nbTariere||0;
+    project.programRecoFondation=geocartoData.nbFondation||0;
+    project.programSondagePelle=geocartoData.nbPelle||0;
+    // Options
+    project.pelleNecessaire=!!geocartoData.pelleOui;
+    project.pelleGereeClient=!!geocartoData.pelleClient;
+    project.laboratoire=!!geocartoData.laboOui;
+    project.liquefaction=geocartoData.liquefaction==='oui'||geocartoData.liquefaction==='oui_sn';
+    // Temps
+    project.estimatedTerrainMinutes=parseMinutes(geocartoData.tempsTerrain);
+    project.estimatedReportMinutes=parseMinutes(geocartoData.tempsRapport);
+    project.estimatedReviewMinutes=parseMinutes(geocartoData.tempsRelecture);
+    // Notes
+    project.infoGeotechnicien=geocartoData.infosGeotech||'';
   }
-  if(projectMission)project.projectMission=projectMission;
+  project.projectMission=projectMission||'';
   if(Object.keys(reportChapters).length>0)project.reportChapters=reportChapters;
   if(modeleFormations.length>0)project.modeleFormations=modeleFormations;
   if(gpsCalib.transform)project.gpsCalib={pt1:gpsCalib.pt1,pt2:gpsCalib.pt2,transform:gpsCalib.transform};
