@@ -6248,13 +6248,17 @@ function buildProjectJSON(){
   if(projectInsee)project.projectInsee=projectInsee;
   if(geocartoData){
     project.geocartoData=geocartoData;
-    // Temps terrain en minutes au niveau racine pour Supabase
-    if(geocartoData.tempsTerrain){
-      const tt=geocartoData.tempsTerrain.toString().trim();
-      const hm=tt.match(/^(\d+)\s*[hH]\s*(\d*)/);
-      if(hm)project.estimatedTerrainMinutes=parseInt(hm[1])*60+(parseInt(hm[2])||0);
-      else{const n=parseInt(tt);if(!isNaN(n))project.estimatedTerrainMinutes=n;} // nombre seul = minutes
+    // Temps en minutes au niveau racine pour Supabase
+    function parseMinutes(val){
+      if(!val)return undefined;
+      const t=val.toString().trim();
+      const hm=t.match(/^(\d+)\s*[hH]\s*(\d*)/);
+      if(hm)return parseInt(hm[1])*60+(parseInt(hm[2])||0);
+      const n=parseInt(t);return isNaN(n)?undefined:n;
     }
+    const tTerrain=parseMinutes(geocartoData.tempsTerrain);if(tTerrain!=null)project.estimatedTerrainMinutes=tTerrain;
+    const tRapport=parseMinutes(geocartoData.tempsRapport);if(tRapport!=null)project.estimatedReportMinutes=tRapport;
+    const tRelecture=parseMinutes(geocartoData.tempsRelecture);if(tRelecture!=null)project.estimatedReviewMinutes=tRelecture;
   }
   if(projectMission)project.projectMission=projectMission;
   if(Object.keys(reportChapters).length>0)project.reportChapters=reportChapters;
