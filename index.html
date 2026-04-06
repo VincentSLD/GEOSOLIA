@@ -1194,6 +1194,7 @@
           <option value="">— Sélectionner le type de mission —</option>
           <option value="G1_ES">G1 REGAR — Étude de Site</option>
           <option value="G1_PGC">G1 PGC — Principes Généraux de Construction</option>
+          <option value="EXE_PLUS">EXE+ — Exécution Plus</option>
           <option value="G2_AVP">G2 AVP — Avant-Projet</option>
           <option value="G2_PRO">G2 AVP + PRO — Avant-Projet et Projet</option>
           <option value="G3">G3 — Suivi d'exécution</option>
@@ -5130,6 +5131,7 @@ function renderGeocartoPanel(){
   html+='<option value=""'+(projectMission?'':' selected')+'>— Choisir —</option>';
   html+='<option value="G1_ES"'+(projectMission==='G1_ES'?' selected':'')+'>G1 REGAR</option>';
   html+='<option value="G1_PGC"'+(projectMission==='G1_PGC'?' selected':'')+'>G1 PGC</option>';
+  html+='<option value="EXE_PLUS"'+(projectMission==='EXE_PLUS'?' selected':'')+'>EXE+</option>';
   html+='<option value="G2_AVP"'+(projectMission==='G2_AVP'?' selected':'')+'>G2 AVP</option>';
   html+='<option value="G2_PRO"'+(projectMission==='G2_PRO'?' selected':'')+'>G2 AVP + PRO</option>';
   html+='<option value="G3"'+(projectMission==='G3'?' selected':'')+'>G3</option>';
@@ -5293,7 +5295,7 @@ function gcSyncMission(val){
   // Basculer la typologie selon la mission
   const typoSel=document.getElementById('gc-typologie');
   if(typoSel){
-    const typoMap={G1_ES:'terrain_seul',G1_PGC:'terrain_seul',G2_AVP:'maison_individuelle',G2_PRO:'maison_individuelle',G5:'maison_individuelle'};
+    const typoMap={G1_ES:'terrain_seul',G1_PGC:'terrain_seul',EXE_PLUS:'maison_individuelle',G2_AVP:'maison_individuelle',G2_PRO:'maison_individuelle',G5:'maison_individuelle'};
     const newTypo=typoMap[val]||'';
     typoSel.value=newTypo;
     gcMissionField('typologie',newTypo);
@@ -5773,7 +5775,7 @@ function buildGeocartoContext(){
     if(g.parcelle.contenance)ctx+="  Contenance : "+g.parcelle.contenance+" m²\n";
   }
   // Type de mission
-  const missionLabels={G1_ES:'G1 REGAR (Étude de site)',G1_PGC:'G1 PGC (Principes Généraux de Construction)',G2_AVP:'G2 AVP (Avant-Projet)',G2_PRO:'G2 AVP + PRO (Avant-Projet et Projet)',G3:'G3 (Études et suivi d\'exécution)',G4:'G4 (Supervision géotechnique)',G5:'G5 (Diagnostic géotechnique)'};
+  const missionLabels={G1_ES:'G1 REGAR (Étude de site)',G1_PGC:'G1 PGC (Principes Généraux de Construction)',EXE_PLUS:'EXE+ (Exécution Plus)',G2_AVP:'G2 AVP (Avant-Projet)',G2_PRO:'G2 AVP + PRO (Avant-Projet et Projet)',G3:'G3 (Études et suivi d\'exécution)',G4:'G4 (Supervision géotechnique)',G5:'G5 (Diagnostic géotechnique)'};
   if(projectMission)ctx+="\nTYPE DE MISSION : "+(missionLabels[projectMission]||projectMission)+"\n";
   // Typologie du projet
   const typoLabels={terrain_seul:'Terrain seul',maison_individuelle:'Maison individuelle',autres_batiment:'Autres bâtiment'};
