@@ -5363,7 +5363,7 @@ function gcRecalcTempsRapport(){
   const ns=parseInt(f('gc-nb-pelle')?.value)||g.nbPelle||0;
   let minutes=0;
   if(projectMission==='G1_ES')minutes=45+Math.max(0,ns-1)*15;
-  else if(projectMission==='G1_PGC')minutes=45+Math.max(0,np-2)*15;
+  else if(projectMission==='G1_PGC')minutes=150+Math.max(0,np-2)*15;
   else if(projectMission==='EXE_PLUS')minutes=120+Math.max(0,np-2)*15;
   else if(projectMission==='G2_AVP')minutes=165+Math.max(0,np-2)*15;
   else if(projectMission==='G2_PRO')minutes=180+Math.max(0,np-2)*15;
