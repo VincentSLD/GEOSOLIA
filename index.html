@@ -5300,6 +5300,19 @@ function gcSyncMission(val){
     typoSel.value=newTypo;
     gcMissionField('typologie',newTypo);
   }
+  // Pré-remplir les valeurs par défaut selon la mission
+  if(val==='G1_ES'){
+    gcMissionField('nbPelle',1);gcMissionField('pelleOui',true);gcMissionField('pelleClient',false);
+    gcMissionField('tempsTerrain','1h');gcMissionField('tempsRapport','45');gcMissionField('tempsRelecture','0');
+    // Mettre à jour les champs UI
+    const f=id=>document.getElementById(id);
+    if(f('gc-nb-pelle'))f('gc-nb-pelle').value=1;
+    if(f('gc-pelle-oui'))f('gc-pelle-oui').value='oui';
+    if(f('gc-pelle-client'))f('gc-pelle-client').value='non';
+    if(f('gc-temps-terrain'))f('gc-temps-terrain').value='1h';
+    if(f('gc-temps-rapport'))f('gc-temps-rapport').value='45';
+    if(f('gc-temps-relecture'))f('gc-temps-relecture').value='0';
+  }
 }
 function gcMissionField(field,val){
   if(!geocartoData)geocartoData={};
