@@ -6405,12 +6405,22 @@ async function silentSave(){
   const project=buildProjectJSON();
   // Sauvegarde IndexedDB (toujours, même sans handle fichier)
   idbSaveProject(project).catch(e=>console.warn('IDB backup failed:',e));
+  // Restaurer le handle fichier si perdu (après rechargement de page)
+  if(!savedFileHandle){
+    try{
+      const restored=await loadFolderHandle('savedFile');
+      if(restored){
+        const perm=await restored.queryPermission({mode:'readwrite'});
+        if(perm==='granted')savedFileHandle=restored;
+      }
+    }catch(e){}
+  }
   if(savedFileHandle){
     try{
       const writable=await savedFileHandle.createWritable();
       await writable.write(new Blob([JSON.stringify(project)],{type:'application/json'}));
       await writable.close();
-    }catch(e){console.warn('Auto-save échoué:',e);}
+    }catch(e){console.warn('Auto-save fichier échoué:',e);savedFileHandle=null;}
   }
   // Sync cloud Supabase
   cloudSaveProject(project).catch(e=>console.warn('Cloud sync failed:',e));
