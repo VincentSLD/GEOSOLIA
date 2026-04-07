@@ -5180,23 +5180,23 @@ function renderGeocartoPanel(){
   html+='<div style="margin:4px 0 16px;padding:10px 14px;background:#EFF6FF;border-radius:8px;border-left:4px solid #3D7AB5">';
   html+='<div style="font-weight:700;font-size:12px;color:#2C3E50;margin-bottom:10px">Programme de reconnaissance</div>';
   html+='<table style="width:100%;border-collapse:separate;border-spacing:0 4px">';
-  html+='<tr><td style="font-size:12px;color:#444;padding-right:8px">Pénétromètres</td><td style="width:54px"><input type="number" min="0" id="gc-nb-penetro" value="'+(g.nbPenetro||0)+'" style="'+gcIn+'" onchange="_gcManualPenetro=true;gcMissionField(\'nbPenetro\',+this.value)"></td>';
-  html+='<td style="font-size:12px;color:#444;padding-left:20px;padding-right:8px">Tarières</td><td style="width:54px"><input type="number" min="0" id="gc-nb-tariere" value="'+(g.nbTariere||0)+'" style="'+gcIn+'" onchange="_gcManualTariere=true;gcMissionField(\'nbTariere\',+this.value)"></td></tr>';
-  html+='<tr><td style="font-size:12px;color:#444;padding-right:8px">Reco fondation</td><td><input type="number" min="0" id="gc-nb-fondation" value="'+(g.nbFondation||0)+'" style="'+gcIn+'" onchange="gcMissionField(\'nbFondation\',+this.value)"></td>';
-  html+='<td style="font-size:12px;color:#444;padding-left:20px;padding-right:8px">Sondage pelle</td><td><input type="number" min="0" id="gc-nb-pelle" value="'+(g.nbPelle||0)+'" style="'+gcIn+'" onchange="gcMissionField(\'nbPelle\',+this.value);gcAutoCheckPelle();gcCheckPelleClient()"></td></tr>';
+  html+='<tr><td style="font-size:12px;color:#444;padding-right:8px">Pénétromètres</td><td style="width:54px"><input type="number" min="0" id="gc-nb-penetro" value="'+(g.nbPenetro||0)+'" style="'+gcIn+'" onchange="_gcManualPenetro=true;gcMissionField(\'nbPenetro\',+this.value);gcRecalcTempsTerrain()"></td>';
+  html+='<td style="font-size:12px;color:#444;padding-left:20px;padding-right:8px">Tarières</td><td style="width:54px"><input type="number" min="0" id="gc-nb-tariere" value="'+(g.nbTariere||0)+'" style="'+gcIn+'" onchange="_gcManualTariere=true;gcMissionField(\'nbTariere\',+this.value);gcRecalcTempsTerrain()"></td></tr>';
+  html+='<tr><td style="font-size:12px;color:#444;padding-right:8px">Reco fondation</td><td><input type="number" min="0" id="gc-nb-fondation" value="'+(g.nbFondation||0)+'" style="'+gcIn+'" onchange="gcMissionField(\'nbFondation\',+this.value);gcRecalcTempsTerrain()"></td>';
+  html+='<td style="font-size:12px;color:#444;padding-left:20px;padding-right:8px">Sondage pelle</td><td><input type="number" min="0" id="gc-nb-pelle" value="'+(g.nbPelle||0)+'" style="'+gcIn+'" onchange="gcMissionField(\'nbPelle\',+this.value);gcAutoCheckPelle();gcCheckPelleClient();gcRecalcTempsTerrain()"></td></tr>';
   html+='</table>';
   html+='<div style="margin-top:8px;padding-top:8px;border-top:1px solid #D6E4F0">';
   html+='<table style="width:100%;border-collapse:separate;border-spacing:0 4px">';
   html+='<tr><td style="font-size:12px;color:#444;padding-right:8px">Pelle nécessaire</td><td style="width:120px"><select id="gc-pelle-oui" style="'+gcSl+'" onchange="gcMissionField(\'pelleOui\',this.value===\'oui\');gcCheckPelleClient()"><option value="oui"'+(g.pelleOui===true?' selected':'')+'>Oui</option><option value="non"'+(g.pelleOui!==true?' selected':'')+'>Non</option></select></td></tr>';
   html+='<tr><td id="gc-pelle-client-label" style="font-size:12px;color:#444;padding-right:8px">Gérée par le client</td><td><select id="gc-pelle-client" style="'+gcSl+'" onchange="gcMissionField(\'pelleClient\',this.value===\'oui\'?true:this.value===\'non\'?false:null);gcCheckPelleClient()"><option value=""'+(g.pelleClient==null?' selected':'')+'>—</option><option value="oui"'+(g.pelleClient===true?' selected':'')+'>Oui</option><option value="non"'+(g.pelleClient===false?' selected':'')+'>Non</option></select></td></tr>';
-  html+='<tr><td style="font-size:12px;color:#444;padding-right:8px">Laboratoire</td><td><select id="gc-labo-oui" style="'+gcSl+'" onchange="gcMissionField(\'laboOui\',this.value===\'oui\')"><option value="oui"'+(g.laboOui?' selected':'')+'>Oui</option><option value="non"'+(!g.laboOui?' selected':'')+'>Non</option></select></td></tr>';
+  html+='<tr><td style="font-size:12px;color:#444;padding-right:8px">Laboratoire</td><td><select id="gc-labo-oui" style="'+gcSl+'" onchange="gcMissionField(\'laboOui\',this.value===\'oui\');gcRecalcTempsTerrain()"><option value="oui"'+(g.laboOui?' selected':'')+'>Oui</option><option value="non"'+(!g.laboOui?' selected':'')+'>Non</option></select></td></tr>';
   const liqAuto=g.liquefaction!=null?g.liquefaction:(g.geologie&&g.geologie.notation&&/^Mz/i.test(g.geologie.notation)?'oui':'non');
   const liqVal=typeof liqAuto==='boolean'?(liqAuto?'oui':'non'):(liqAuto||'non');
-  html+='<tr><td style="font-size:12px;color:#444;padding-right:8px">Liquéfaction</td><td><select id="gc-liquefaction" style="'+gcSl+'" onchange="gcMissionField(\'liquefaction\',this.value)"><option value="oui"'+(liqVal==='oui'?' selected':'')+'>Oui</option><option value="oui_sn"'+(liqVal==='oui_sn'?' selected':'')+'>Si nécessaire</option><option value="non"'+(liqVal==='non'?' selected':'')+'>Non</option></select></td></tr>';
+  html+='<tr><td style="font-size:12px;color:#444;padding-right:8px">Liquéfaction</td><td><select id="gc-liquefaction" style="'+gcSl+'" onchange="gcMissionField(\'liquefaction\',this.value);gcRecalcTempsTerrain()"><option value="oui"'+(liqVal==='oui'?' selected':'')+'>Oui</option><option value="oui_sn"'+(liqVal==='oui_sn'?' selected':'')+'>Si nécessaire</option><option value="non"'+(liqVal==='non'?' selected':'')+'>Non</option></select></td></tr>';
   html+='</table></div>';
   html+='<div style="margin-top:8px;padding-top:8px;border-top:1px solid #D6E4F0">';
   html+='<table style="width:100%;border-collapse:separate;border-spacing:0 4px">';
-  html+='<tr><td style="font-size:12px;color:#444;padding-right:8px">Temps estimé terrain</td><td style="width:120px"><input type="text" id="gc-temps-terrain" value="'+(g.tempsTerrain||'')+'" style="'+gcTx+'" onchange="gcMissionField(\'tempsTerrain\',this.value)"></td></tr>';
+  html+='<tr><td style="font-size:12px;color:#444;padding-right:8px">Temps estimé terrain</td><td style="width:120px"><input type="text" id="gc-temps-terrain" value="'+(g.tempsTerrain||'')+'" style="'+gcTx+'" onchange="_gcManualTempsTerrain=true;gcMissionField(\'tempsTerrain\',this.value)"></td></tr>';
   html+='<tr><td style="font-size:12px;color:#444;padding-right:8px">Temps estimé rapport</td><td><input type="text" id="gc-temps-rapport" value="'+(g.tempsRapport||'')+'" style="'+gcTx+'" onchange="gcMissionField(\'tempsRapport\',this.value)"></td></tr>';
   html+='<tr><td style="font-size:12px;color:#444;padding-right:8px">Temps estimé relecture</td><td><input type="text" id="gc-temps-relecture" value="'+(g.tempsRelecture||'')+'" style="'+gcTx+'" onchange="gcMissionField(\'tempsRelecture\',this.value)"></td></tr>';
   html+='</table></div>';
@@ -5313,16 +5313,17 @@ function gcSyncMission(val){
     if(f('gc-temps-relecture'))f('gc-temps-relecture').value='0';
   }
   if(val==='EXE_PLUS'||val==='G2_AVP'||val==='G2_PRO'){
-    _gcManualPenetro=false;_gcManualTariere=false;
+    _gcManualPenetro=false;_gcManualTariere=false;_gcManualTempsTerrain=false;
     gcApplyDefaultProgram();
   }
 }
 
-let _gcManualPenetro=false,_gcManualTariere=false;
+let _gcManualPenetro=false,_gcManualTariere=false,_gcManualTempsTerrain=false;
 
 function gcApplyDefaultProgram(){
   const emprise=parseFloat((geocartoData&&geocartoData.empriseAuSol)||document.getElementById('gc-emprise')?.value||0);
   const f=id=>document.getElementById(id);
+  const g=geocartoData||{};
 
   if(!_gcManualPenetro){
     let nbPenetro=emprise<100?2:3;
@@ -5336,7 +5337,39 @@ function gcApplyDefaultProgram(){
     gcMissionField('nbTariere',nbTariere);
     if(f('gc-nb-tariere'))f('gc-nb-tariere').value=nbTariere;
   }
+  // Calcul temps terrain automatique
+  if(!_gcManualTempsTerrain){
+    const np=parseInt(f('gc-nb-penetro')?.value)||g.nbPenetro||0;
+    const nt=parseInt(f('gc-nb-tariere')?.value)||g.nbTariere||0;
+    const nf=parseInt(f('gc-nb-fondation')?.value)||g.nbFondation||0;
+    const ns=parseInt(f('gc-nb-pelle')?.value)||g.nbPelle||0;
+    const labo=(f('gc-labo-oui')?.value==='oui')||g.laboOui;
+    const liq=(f('gc-liquefaction')?.value==='oui')||g.liquefaction==='oui';
+    const minutes=60+np*25+nt*30+nf*30+ns*15+(labo?5:0)+(liq?30:0);
+    const h=Math.floor(minutes/60),m=minutes%60;
+    const txt=h>0?(m>0?h+'h'+String(m).padStart(2,'0'):h+'h'):minutes+'';
+    gcMissionField('tempsTerrain',txt);
+    if(f('gc-temps-terrain'))f('gc-temps-terrain').value=txt;
+  }
 }
+function gcRecalcTempsTerrain(){
+  if(_gcManualTempsTerrain)return;
+  if(projectMission!=='EXE_PLUS'&&projectMission!=='G2_AVP'&&projectMission!=='G2_PRO')return;
+  const f=id=>document.getElementById(id);
+  const g=geocartoData||{};
+  const np=parseInt(f('gc-nb-penetro')?.value)||g.nbPenetro||0;
+  const nt=parseInt(f('gc-nb-tariere')?.value)||g.nbTariere||0;
+  const nf=parseInt(f('gc-nb-fondation')?.value)||g.nbFondation||0;
+  const ns=parseInt(f('gc-nb-pelle')?.value)||g.nbPelle||0;
+  const labo=(f('gc-labo-oui')?.value==='oui')||g.laboOui;
+  const liq=(f('gc-liquefaction')?.value==='oui')||g.liquefaction==='oui';
+  const minutes=60+np*25+nt*30+nf*30+ns*15+(labo?5:0)+(liq?30:0);
+  const h=Math.floor(minutes/60),m=minutes%60;
+  const txt=h>0?(m>0?h+'h'+String(m).padStart(2,'0'):h+'h'):minutes+'';
+  gcMissionField('tempsTerrain',txt);
+  if(f('gc-temps-terrain'))f('gc-temps-terrain').value=txt;
+}
+
 function gcMissionField(field,val){
   if(!geocartoData)geocartoData={};
   geocartoData[field]=val;
