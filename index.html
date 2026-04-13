@@ -972,6 +972,19 @@
       </div>
       <button type="submit" class="login-btn" id="login-submit">Se connecter</button>
       <div class="login-error" id="login-error"></div>
+      <div style="text-align:center;margin-top:8px"><a href="#" onclick="showResetPassword();return false" style="font-size:11px;color:var(--gray-500);text-decoration:underline;cursor:pointer">Mot de passe oublie ?</a></div>
+    </form>
+    <!-- RESET MOT DE PASSE -->
+    <form id="reset-form" autocomplete="on" style="display:none">
+      <p style="font-size:12px;color:var(--gray-500);margin:0 0 12px;line-height:1.5">Entrez votre email. Vous recevrez un lien pour reinitialiser votre mot de passe.</p>
+      <div class="login-field">
+        <label for="reset-email">Email</label>
+        <input type="email" id="reset-email" placeholder="votre@email.com" required autocomplete="email">
+      </div>
+      <button type="submit" class="login-btn" id="reset-submit">Envoyer le lien</button>
+      <div class="login-error" id="reset-error"></div>
+      <div class="login-success" id="reset-success"></div>
+      <div style="text-align:center;margin-top:8px"><a href="#" onclick="showLoginForm();return false" style="font-size:11px;color:var(--gray-500);text-decoration:underline;cursor:pointer">Retour a la connexion</a></div>
     </form>
     <!-- INSCRIPTION -->
     <form id="signup-form" autocomplete="on" style="display:none">
@@ -2081,10 +2094,13 @@ sbAuth.auth.onAuthStateChange((event, session) => {
 function toggleAuthMode() {
   const loginForm = document.getElementById('login-form');
   const signupForm = document.getElementById('signup-form');
+  const resetForm = document.getElementById('reset-form');
   const toggle = document.getElementById('toggle-signup');
   const isLogin = loginForm.style.display !== 'none';
   loginForm.style.display = isLogin ? 'none' : 'block';
   signupForm.style.display = isLogin ? 'block' : 'none';
+  resetForm.style.display = 'none';
+  toggle.style.display = '';
   toggle.innerHTML = isLogin
     ? 'Deja un compte ? <b>Se connecter</b>'
     : 'Pas encore de compte ? <b>S\'inscrire</b>';
@@ -2092,6 +2108,42 @@ function toggleAuthMode() {
   document.getElementById('signup-error').textContent = '';
   document.getElementById('signup-success').textContent = '';
 }
+
+function showResetPassword(){
+  document.getElementById('login-form').style.display='none';
+  document.getElementById('signup-form').style.display='none';
+  document.getElementById('reset-form').style.display='block';
+  document.getElementById('toggle-signup').style.display='none';
+  document.getElementById('reset-error').textContent='';
+  document.getElementById('reset-success').textContent='';
+}
+
+function showLoginForm(){
+  document.getElementById('login-form').style.display='block';
+  document.getElementById('signup-form').style.display='none';
+  document.getElementById('reset-form').style.display='none';
+  document.getElementById('toggle-signup').style.display='';
+  document.getElementById('toggle-signup').innerHTML='Pas encore de compte ? <b>S\'inscrire</b>';
+}
+
+document.getElementById('reset-form').addEventListener('submit',async(e)=>{
+  e.preventDefault();
+  const email=document.getElementById('reset-email').value.trim();
+  const btn=document.getElementById('reset-submit');
+  const errEl=document.getElementById('reset-error');
+  const okEl=document.getElementById('reset-success');
+  errEl.textContent='';okEl.textContent='';
+  btn.disabled=true;btn.textContent='Envoi en cours...';
+  try{
+    const{error}=await sbAuth.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin});
+    if(error)throw error;
+    okEl.textContent='Un email de reinitialisation a ete envoye a '+email+'. Verifiez votre boite de reception.';
+  }catch(err){
+    errEl.textContent=err.message||'Erreur lors de l\'envoi.';
+  }finally{
+    btn.disabled=false;btn.textContent='Envoyer le lien';
+  }
+});
 
 // Formulaire inscription
 document.getElementById('signup-form').addEventListener('submit', async (e) => {
