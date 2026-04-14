@@ -2444,6 +2444,7 @@ async function restoreCloudProject(id){
   if(!project){alert('Impossible de charger le projet.');return;}
   document.getElementById('cloud-projects-modal').style.display='none';
   _cloudLastSyncAt=new Date().toISOString();
+  _cloudProjectId=id;
   _cloudConflictPending=false;
   const file=new File([JSON.stringify(project)],'cloud.geosolia',{type:'application/json'});
   const input=document.getElementById('projectInput');
@@ -6486,6 +6487,7 @@ async function getAuthToken(){
 }
 
 let _cloudLastSyncAt=null; // horodatage de la dernière sync cloud réussie
+let _cloudProjectId=null; // ID Supabase du projet en cours
 let _cloudConflictPending=false; // flag pour éviter les popups en boucle
 
 async function cloudCheckConflict(ref){
@@ -6605,15 +6607,17 @@ async function cloudSaveProject(project){
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
       body:JSON.stringify({
+        projectId:_cloudProjectId||null,
         projectRef:ref,
         projectName:project.projectName||'',
         projectData:dataClean,
-        files:[] // pas de fichiers dans la première requête
+        files:[]
       })
     });
     if(!resp.ok){const e=await resp.json();console.warn('Cloud save meta error:',e);return;}
     const saveResult=await resp.json();
     const projectId=saveResult.id;
+    _cloudProjectId=projectId; // mémoriser l'ID pour les prochaines sauvegardes
 
     // 2. Envoyer chaque fichier séparément (évite la limite de 4.5 Mo Vercel)
     if(projectId&&files.length>0){
@@ -6899,6 +6903,7 @@ async function closeProject(){
   // Arrêter l'auto-save
   if(autoSaveInterval){clearInterval(autoSaveInterval);autoSaveInterval=null;}
   savedFileHandle=null;
+  _cloudProjectId=null;_cloudLastSyncAt=null;_cloudConflictPending=false;
   // Réinitialiser toutes les données
   elements=[];clearSelection();selectedStickerId=null;
   drawPaths=[];cleanPaths=[];currentPathPts=[];

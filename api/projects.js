@@ -49,29 +49,55 @@ export default async function handler(req, res) {
 
   try {
     if (action === 'save') {
-      const { projectRef, projectName, projectData, files } = req.body;
+      const { projectRef, projectName, projectData, files, projectId: existingId } = req.body;
       if (!projectRef) return res.status(400).json({ error: 'projectRef requis' });
 
-      const meta = {
-        user_id: userId,
-        project_ref: projectRef,
-        project_name: projectName || '',
-        project_data: projectData,
-        updated_at: new Date().toISOString()
-      };
+      let projectId = existingId || null;
 
-      const r = await sbFetch(
-        `geosolia_projects?on_conflict=user_id,project_ref`,
-        {
-          method: 'POST',
-          prefer: 'resolution=merge-duplicates,return=representation',
-          body: JSON.stringify(meta)
+      if (projectId) {
+        // UPDATE existant (la ref a pu changer)
+        const r = await sbFetch(
+          `geosolia_projects?id=eq.${projectId}&user_id=eq.${userId}`,
+          {
+            method: 'PATCH',
+            prefer: 'return=representation',
+            body: JSON.stringify({
+              project_ref: projectRef,
+              project_name: projectName || '',
+              project_data: projectData,
+              updated_at: new Date().toISOString()
+            })
+          }
+        );
+        const data = await r.json();
+        if (!r.ok || !data.length) {
+          // Fallback : si l'id n'existe plus, créer un nouveau
+          projectId = null;
+        } else {
+          projectId = data[0].id;
         }
-      );
-      const data = await r.json();
-      if (!r.ok) return res.status(r.status).json({ error: data.message || JSON.stringify(data) });
+      }
 
-      const projectId = Array.isArray(data) ? data[0]?.id : data.id;
+      if (!projectId) {
+        // INSERT ou UPSERT par ref
+        const r = await sbFetch(
+          `geosolia_projects?on_conflict=user_id,project_ref`,
+          {
+            method: 'POST',
+            prefer: 'resolution=merge-duplicates,return=representation',
+            body: JSON.stringify({
+              user_id: userId,
+              project_ref: projectRef,
+              project_name: projectName || '',
+              project_data: projectData,
+              updated_at: new Date().toISOString()
+            })
+          }
+        );
+        const data = await r.json();
+        if (!r.ok) return res.status(r.status).json({ error: data.message || JSON.stringify(data) });
+        projectId = Array.isArray(data) ? data[0]?.id : data.id;
+      }
 
       // Sauvegarder les fichiers (plans, photos, images) un par un
       if (projectId && files && Array.isArray(files)) {
