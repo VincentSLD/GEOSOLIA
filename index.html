@@ -1043,7 +1043,7 @@
       <span id="cloud-sync-dot" title="Sync cloud" style="font-size:10px;opacity:0.5;margin-left:4px">☁️</span>
     </div>
     <div class="actions">
-      <label for="project-ref" style="color:rgba(255,255,255,0.6);font-size:11px;font-weight:700;white-space:nowrap;margin-right:4px">Ref. Dossier :</label><input type="text" id="project-ref" placeholder="N° réf. projet" spellcheck="false" readonly>
+      <label for="project-ref" style="color:rgba(255,255,255,0.6);font-size:11px;font-weight:700;white-space:nowrap;margin-right:4px">Ref. Dossier :</label><input type="text" id="project-ref" placeholder="N° réf. projet" spellcheck="false" readonly onclick="openEditSiteModal()" style="cursor:pointer" title="Cliquer pour modifier">
       <input type="file" id="fileInput" accept=".pdf,image/*" style="display:none" onchange="loadPlan(event)">
       <div id="auth-user-bar"><span class="auth-avatar" id="auth-avatar"></span><button class="admin-btn" id="admin-btn" onclick="openAdminPanel()" style="display:none">Admin<span class="admin-badge" id="admin-badge" style="display:none">0</span></button><button class="auth-logout" onclick="authLogout()">Deconnexion</button></div>
     <div id="admin-overlay" onclick="closeAdminPanel()"></div>
@@ -4362,7 +4362,9 @@ function openEditSiteModal(){
   const $m=document.getElementById('new-study-inner');
   $m.querySelector('h2').textContent='Modifier les données du site';
   $m.querySelector('p').textContent='Modifiez les informations et relancez l\u2019enquête.';
-  document.getElementById('new-study-ref').value=document.getElementById('project-ref').value||'';
+  const refField=document.getElementById('project-ref').value||'';
+  const refNum=projectName&&refField.endsWith(projectName)?refField.slice(0,refField.length-projectName.length).trim():refField;
+  document.getElementById('new-study-ref').value=refNum;
   document.getElementById('new-study-name').value=projectName||'';
   document.getElementById('new-study-addr').value=projectAddr||'';
   document.getElementById('new-study-cp').value=projectCp||'';
