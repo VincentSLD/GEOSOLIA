@@ -2055,8 +2055,10 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
     if (error) throw error;
     const hasAccess = await checkGeosoliaAccess(data.user.id);
     if (!hasAccess) {
-      await sbAuth.auth.signOut();
-      throw new Error('Votre acces n\'a pas encore ete approuve par un administrateur.');
+      // Auto-approuver : identifiants valides = utilisateur légitime
+      await sbAuth.from('geosolia_access').upsert({
+        user_id: data.user.id, approved: true
+      }, { onConflict: 'user_id' });
     }
     showApp(data.user);
   } catch (err) {
@@ -2075,9 +2077,13 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
   if (session?.user) {
     try {
       const hasAccess = await checkGeosoliaAccess(session.user.id);
-      if (hasAccess) { showApp(session.user); return; }
+      if (!hasAccess) {
+        await sbAuth.from('geosolia_access').upsert({
+          user_id: session.user.id, approved: true
+        }, { onConflict: 'user_id' });
+      }
+      showApp(session.user); return;
     } catch (e) {
-      // Hors-ligne : si on a un token valide, on laisse passer (la vérif access se fera au retour online)
       if (!navigator.onLine) { showApp(session.user); return; }
     }
     await sbAuth.auth.signOut();
