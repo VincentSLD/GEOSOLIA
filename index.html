@@ -5373,10 +5373,25 @@ function gcSyncMission(val){
     typoSel.value=newTypo;
     gcMissionField('typologie',newTypo);
   }
-  // Pré-remplir les valeurs par défaut selon la mission
+  // Reset complet des valeurs calculees + flags manuels
   const f=id=>document.getElementById(id);
+  _gcManualPenetro=false;_gcManualTariere=false;_gcManualTempsTerrain=false;_gcManualTempsRapport=false;_gcManualTempsRelecture=false;
+  ['nbPenetro','nbTariere','nbFondation','nbPelle'].forEach(k=>gcMissionField(k,0));
+  gcMissionField('pelleOui',false);gcMissionField('pelleClient',null);
+  gcMissionField('laboOui',false);gcMissionField('liquefaction','non');
+  gcMissionField('tempsTerrain','');gcMissionField('tempsRapport','');gcMissionField('tempsRelecture','');
+  // Remettre les champs UI à zéro
+  ['gc-nb-penetro','gc-nb-tariere','gc-nb-fondation','gc-nb-pelle'].forEach(id=>{if(f(id))f(id).value=0;});
+  if(f('gc-pelle-oui'))f('gc-pelle-oui').value='non';
+  if(f('gc-pelle-client'))f('gc-pelle-client').value='';
+  if(f('gc-labo-oui'))f('gc-labo-oui').value='non';
+  if(f('gc-liquefaction'))f('gc-liquefaction').value='non';
+  if(f('gc-temps-terrain'))f('gc-temps-terrain').value='';
+  if(f('gc-temps-rapport'))f('gc-temps-rapport').value='';
+  if(f('gc-temps-relecture'))f('gc-temps-relecture').value='';
+
+  // Pré-remplir les valeurs par défaut selon la mission
   if(val==='G1_ES'){
-    _gcManualTempsTerrain=false;_gcManualTempsRapport=false;_gcManualTempsRelecture=false;
     gcMissionField('nbPelle',1);gcMissionField('pelleOui',true);gcMissionField('pelleClient',false);
     gcMissionField('tempsTerrain','1h');gcMissionField('tempsRelecture','0');
     if(f('gc-nb-pelle'))f('gc-nb-pelle').value=1;
@@ -5387,7 +5402,6 @@ function gcSyncMission(val){
     gcRecalcTempsRelecture();
   }
   if(val==='EXE_PLUS'||val==='G2_AVP'||val==='G2_PRO'||val==='G1_PGC'||val==='G5'){
-    _gcManualPenetro=false;_gcManualTariere=false;_gcManualTempsTerrain=false;_gcManualTempsRapport=false;_gcManualTempsRelecture=false;
     gcApplyDefaultProgram();
   }
 }
