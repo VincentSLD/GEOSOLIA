@@ -1045,7 +1045,7 @@
     <div class="actions">
       <label for="project-ref" style="color:rgba(255,255,255,0.6);font-size:11px;font-weight:700;white-space:nowrap;margin-right:4px">Ref. Dossier :</label><input type="text" id="project-ref" placeholder="N° réf. projet" spellcheck="false" readonly onclick="openEditSiteModal()" style="cursor:pointer" title="Cliquer pour modifier">
       <input type="file" id="fileInput" accept=".pdf,image/*" style="display:none" onchange="loadPlan(event)">
-      <div id="auth-user-bar"><span class="auth-avatar" id="auth-avatar"></span><button class="admin-btn" onclick="openUserFolderConfig()" title="Configurer mes dossiers" style="background:#1565C0">⚙️ Mes dossiers</button><button class="admin-btn" id="admin-btn" onclick="openAdminPanel()" style="display:none">Admin<span class="admin-badge" id="admin-badge" style="display:none">0</span></button><button class="auth-logout" onclick="authLogout()">Deconnexion</button></div>
+      <div id="auth-user-bar"><span class="auth-avatar" id="auth-avatar"></span><button class="admin-btn" onclick="openUserFolderConfig()" title="Paramétrages" style="background:#1565C0">⚙️ Paramétrages</button><button class="admin-btn" id="admin-btn" onclick="openAdminPanel()" style="display:none">Admin<span class="admin-badge" id="admin-badge" style="display:none">0</span></button><button class="auth-logout" onclick="authLogout()">Deconnexion</button></div>
     <div id="admin-overlay" onclick="closeAdminPanel()"></div>
     <div id="admin-panel">
       <div class="admin-title">Gestion des utilisateurs</div>
@@ -1077,7 +1077,7 @@
   <div id="user-folder-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;z-index:960;backdrop-filter:blur(4px)">
     <div style="background:var(--white);border-radius:var(--radius-lg);padding:22px;width:440px;max-width:92vw;max-height:85vh;overflow-y:auto;box-shadow:var(--shadow-lg);border-top:4px solid #1565C0">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-        <div style="font-weight:800;font-size:16px;color:var(--black)">⚙️ Mes dossiers</div>
+        <div style="font-weight:800;font-size:16px;color:var(--black)">⚙️ Paramétrages</div>
         <button onclick="document.getElementById('user-folder-modal').style.display='none'" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--gray-500)">&times;</button>
       </div>
       <p style="font-size:12px;color:var(--gray-500);margin:0 0 14px;line-height:1.5">Configurez vos chemins de dossiers. Ces paramètres sont propres à votre poste et utilisateur.</p>
