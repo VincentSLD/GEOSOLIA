@@ -5717,8 +5717,7 @@ async function createProjectFolder(){
   }
   // Si pas de template configure pour cet utilisateur, demander de le selectionner
   if(!tplHandle){
-    const msg='Premiere utilisation : selectionnez le dossier MODÈLE (template a copier).\n\nCe choix sera memorise pour vos prochaines creations.';
-    if(!confirm(msg))return;
+    if(typeof showToast==='function')showToast('Selectionnez le dossier MODÈLE (template a copier)');
     try{
       tplHandle=await window.showDirectoryPicker({mode:'read'});
       await saveFolderHandle('template',tplHandle);
