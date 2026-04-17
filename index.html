@@ -6911,9 +6911,19 @@ async function exportProject(){
     }
   }else if(window.showSaveFilePicker){
     try{
-      const handle=await window.showSaveFilePicker({suggestedName:fileName,types:[{description:'Projet GéoSolia',accept:{'application/json':['.geosolia']}}]});
+      // Démarrer dans le dossier destination (si configuré) sinon Bureau
+      const savedDest=await loadFolderHandle('destination');
+      let startIn='desktop';
+      if(savedDest){
+        try{
+          const perm=await savedDest.queryPermission({mode:'readwrite'});
+          if(perm==='granted'||await savedDest.requestPermission({mode:'readwrite'})==='granted'){
+            startIn=savedDest;
+          }
+        }catch(e){}
+      }
+      const handle=await window.showSaveFilePicker({suggestedName:fileName,startIn:startIn,types:[{description:'Projet GéoSolia',accept:{'application/json':['.geosolia']}}]});
       savedFileHandle=handle;
-      // Persister le handle en IDB pour les prochaines sessions
       saveFolderHandle('savedFile',handle).catch(()=>{});
       const writable=await handle.createWritable();
       await writable.write(blob);
@@ -6938,7 +6948,9 @@ async function exportProjectAs(){
   const blob=new Blob([JSON.stringify(project)],{type:'application/json'});
   if(window.showSaveFilePicker){
     try{
-      const handle=await window.showSaveFilePicker({suggestedName:fileName,startIn:savedFileHandle||'desktop',types:[{description:'Projet GéoSolia',accept:{'application/json':['.geosolia']}}]});
+      const savedDest=await loadFolderHandle('destination');
+      const startIn=savedFileHandle||savedDest||'desktop';
+      const handle=await window.showSaveFilePicker({suggestedName:fileName,startIn:startIn,types:[{description:'Projet GéoSolia',accept:{'application/json':['.geosolia']}}]});
       savedFileHandle=handle;
       const writable=await handle.createWritable();
       await writable.write(blob);
