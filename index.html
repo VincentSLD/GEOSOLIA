@@ -5612,19 +5612,25 @@ async function openProjectFolder(){
   const refNum=projectName&&refField.endsWith(projectName)?refField.slice(0,refField.length-projectName.length).trim():refField;
 
   // Chercher le dossier via File System Access API dans le dossier destination
-  const destHandle=await loadFolderHandle('destination');
+  let destHandle=await loadFolderHandle('destination');
   if(!destHandle){
-    alert('Dossier destination non configuré.\nDemandez à l\'administrateur de le paramétrer dans Admin (⚙️).');
-    return;
-  }
-
-  try{
-    const perm=await destHandle.queryPermission({mode:'read'});
-    if(perm!=='granted'){
-      const req=await destHandle.requestPermission({mode:'read'});
-      if(req!=='granted'){alert('Permission refusée.');return;}
+    if(typeof showToast==='function')showToast('Selectionnez le dossier qui contient les projets');
+    try{
+      destHandle=await window.showDirectoryPicker({mode:'read'});
+      await saveFolderHandle('destination',destHandle);
+    }catch(e){
+      if(e.name!=='AbortError')alert('Erreur : '+e.message);
+      return;
     }
-  }catch(e){alert('Impossible d\'accéder au dossier destination.');return;}
+  }else{
+    try{
+      const perm=await destHandle.queryPermission({mode:'read'});
+      if(perm!=='granted'){
+        const req=await destHandle.requestPermission({mode:'read'});
+        if(req!=='granted'){alert('Permission refusée.');return;}
+      }
+    }catch(e){alert('Impossible d\'accéder au dossier destination.');return;}
+  }
 
   if(typeof showToast==='function')showToast('Recherche du dossier...');
 
