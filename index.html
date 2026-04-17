@@ -5393,11 +5393,11 @@ function gcSyncMission(val){
   // Pré-remplir les valeurs par défaut selon la mission
   if(val==='G1_ES'){
     gcMissionField('nbPelle',1);gcMissionField('pelleOui',true);gcMissionField('pelleClient',false);
-    gcMissionField('tempsTerrain','1h');gcMissionField('tempsRelecture','0');
+    gcMissionField('tempsRelecture','0');
     if(f('gc-nb-pelle'))f('gc-nb-pelle').value=1;
     if(f('gc-pelle-oui'))f('gc-pelle-oui').value='oui';
     if(f('gc-pelle-client'))f('gc-pelle-client').value='non';
-    if(f('gc-temps-terrain'))f('gc-temps-terrain').value='1h';
+    gcRecalcTempsTerrain();
     gcRecalcTempsRapport();
     gcRecalcTempsRelecture();
   }
@@ -5483,7 +5483,6 @@ function gcRecalcTempsRelecture(){
 
 function gcRecalcTempsTerrain(){
   if(_gcManualTempsTerrain)return;
-  if(projectMission!=='EXE_PLUS'&&projectMission!=='G2_AVP'&&projectMission!=='G2_PRO'&&projectMission!=='G1_PGC'&&projectMission!=='G5')return;
   const f=id=>document.getElementById(id);
   const g=geocartoData||{};
   const np=parseInt(f('gc-nb-penetro')?.value)||g.nbPenetro||0;
@@ -5492,7 +5491,13 @@ function gcRecalcTempsTerrain(){
   const ns=parseInt(f('gc-nb-pelle')?.value)||g.nbPelle||0;
   const labo=(f('gc-labo-oui')?.value==='oui')||g.laboOui;
   const liq=(f('gc-liquefaction')?.value==='oui')||g.liquefaction==='oui';
-  const minutes=60+np*25+nt*30+nf*30+ns*15+(labo?5:0)+(liq?30:0);
+  let minutes;
+  if(projectMission==='G1_ES'){
+    // G1 REGAR : 60 min de base + 30 min par pelle supplementaire (au-dela de 1)
+    minutes=60+Math.max(0,ns-1)*30;
+  }else if(projectMission==='EXE_PLUS'||projectMission==='G2_AVP'||projectMission==='G2_PRO'||projectMission==='G1_PGC'||projectMission==='G5'){
+    minutes=60+np*25+nt*30+nf*30+ns*15+(labo?5:0)+(liq?30:0);
+  }else return;
   const h=Math.floor(minutes/60),m=minutes%60;
   const txt=h>0?(m>0?h+'h'+String(m).padStart(2,'0'):h+'h'):minutes+'';
   gcMissionField('tempsTerrain',txt);
