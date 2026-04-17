@@ -5633,7 +5633,8 @@ async function openProjectFolder(){
     for await(const [name,entry] of destHandle.entries()){
       if(entry.kind==='directory'&&(name.startsWith(refNum+'_')||name===refNum)){
         if(typeof showToast==='function')showToast('Dossier trouvé : '+name);
-        try{await window.showDirectoryPicker({startIn:entry});}catch(e){}
+        // Utiliser showOpenFilePicker pour voir tous les fichiers du dossier
+        try{await window.showOpenFilePicker({startIn:entry,multiple:false});}catch(e){}
         return;
       }
     }
