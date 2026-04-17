@@ -5715,9 +5715,17 @@ async function createProjectFolder(){
       }
     }catch(e){tplHandle=null;}
   }
+  // Si pas de template configure pour cet utilisateur, demander de le selectionner
   if(!tplHandle){
-    alert('Dossier modèle non configuré.\nDemandez à l\'administrateur de le paramétrer.');
-    return;
+    const msg='Premiere utilisation : selectionnez le dossier MODÈLE (template a copier).\n\nCe choix sera memorise pour vos prochaines creations.';
+    if(!confirm(msg))return;
+    try{
+      tplHandle=await window.showDirectoryPicker({mode:'read'});
+      await saveFolderHandle('template',tplHandle);
+    }catch(e){
+      if(e.name!=='AbortError')alert('Erreur : '+e.message);
+      return;
+    }
   }
 
   // Demander la destination à l'utilisateur à chaque création
