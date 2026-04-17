@@ -4395,7 +4395,7 @@ let projectAddr='',projectLat=null,projectLng=null,projectInsee=null,projectName
 // ═══ PANNEAU GÉOCARTO ═══
 function toggleGeocartoPanel(){document.getElementById('geocarto-panel').classList.toggle('open');}
 function openGeocartoPanel(){document.getElementById('geocarto-panel').classList.add('open');}
-function closeGeocartoPanel(){document.getElementById('geocarto-panel').classList.remove('open');}
+function closeGeocartoPanel(){document.getElementById('geocarto-panel').classList.remove('open');if(typeof silentSave==='function')silentSave();}
 
 function reloadGeocartoData(){
   if(projectLat!=null&&projectLng!=null){
