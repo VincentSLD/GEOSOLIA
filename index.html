@@ -1063,7 +1063,13 @@
           <p style="font-size:10px;color:var(--gray-500);margin:0;font-style:italic">Le dossier destination peut aussi être choisi au cas par cas lors de chaque création.</p>
         </div>
         <button onclick="configProjectFolders()" style="width:100%;padding:10px;background:#2E7D32;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px">⚙️ Configurer les dossiers par défaut</button>
-        <div id="admin-folder-status" style="font-size:10px;color:var(--gray-500);margin-top:8px;text-align:center;padding:6px;background:#FAFAFA;border-radius:4px"></div>
+        <div id="admin-folder-status" style="font-size:10px;color:var(--gray-500);margin-top:8px;padding:6px;background:#FAFAFA;border-radius:4px"></div>
+        <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--gray-200)">
+          <p style="font-size:11px;color:var(--gray-500);margin:0 0 6px;line-height:1.5"><strong>Chemins réseau pour le bouton "Ouvrir dossier"</strong> :<br>Chemins à tester pour ouvrir un projet existant.</p>
+          <input type="text" id="admin-network-path1" placeholder="Chemin 1 (ex: \\SERVEUR\Affaires)" style="width:100%;padding:6px 8px;border:1px solid #ccc;border-radius:4px;font-size:11px;font-family:inherit;margin-bottom:4px;box-sizing:border-box">
+          <input type="text" id="admin-network-path2" placeholder="Chemin 2 (ex: \\NAS\Projets)" style="width:100%;padding:6px 8px;border:1px solid #ccc;border-radius:4px;font-size:11px;font-family:inherit;box-sizing:border-box">
+          <button onclick="saveNetworkPaths()" style="width:100%;margin-top:6px;padding:8px;background:#1565C0;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Enregistrer les chemins réseau</button>
+        </div>
       </div>
     </div>
     </div>
@@ -2011,6 +2017,11 @@ async function openAdminPanel() {
       st.style.textAlign='left';
     }
   }catch(e){}
+  // Charger les chemins réseau
+  const inp1=document.getElementById('admin-network-path1');
+  const inp2=document.getElementById('admin-network-path2');
+  if(inp1)inp1.value=localStorage.getItem('geosolia_network_path1')||'';
+  if(inp2)inp2.value=localStorage.getItem('geosolia_network_path2')||'';
 }
 
 function closeAdminPanel() {
