@@ -5179,18 +5179,16 @@ function renderGeocartoPanel(){
   const sismColors={1:'green',2:'green',3:'orange',4:'red',5:'red'};
   let html='';
   // En-tête résumé
-  html+='<div class="gc-summary">';
-  html+='<div class="gc-addr">'+(g.addr||'\u2014')+'</div>';
+  html+='<div class="gc-summary" style="position:relative">';
+  html+='<button onclick="openProjectFolder()" title="Ouvrir le dossier projet" style="position:absolute;top:8px;right:8px;padding:4px 10px;background:#1565C0;color:#fff;border:none;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;z-index:2"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> Ouvrir Dossier</button>';
+  html+='<div class="gc-addr" style="padding-right:120px">'+(g.addr||'\u2014')+'</div>';
   html+='<div class="gc-meta">';
   if(g.commune)html+=g.commune+(g.codePostal?' ('+g.codePostal+')':'');
   if(g.departement)html+=' \u2014 '+g.departement;
   html+='</div>';
-  html+='<div class="gc-meta" style="margin-top:4px;display:flex;align-items:center;justify-content:space-between;gap:8px">';
-  html+='<span>';
+  html+='<div class="gc-meta" style="margin-top:4px">';
   if(g.altitude)html+='Altitude : <strong>'+g.altitude+' m NGF</strong> \u00a0\u00a0';
   html+='GPS : '+g.lat.toFixed(6)+', '+g.lng.toFixed(6);
-  html+='</span>';
-  html+='<button onclick="openProjectFolder()" title="Ouvrir le dossier projet" style="padding:3px 8px;background:#1565C0;color:#fff;border:none;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:3px;white-space:nowrap"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>Ouvrir</button>';
   html+='</div>';
   if(g.parcelle){
     html+='<div class="gc-meta" style="margin-top:4px;color:#795548">Parcelle : <strong>'+g.parcelle.section+' '+g.parcelle.numero+'</strong>';
