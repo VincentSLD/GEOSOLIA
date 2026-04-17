@@ -1065,10 +1065,9 @@
         <button onclick="configProjectFolders()" style="width:100%;padding:10px;background:#2E7D32;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px">⚙️ Configurer les dossiers par défaut</button>
         <div id="admin-folder-status" style="font-size:10px;color:var(--gray-500);margin-top:8px;padding:6px;background:#FAFAFA;border-radius:4px"></div>
         <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--gray-200)">
-          <p style="font-size:11px;color:var(--gray-500);margin:0 0 6px;line-height:1.5"><strong>Chemins réseau pour le bouton "Ouvrir dossier"</strong> :<br>Chemins à tester pour ouvrir un projet existant.</p>
-          <input type="text" id="admin-network-path1" placeholder="Chemin 1 (ex: \\SERVEUR\Affaires)" style="width:100%;padding:6px 8px;border:1px solid #ccc;border-radius:4px;font-size:11px;font-family:inherit;margin-bottom:4px;box-sizing:border-box">
-          <input type="text" id="admin-network-path2" placeholder="Chemin 2 (ex: \\NAS\Projets)" style="width:100%;padding:6px 8px;border:1px solid #ccc;border-radius:4px;font-size:11px;font-family:inherit;box-sizing:border-box">
-          <button onclick="saveNetworkPaths()" style="width:100%;margin-top:6px;padding:8px;background:#1565C0;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Enregistrer les chemins réseau</button>
+          <p style="font-size:11px;color:var(--gray-500);margin:0 0 8px;line-height:1.5"><strong>Dossiers de recherche pour "Ouvrir dossier"</strong> :<br>2 dossiers où chercher les projets existants.</p>
+          <button onclick="configSearchFolder(1)" style="width:100%;padding:8px;background:#1565C0;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:4px">Recherche 1 : <span id="admin-search1-name">non configuré</span></button>
+          <button onclick="configSearchFolder(2)" style="width:100%;padding:8px;background:#1565C0;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Recherche 2 : <span id="admin-search2-name">non configuré</span></button>
         </div>
       </div>
     </div>
@@ -2017,11 +2016,15 @@ async function openAdminPanel() {
       st.style.textAlign='left';
     }
   }catch(e){}
-  // Charger les chemins réseau
-  const inp1=document.getElementById('admin-network-path1');
-  const inp2=document.getElementById('admin-network-path2');
-  if(inp1)inp1.value=localStorage.getItem('geosolia_network_path1')||'';
-  if(inp2)inp2.value=localStorage.getItem('geosolia_network_path2')||'';
+  // Charger les noms des dossiers de recherche
+  try{
+    const s1=await loadFolderHandle('search1');
+    const s2=await loadFolderHandle('search2');
+    const n1=document.getElementById('admin-search1-name');
+    const n2=document.getElementById('admin-search2-name');
+    if(n1)n1.textContent=s1?s1.name:'non configuré';
+    if(n2)n2.textContent=s2?s2.name:'non configuré';
+  }catch(e){}
 }
 
 function closeAdminPanel() {
@@ -5564,6 +5567,18 @@ async function loadFolderHandle(key){
   });
 }
 
+async function configSearchFolder(num){
+  try{
+    const handle=await window.showDirectoryPicker({mode:'read'});
+    await saveFolderHandle('search'+num,handle);
+    const span=document.getElementById('admin-search'+num+'-name');
+    if(span)span.textContent=handle.name;
+    if(typeof showToast==='function')showToast('Recherche '+num+' : '+handle.name);
+  }catch(e){
+    if(e.name!=='AbortError')alert('Erreur : '+e.message);
+  }
+}
+
 async function configProjectFolders(){
   try{
     if(typeof showToast==='function')showToast('1/2 — Sélectionnez le dossier MODÈLE...');
@@ -5611,43 +5626,46 @@ async function openProjectFolder(){
 
   const refNum=projectName&&refField.endsWith(projectName)?refField.slice(0,refField.length-projectName.length).trim():refField;
 
-  // Chercher le dossier via File System Access API dans le dossier destination
-  let destHandle=await loadFolderHandle('destination');
-  if(!destHandle){
+  // Charger les 2 handles de recherche (search1, search2) + fallback sur destination
+  const handles=[];
+  for(const key of ['search1','search2','destination']){
+    const h=await loadFolderHandle(key);
+    if(h&&!handles.find(x=>x.name===h.name))handles.push(h);
+  }
+
+  // Si aucun handle configure, demander a l'utilisateur
+  if(handles.length===0){
     if(typeof showToast==='function')showToast('Selectionnez le dossier qui contient les projets');
     try{
-      destHandle=await window.showDirectoryPicker({mode:'read'});
-      await saveFolderHandle('destination',destHandle);
+      const h=await window.showDirectoryPicker({mode:'read'});
+      await saveFolderHandle('search1',h);
+      handles.push(h);
     }catch(e){
       if(e.name!=='AbortError')alert('Erreur : '+e.message);
       return;
     }
-  }else{
-    try{
-      const perm=await destHandle.queryPermission({mode:'read'});
-      if(perm!=='granted'){
-        const req=await destHandle.requestPermission({mode:'read'});
-        if(req!=='granted'){alert('Permission refusée.');return;}
-      }
-    }catch(e){alert('Impossible d\'accéder au dossier destination.');return;}
   }
 
   if(typeof showToast==='function')showToast('Recherche du dossier...');
 
-  // Parcourir le dossier destination pour trouver le projet
-  try{
-    for await(const [name,entry] of destHandle.entries()){
-      if(entry.kind==='directory'&&(name.startsWith(refNum+'_')||name===refNum)){
-        if(typeof showToast==='function')showToast('Dossier trouvé : '+name);
-        // Utiliser showOpenFilePicker pour voir tous les fichiers du dossier
-        try{await window.showOpenFilePicker({startIn:entry,multiple:false});}catch(e){}
-        return;
+  // Chercher dans chaque handle
+  for(const h of handles){
+    try{
+      const perm=await h.queryPermission({mode:'read'});
+      if(perm!=='granted'){
+        const req=await h.requestPermission({mode:'read'});
+        if(req!=='granted')continue;
       }
-    }
-    alert('Dossier avec la référence "'+refNum+'" non trouvé dans "'+destHandle.name+'".\nVérifiez que le dossier a été créé.');
-  }catch(e){
-    alert('Erreur lors de la recherche :\n'+e.message);
+      for await(const [name,entry] of h.entries()){
+        if(entry.kind==='directory'&&(name.startsWith(refNum+'_')||name===refNum)){
+          if(typeof showToast==='function')showToast('Dossier trouve : '+name+' (dans '+h.name+')');
+          try{await window.showOpenFilePicker({startIn:entry,multiple:false});}catch(e){}
+          return;
+        }
+      }
+    }catch(e){continue;}
   }
+  alert('Dossier avec la reference "'+refNum+'" non trouve dans :\n\n'+handles.map(h=>'- '+h.name).join('\n')+'\n\nVerifiez que le dossier a ete cree.');
 }
 
 async function createProjectFolderFromModal(){
