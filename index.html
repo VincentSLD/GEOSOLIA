@@ -5655,9 +5655,9 @@ async function createProjectFolder(){
 
   // Charger les handles sauvegardés
   let tplHandle=await loadFolderHandle('template');
-  let destHandle=await loadFolderHandle('destination');
+  const savedDest=await loadFolderHandle('destination');
 
-  // Vérifier les permissions
+  // Vérifier le modèle
   if(tplHandle){
     try{
       const perm=await tplHandle.queryPermission({mode:'read'});
@@ -5667,20 +5667,30 @@ async function createProjectFolder(){
       }
     }catch(e){tplHandle=null;}
   }
-  if(destHandle){
-    try{
-      const perm=await destHandle.queryPermission({mode:'readwrite'});
-      if(perm!=='granted'){
-        const req=await destHandle.requestPermission({mode:'readwrite'});
-        if(req!=='granted')destHandle=null;
-      }
-    }catch(e){destHandle=null;}
-  }
-
-  if(!tplHandle||!destHandle){
-    alert('Les dossiers ne sont pas configurés.\nCliquez sur ⚙️ pour configurer le dossier modèle et le dossier destination.');
+  if(!tplHandle){
+    alert('Dossier modèle non configuré.\nDemandez à l\'administrateur de le paramétrer.');
     return;
   }
+
+  // Demander la destination à l'utilisateur à chaque création
+  let destHandle;
+  try{
+    const opts={mode:'readwrite'};
+    if(savedDest){
+      try{
+        const perm=await savedDest.queryPermission({mode:'readwrite'});
+        if(perm==='granted'||await savedDest.requestPermission({mode:'readwrite'})==='granted'){
+          opts.startIn=savedDest;
+        }
+      }catch(e){}
+    }
+    destHandle=await window.showDirectoryPicker(opts);
+  }catch(e){
+    if(e.name!=='AbortError')alert('Erreur : '+e.message);
+    return;
+  }
+  // Mémoriser la destination choisie pour la prochaine fois
+  saveFolderHandle('destination',destHandle).catch(()=>{});
 
   try{
     // Vérifier si un dossier avec le même numéro de projet existe déjà
