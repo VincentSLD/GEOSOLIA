@@ -1579,6 +1579,10 @@
       <input type="hidden" id="new-study-lng">
       <input type="hidden" id="new-study-insee">
       <div class="new-study-error" id="new-study-error"></div>
+      <div style="display:flex;gap:6px;align-items:center;margin-top:10px">
+        <button type="button" id="btn-ns-create-folder" onclick="createProjectFolderFromModal()" style="flex:1;padding:8px 12px;background:#2E7D32;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg> Créer dossier</button>
+        <button type="button" id="btn-ns-open-folder" onclick="openProjectFolderFromModal()" style="flex:1;padding:8px 12px;background:#1565C0;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> Ouvrir dossier</button>
+      </div>
       <div class="new-study-actions">
         <button class="btn-cancel-study" onclick="closeNewStudyModal()">Annuler</button>
         <button class="btn-create-study" onclick="createNewStudy()">Valider</button>
@@ -5601,6 +5605,38 @@ async function openProjectFolder(){
     alert('Dossier avec la référence "'+refNum+'" non trouvé dans "'+destHandle.name+'".\nVérifiez que le dossier a été créé.');
   }catch(e){
     alert('Erreur lors de la recherche :\n'+e.message);
+  }
+}
+
+async function createProjectFolderFromModal(){
+  // Récupère la ref et le nom depuis le modal Nouveau Projet
+  const ref=document.getElementById('new-study-ref').value.trim();
+  const nom=document.getElementById('new-study-name').value.trim();
+  if(!ref){alert('Renseignez d\'abord un N° Dossier.');return;}
+  // Pré-remplir temporairement project-ref et projectName pour la fonction existante
+  const oldRef=document.getElementById('project-ref').value;
+  const oldName=projectName;
+  document.getElementById('project-ref').value=ref+(nom?' '+nom:'');
+  projectName=nom;
+  try{await createProjectFolder();}
+  finally{
+    document.getElementById('project-ref').value=oldRef;
+    projectName=oldName;
+  }
+}
+
+async function openProjectFolderFromModal(){
+  const ref=document.getElementById('new-study-ref').value.trim();
+  const nom=document.getElementById('new-study-name').value.trim();
+  if(!ref){alert('Renseignez d\'abord un N° Dossier.');return;}
+  const oldRef=document.getElementById('project-ref').value;
+  const oldName=projectName;
+  document.getElementById('project-ref').value=ref+(nom?' '+nom:'');
+  projectName=nom;
+  try{await openProjectFolder();}
+  finally{
+    document.getElementById('project-ref').value=oldRef;
+    projectName=oldName;
   }
 }
 
