@@ -4402,6 +4402,9 @@ function openEditSiteModal(){
   else{document.getElementById('new-study-coords').textContent='';}
   if(studyMarker&&studyMap){studyMap.removeLayer(studyMarker);studyMarker=null;}
   document.getElementById('new-study-modal').classList.add('open');
+  // En mode edition : Valider toujours actif
+  const btnValidEdit=document.querySelector('#new-study-modal .btn-create-study');
+  if(btnValidEdit){btnValidEdit.disabled=false;btnValidEdit.style.opacity='';btnValidEdit.style.cursor='';btnValidEdit.title='';}
   setTimeout(()=>{
     initStudyMap();
     if(projectLat!=null&&projectLng!=null){updateStudyMarker(projectLat,projectLng,true);}
@@ -5636,11 +5639,17 @@ async function openProjectFolder(){
 }
 
 async function createProjectFolderFromModal(){
-  // Récupère la ref et le nom depuis le modal Nouveau Projet
   const ref=document.getElementById('new-study-ref').value.trim();
   const nom=document.getElementById('new-study-name').value.trim();
   if(!ref){alert('Renseignez d\'abord un N° Dossier.');return;}
-  // Pré-remplir temporairement project-ref et projectName pour la fonction existante
+
+  // Sablier immediat + bloquer le bouton Valider
+  const btnCreate=document.getElementById('btn-ns-create-folder');
+  const btnValid=document.querySelector('.btn-create-study');
+  const origCreateHTML=btnCreate?btnCreate.innerHTML:'';
+  if(btnCreate){btnCreate.disabled=true;btnCreate.innerHTML='&#9203; Création...';}
+  if(btnValid){btnValid.disabled=true;btnValid.style.opacity='0.5';btnValid.style.cursor='not-allowed';}
+
   const oldRef=document.getElementById('project-ref').value;
   const oldName=projectName;
   document.getElementById('project-ref').value=ref+(nom?' '+nom:'');
@@ -5649,6 +5658,12 @@ async function createProjectFolderFromModal(){
   finally{
     document.getElementById('project-ref').value=oldRef;
     projectName=oldName;
+    if(btnCreate){btnCreate.disabled=false;btnCreate.innerHTML=origCreateHTML;}
+    // Ne reactiver Valider que si un dossier a bien ete cree
+    if(btnValid){
+      if(_lastCreatedDir){btnValid.disabled=false;btnValid.style.opacity='';btnValid.style.cursor='';btnValid.title='';}
+      else{btnValid.disabled=true;btnValid.style.opacity='0.5';btnValid.style.cursor='not-allowed';}
+    }
   }
 }
 
@@ -6308,6 +6323,10 @@ function openNewStudyModal(){
   // Reset marqueur carte
   if(studyMarker&&studyMap){studyMap.removeLayer(studyMarker);studyMarker=null;}
   document.getElementById('new-study-modal').classList.add('open');
+  // Desactiver Valider tant que le dossier n'a pas ete cree
+  _lastCreatedDir=null;
+  const btnValid=document.querySelector('#new-study-modal .btn-create-study');
+  if(btnValid){btnValid.disabled=true;btnValid.style.opacity='0.5';btnValid.style.cursor='not-allowed';btnValid.title='Créez d\'abord le dossier projet';}
   setTimeout(()=>{
     document.getElementById('new-study-ref').focus();
     initStudyMap();
