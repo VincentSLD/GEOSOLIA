@@ -5383,6 +5383,11 @@ function gcSyncMission(val){
   gcMissionField('pelleOui',false);gcMissionField('pelleClient',null);
   gcMissionField('laboOui',false);gcMissionField('liquefaction','non');
   gcMissionField('tempsTerrain','');gcMissionField('tempsRapport','');gcMissionField('tempsRelecture','');
+  // Vider la surface pour G1 REGAR, G1 PGC, G3, G4
+  if(val==='G1_ES'||val==='G1_PGC'||val==='G3'||val==='G4'){
+    gcMissionField('empriseAuSol','');
+    if(f('gc-emprise'))f('gc-emprise').value='';
+  }
   // Remettre les champs UI à zéro
   ['gc-nb-penetro','gc-nb-tariere','gc-nb-fondation','gc-nb-pelle'].forEach(id=>{if(f(id))f(id).value=0;});
   if(f('gc-pelle-oui'))f('gc-pelle-oui').value='non';
