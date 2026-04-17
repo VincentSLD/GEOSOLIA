@@ -5734,6 +5734,7 @@ async function createProjectFolder(){
       const newDir=await destHandle.getDirectoryHandle(folderName,{create:true});
       // Copier le contenu du modèle
       await copyDirectory(tplHandle,newDir);
+      _lastCreatedDir=newDir; // Mémoriser pour l'enregistrement du projet
       restoreButtons();
       if(typeof showToast==='function')showToast('Dossier "'+folderName+'" créé !');
     }catch(errCopy){
@@ -6358,7 +6359,8 @@ async function createNewStudy(){
   const fileName='GEO-'+(ref||'')+(projectName?'_'+projectName:'')+'.geosolia';
   if(window.showSaveFilePicker){
     try{
-      const handle=await window.showSaveFilePicker({suggestedName:fileName,startIn:'desktop',types:[{description:'Projet GéoSolia',accept:{'application/json':['.geosolia']}}]});
+      const startIn=_lastCreatedDir||await loadFolderHandle('destination')||'desktop';
+      const handle=await window.showSaveFilePicker({suggestedName:fileName,startIn:startIn,types:[{description:'Projet GéoSolia',accept:{'application/json':['.geosolia']}}]});
       savedFileHandle=handle;
       const initProject=buildProjectJSON();
       const writable=await handle.createWritable();
@@ -6926,16 +6928,19 @@ async function exportProject(){
     }
   }else if(window.showSaveFilePicker){
     try{
-      // Démarrer dans le dossier destination (si configuré) sinon Bureau
-      const savedDest=await loadFolderHandle('destination');
+      // Priorité : dossier projet fraîchement créé > destination configurée > Bureau
       let startIn='desktop';
-      if(savedDest){
-        try{
-          const perm=await savedDest.queryPermission({mode:'readwrite'});
-          if(perm==='granted'||await savedDest.requestPermission({mode:'readwrite'})==='granted'){
-            startIn=savedDest;
-          }
-        }catch(e){}
+      if(_lastCreatedDir){startIn=_lastCreatedDir;}
+      else{
+        const savedDest=await loadFolderHandle('destination');
+        if(savedDest){
+          try{
+            const perm=await savedDest.queryPermission({mode:'readwrite'});
+            if(perm==='granted'||await savedDest.requestPermission({mode:'readwrite'})==='granted'){
+              startIn=savedDest;
+            }
+          }catch(e){}
+        }
       }
       const handle=await window.showSaveFilePicker({suggestedName:fileName,startIn:startIn,types:[{description:'Projet GéoSolia',accept:{'application/json':['.geosolia']}}]});
       savedFileHandle=handle;
@@ -6982,7 +6987,7 @@ async function closeProject(){
   // Arrêter l'auto-save
   if(autoSaveInterval){clearInterval(autoSaveInterval);autoSaveInterval=null;}
   savedFileHandle=null;
-  _cloudProjectId=null;_cloudLastSyncAt=null;_cloudConflictPending=false;
+  _cloudProjectId=null;_cloudLastSyncAt=null;_cloudConflictPending=false;_lastCreatedDir=null;
   // Réinitialiser toutes les données
   elements=[];clearSelection();selectedStickerId=null;
   drawPaths=[];cleanPaths=[];currentPathPts=[];
