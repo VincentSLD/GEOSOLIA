@@ -1051,16 +1051,19 @@
       <div class="admin-title">Gestion des utilisateurs</div>
       <div id="admin-list"></div>
       <div style="margin-top:18px;padding-top:14px;border-top:2px solid var(--gray-200)">
-        <div class="admin-title" style="font-size:14px;margin-bottom:8px">Configuration dossiers projet</div>
-        <p style="font-size:11px;color:var(--gray-500);margin:0 0 8px">Dossier modèle copié lors de la création d'un nouveau dossier projet.</p>
-        <button onclick="configProjectFolders()" style="width:100%;padding:10px;background:#2E7D32;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px">⚙️ Configurer dossier modèle et destination</button>
-        <div id="admin-folder-status" style="font-size:10px;color:var(--gray-500);margin-top:6px;text-align:center"></div>
-        <div style="margin-top:12px">
-          <p style="font-size:11px;color:var(--gray-500);margin:0 0 6px">Chemins réseau pour ouvrir les dossiers projet :<br><span style="font-size:10px;color:#888">(nécessite open-folder.py en local)</span></p>
-          <input type="text" id="admin-network-path1" placeholder="Chemin 1 (ex: \\SERVEUR\Affaires)" style="width:100%;padding:6px 8px;border:1px solid #ccc;border-radius:4px;font-size:11px;font-family:inherit;margin-bottom:4px;box-sizing:border-box">
-          <input type="text" id="admin-network-path2" placeholder="Chemin 2 (ex: \\NAS\Projets)" style="width:100%;padding:6px 8px;border:1px solid #ccc;border-radius:4px;font-size:11px;font-family:inherit;box-sizing:border-box">
-          <button onclick="saveNetworkPaths()" style="width:100%;margin-top:6px;padding:8px;background:#1565C0;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Enregistrer les chemins réseau</button>
+        <div class="admin-title" style="font-size:14px;margin-bottom:10px">Création de dossier projet</div>
+        <div style="background:#F5F5F5;border-radius:8px;padding:12px;margin-bottom:10px">
+          <p style="font-size:12px;color:var(--black);margin:0 0 8px;line-height:1.5;font-weight:700">Comment ça marche ?</p>
+          <p style="font-size:11px;color:var(--gray-500);margin:0 0 6px;line-height:1.5">Le bouton <strong>"Créer dossier"</strong> dans un projet va :</p>
+          <ol style="font-size:11px;color:var(--gray-500);margin:0 0 8px 20px;padding:0;line-height:1.6">
+            <li>Copier le <strong>dossier modèle</strong> (template avec sous-dossiers, fichiers Word, Excel...)</li>
+            <li>Le coller dans le <strong>dossier destination</strong> (ex: <code style="background:#fff;padding:1px 4px;border-radius:3px">\\SERVEUR\AFFAIRES</code>)</li>
+            <li>Renommer la copie avec la référence du projet (ex: <code style="background:#fff;padding:1px 4px;border-radius:3px">2607011_MAISON DUPONT</code>)</li>
+          </ol>
+          <p style="font-size:10px;color:var(--gray-500);margin:0;font-style:italic">Le dossier destination peut aussi être choisi au cas par cas lors de chaque création.</p>
         </div>
+        <button onclick="configProjectFolders()" style="width:100%;padding:10px;background:#2E7D32;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px">⚙️ Configurer les dossiers par défaut</button>
+        <div id="admin-folder-status" style="font-size:10px;color:var(--gray-500);margin-top:8px;text-align:center;padding:6px;background:#FAFAFA;border-radius:4px"></div>
       </div>
     </div>
     </div>
@@ -2001,15 +2004,13 @@ async function openAdminPanel() {
     const dest=await loadFolderHandle('destination');
     const st=document.getElementById('admin-folder-status');
     if(st){
-      if(tpl&&dest)st.textContent='Modèle : '+tpl.name+' | Destination : '+dest.name;
-      else st.textContent='Non configuré';
+      const lines=[];
+      lines.push('<strong>Dossier modèle :</strong> '+(tpl?('📁 '+tpl.name):'<span style="color:#D94040">non configuré</span>'));
+      lines.push('<strong>Dossier destination :</strong> '+(dest?('📁 '+dest.name):'<span style="color:#D94040">non configuré</span>'));
+      st.innerHTML=lines.join('<br>');
+      st.style.textAlign='left';
     }
   }catch(e){}
-  // Charger les chemins réseau
-  const inp1=document.getElementById('admin-network-path1');
-  const inp2=document.getElementById('admin-network-path2');
-  if(inp1)inp1.value=localStorage.getItem('geosolia_network_path1')||'';
-  if(inp2)inp2.value=localStorage.getItem('geosolia_network_path2')||'';
 }
 
 function closeAdminPanel() {
