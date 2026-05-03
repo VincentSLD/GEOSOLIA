@@ -5727,7 +5727,6 @@ async function createProjectFolderFromModal(){
   const btnValid=document.querySelector('.btn-create-study');
   const origCreateHTML=btnCreate?btnCreate.innerHTML:'';
   if(btnCreate){btnCreate.disabled=true;btnCreate.innerHTML='&#9203; Création...';}
-  if(btnValid){btnValid.disabled=true;btnValid.style.opacity='0.5';btnValid.style.cursor='not-allowed';}
 
   const oldRef=document.getElementById('project-ref').value;
   const oldName=projectName;
@@ -5738,11 +5737,6 @@ async function createProjectFolderFromModal(){
     document.getElementById('project-ref').value=oldRef;
     projectName=oldName;
     if(btnCreate){btnCreate.disabled=false;btnCreate.innerHTML=origCreateHTML;}
-    // Ne reactiver Valider que si un dossier a bien ete cree
-    if(btnValid){
-      if(_lastCreatedDir){btnValid.disabled=false;btnValid.style.opacity='';btnValid.style.cursor='';btnValid.title='';}
-      else{btnValid.disabled=true;btnValid.style.opacity='0.5';btnValid.style.cursor='not-allowed';}
-    }
   }
 }
 
@@ -6409,10 +6403,10 @@ function openNewStudyModal(){
   // Reset marqueur carte
   if(studyMarker&&studyMap){studyMap.removeLayer(studyMarker);studyMarker=null;}
   document.getElementById('new-study-modal').classList.add('open');
-  // Desactiver Valider tant que le dossier n'a pas ete cree
   _lastCreatedDir=null;
+  // Valider toujours actif mais demande si le dossier n'existe pas
   const btnValid=document.querySelector('#new-study-modal .btn-create-study');
-  if(btnValid){btnValid.disabled=true;btnValid.style.opacity='0.5';btnValid.style.cursor='not-allowed';btnValid.title='Créez d\'abord le dossier projet';}
+  if(btnValid){btnValid.disabled=false;btnValid.style.opacity='';btnValid.style.cursor='';btnValid.title='';}
   setTimeout(()=>{
     document.getElementById('new-study-ref').focus();
     initStudyMap();
@@ -6442,6 +6436,29 @@ function closeNewStudyModal(){
   }
 }
 
+function showFolderMissingDialog(){
+  return new Promise(resolve=>{
+    let ov=document.getElementById('folder-missing-overlay');
+    if(ov)ov.remove();
+    ov=document.createElement('div');
+    ov.id='folder-missing-overlay';
+    ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:9999;backdrop-filter:blur(4px)';
+    ov.innerHTML='<div style="background:#fff;border-radius:12px;padding:22px;max-width:440px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.4);border-top:4px solid #E88D00">'
+      +'<div style="font-size:16px;font-weight:900;color:#E88D00;margin-bottom:10px">Dossier projet manquant</div>'
+      +'<p style="font-size:13px;color:#333;margin:0 0 16px;line-height:1.5">Le dossier ne semble pas être créé sur le serveur, voulez-vous le créer ou bien préférez-vous enregistrer le document autre part ?</p>'
+      +'<div style="display:flex;flex-direction:column;gap:8px">'
+      +'<button data-c="create" style="padding:10px;background:#2E7D32;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer">Créer dossier</button>'
+      +'<button data-c="elsewhere" style="padding:10px;background:#1565C0;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer">Enregistrer autre part</button>'
+      +'<button data-c="cancel" style="padding:10px;background:#eee;color:#333;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer">Annuler</button>'
+      +'</div></div>';
+    ov.addEventListener('click',e=>{
+      const btn=e.target.closest('button[data-c]');
+      if(btn){ov.remove();resolve(btn.dataset.c);}
+    });
+    document.body.appendChild(ov);
+  });
+}
+
 async function createNewStudy(){
   if(editSiteMode){
     // Mode édition : mettre à jour les variables sans créer de fichier
@@ -6465,9 +6482,23 @@ async function createNewStudy(){
   }
   const refInput=document.getElementById('new-study-ref');
   const ref=refInput.value.trim();
-  // Remplir la référence projet
+  const tmpName=document.getElementById('new-study-name').value.trim();
+
+  // Si le dossier projet n'a pas ete cree, proposer de le creer ou enregistrer ailleurs
+  if(!_lastCreatedDir){
+    const choice=await showFolderMissingDialog();
+    if(choice==='cancel')return;
+    if(choice==='create'){
+      // Lancer la creation du dossier
+      await createProjectFolderFromModal();
+      // Si la creation a echoue ou ete annulee, ne pas continuer
+      if(!_lastCreatedDir)return;
+    }
+    // Si choice==='elsewhere', on continue normalement (showSaveFilePicker proposera le bureau)
+  }
+
   // Stocker le nom du projet
-  projectName=document.getElementById('new-study-name').value.trim();
+  projectName=tmpName;
   document.getElementById('project-ref').value=(ref+(projectName?' '+projectName:'')).trim();autoSizeRef();
   // Stocker l'adresse du site
   projectAddr=document.getElementById('new-study-addr').value.trim();
