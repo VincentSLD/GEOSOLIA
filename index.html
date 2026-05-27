@@ -1051,6 +1051,41 @@
     </div>
   </div>
 </div>
+<!-- ADMIN : Gestion de tous les projets -->
+<div id="admin-projects-modal" style="position:fixed;inset:0;background:rgba(0,0,0,0.85);display:none;flex-direction:column;z-index:960;backdrop-filter:blur(4px)">
+  <div style="background:var(--white);width:100%;height:100%;display:flex;flex-direction:column;overflow:hidden">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 22px;border-bottom:2px solid var(--gray-200);background:#D32F2F;color:#fff">
+      <div style="font-weight:800;font-size:18px">Admin — Tous les projets GeoSolia</div>
+      <button onclick="document.getElementById('admin-projects-modal').style.display='none'" style="background:none;border:none;font-size:24px;cursor:pointer;color:#fff">&times;</button>
+    </div>
+    <div style="padding:12px 22px;border-bottom:1px solid var(--gray-200);display:flex;gap:10px;align-items:center;background:var(--gray-50)">
+      <input type="text" id="admin-proj-search" placeholder="Rechercher (numero, nom, adresse, ville, utilisateur...)" oninput="renderAdminProjectsTable()" style="flex:1;padding:8px 12px;border:1px solid var(--gray-200);border-radius:6px;font-size:13px;font-family:inherit">
+      <span id="admin-proj-count" style="font-size:12px;color:var(--gray-500);font-weight:700"></span>
+    </div>
+    <div style="flex:1;overflow:auto;padding:0 22px">
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead style="position:sticky;top:0;background:var(--white);z-index:1;border-bottom:2px solid var(--gray-200)">
+          <tr>
+            <th style="text-align:left;padding:10px 8px;font-weight:800;cursor:pointer" onclick="sortAdminProjects('user')">Utilisateur <span data-admsort="user"></span></th>
+            <th style="text-align:left;padding:10px 8px;font-weight:800;cursor:pointer" onclick="sortAdminProjects('ref')">N Dossier <span data-admsort="ref"></span></th>
+            <th style="text-align:left;padding:10px 8px;font-weight:800;cursor:pointer" onclick="sortAdminProjects('name')">Nom <span data-admsort="name"></span></th>
+            <th style="text-align:left;padding:10px 8px;font-weight:800;cursor:pointer" onclick="sortAdminProjects('addr')">Adresse <span data-admsort="addr"></span></th>
+            <th style="text-align:left;padding:10px 8px;font-weight:800;cursor:pointer" onclick="sortAdminProjects('cp')">CP <span data-admsort="cp"></span></th>
+            <th style="text-align:left;padding:10px 8px;font-weight:800;cursor:pointer" onclick="sortAdminProjects('ville')">Ville <span data-admsort="ville"></span></th>
+            <th style="text-align:left;padding:10px 8px;font-weight:800;cursor:pointer" onclick="sortAdminProjects('updated')">Modif <span data-admsort="updated"></span></th>
+            <th style="text-align:right;padding:10px 8px"></th>
+          </tr>
+        </thead>
+        <tbody id="admin-proj-tbody"><tr><td colspan="8" style="padding:30px;text-align:center;color:var(--gray-500)">Chargement...</td></tr></tbody>
+      </table>
+    </div>
+    <div style="padding:10px 22px;border-top:1px solid var(--gray-200);background:var(--gray-50);display:flex;justify-content:space-between;align-items:center;gap:10px">
+      <button id="admin-proj-prev" onclick="changeAdminProjPage(-1)" style="padding:6px 14px;background:var(--gray-100);color:var(--black);border:none;border-radius:5px;font-size:12px;font-weight:700;cursor:pointer">Precedent</button>
+      <span id="admin-proj-page-info" style="font-size:12px;color:var(--gray-500);font-weight:700">Page 1 / 1</span>
+      <button id="admin-proj-next" onclick="changeAdminProjPage(1)" style="padding:6px 14px;background:var(--gray-100);color:var(--black);border:none;border-radius:5px;font-size:12px;font-weight:700;cursor:pointer">Suivant</button>
+    </div>
+  </div>
+</div>
 <div id="idb-recovery-modal">
   <div id="idb-recovery-content">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
@@ -1075,6 +1110,9 @@
     <div id="admin-panel">
       <div class="admin-title">Gestion des utilisateurs</div>
       <div id="admin-list"></div>
+      <div style="margin-top:14px;padding-top:14px;border-top:2px solid var(--gray-200)">
+        <button onclick="closeAdminPanel();openAdminProjects()" style="width:100%;padding:12px;background:#D32F2F;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Gestion des projets (tous les utilisateurs)</button>
+      </div>
       <div style="margin-top:18px;padding-top:14px;border-top:2px solid var(--gray-200)">
         <div class="admin-title" style="font-size:14px;margin-bottom:10px">Création de dossier projet</div>
         <div style="background:#F5F5F5;border-radius:8px;padding:12px;margin-bottom:10px">
@@ -2674,6 +2712,125 @@ async function bulkImportToCloud(){
     }
   };
   input.click();
+}
+
+// ═══ ADMIN : GESTION DE TOUS LES PROJETS ═══
+let _adminProjects=[],_adminProjPageIdx=0,_adminProjSortField='updated',_adminProjSortDesc=true,_adminProjUserMap={};
+const ADMIN_PROJ_PAGE_SIZE=100;
+
+async function openAdminProjects(){
+  const modal=document.getElementById('admin-projects-modal');
+  modal.style.display='flex';
+  const tbody=document.getElementById('admin-proj-tbody');
+  if(tbody)tbody.innerHTML='<tr><td colspan="8" style="padding:30px;text-align:center;color:var(--gray-500)">Chargement...</td></tr>';
+  const search=document.getElementById('admin-proj-search');
+  if(search)search.value='';
+  _adminProjPageIdx=0;
+  const token=await getAuthToken();
+  if(!token){alert('Session expirée.');return;}
+  try{
+    // Charger les projets
+    const resp=await fetch('/api/projects?action=admin-list',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body:'{}'
+    });
+    if(!resp.ok){const err=await resp.json();alert('Erreur: '+(err.error||resp.status));return;}
+    const data=await resp.json();
+    _adminProjects=data.projects||[];
+    // Charger les emails des utilisateurs
+    try{
+      const r2=await fetch('/api/admin-users',{headers:{'Authorization':'Bearer '+token}});
+      if(r2.ok){const d2=await r2.json();_adminProjUserMap={};(d2.users||[]).forEach(u=>{_adminProjUserMap[u.user_id]=u.email||u.name||'';});}
+    }catch(e){}
+    renderAdminProjectsTable();
+  }catch(e){
+    if(tbody)tbody.innerHTML='<tr><td colspan="8" style="padding:30px;text-align:center;color:#D94040">Erreur: '+e.message+'</td></tr>';
+  }
+}
+
+function sortAdminProjects(field){
+  if(_adminProjSortField===field)_adminProjSortDesc=!_adminProjSortDesc;
+  else{_adminProjSortField=field;_adminProjSortDesc=false;}
+  renderAdminProjectsTable();
+}
+
+function changeAdminProjPage(delta){
+  _adminProjPageIdx=Math.max(0,_adminProjPageIdx+delta);
+  renderAdminProjectsTable();
+}
+
+function renderAdminProjectsTable(){
+  const tbody=document.getElementById('admin-proj-tbody');
+  if(!tbody)return;
+  const search=(document.getElementById('admin-proj-search')?.value||'').toLowerCase().trim();
+  let list=_adminProjects.map(p=>({...p,_email:_adminProjUserMap[p.user_id]||p.user_id?.substring(0,8)||''}));
+  if(search){
+    list=list.filter(p=>{
+      const fields=[p._email,p.project_ref,p.project_name,p.project_addr,p.project_cp,p.project_ville].map(x=>(x||'').toLowerCase());
+      return fields.some(f=>f.includes(search));
+    });
+  }
+  list.sort((a,b)=>{
+    let va,vb;
+    if(_adminProjSortField==='user'){va=a._email;vb=b._email;}
+    else if(_adminProjSortField==='ref'){va=a.project_ref||'';vb=b.project_ref||'';}
+    else if(_adminProjSortField==='name'){va=a.project_name||'';vb=b.project_name||'';}
+    else if(_adminProjSortField==='addr'){va=a.project_addr||'';vb=b.project_addr||'';}
+    else if(_adminProjSortField==='cp'){va=a.project_cp||'';vb=b.project_cp||'';}
+    else if(_adminProjSortField==='ville'){va=a.project_ville||'';vb=b.project_ville||'';}
+    else{va=a.updated_at||'';vb=b.updated_at||'';}
+    const cmp=String(va).localeCompare(String(vb),'fr',{numeric:true});
+    return _adminProjSortDesc?-cmp:cmp;
+  });
+  const total=list.length;
+  const totalPages=Math.max(1,Math.ceil(total/ADMIN_PROJ_PAGE_SIZE));
+  if(_adminProjPageIdx>=totalPages)_adminProjPageIdx=totalPages-1;
+  const start=_adminProjPageIdx*ADMIN_PROJ_PAGE_SIZE;
+  const pageItems=list.slice(start,start+ADMIN_PROJ_PAGE_SIZE);
+  document.getElementById('admin-proj-count').textContent=total+' projet'+(total>1?'s':'')+(search?' (filtre)':'');
+  document.getElementById('admin-proj-page-info').textContent='Page '+(_adminProjPageIdx+1)+' / '+totalPages;
+  document.getElementById('admin-proj-prev').disabled=_adminProjPageIdx<=0;
+  document.getElementById('admin-proj-next').disabled=_adminProjPageIdx>=totalPages-1;
+  document.querySelectorAll('[data-admsort]').forEach(el=>{
+    el.textContent=el.dataset.admsort===_adminProjSortField?(_adminProjSortDesc?' ▼':' ▲'):'';
+  });
+  if(pageItems.length===0){
+    tbody.innerHTML='<tr><td colspan="8" style="padding:30px;text-align:center;color:var(--gray-500)">'+(search?'Aucun projet ne correspond.':'Aucun projet.')+'</td></tr>';
+    return;
+  }
+  tbody.innerHTML=pageItems.map(p=>{
+    const date=p.updated_at?new Date(p.updated_at).toLocaleString('fr-FR',{dateStyle:'short',timeStyle:'short'}):'';
+    const emailShort=(p._email||'').split('@')[0]||p.user_id?.substring(0,8)||'';
+    return '<tr style="border-bottom:1px solid var(--gray-100)">'
+      +'<td style="padding:8px;font-size:11px;color:#1565C0;font-weight:700" title="'+(p._email||p.user_id||'')+'">'+emailShort+'</td>'
+      +'<td style="padding:8px;font-weight:700;font-family:monospace">'+(p.project_ref||'')+'</td>'
+      +'<td style="padding:8px">'+(p.project_name||'')+'</td>'
+      +'<td style="padding:8px;color:var(--gray-500);font-size:11px">'+(p.project_addr||'')+'</td>'
+      +'<td style="padding:8px;font-family:monospace;font-size:11px">'+(p.project_cp||'')+'</td>'
+      +'<td style="padding:8px;font-size:11px">'+(p.project_ville||'')+'</td>'
+      +'<td style="padding:8px;font-size:11px;color:var(--gray-500)">'+date+'</td>'
+      +'<td style="padding:8px;text-align:right;white-space:nowrap">'
+      +'<button onclick="adminDeleteProject(\''+p.id+'\')" style="padding:5px 10px;background:#D32F2F;color:#fff;border:none;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer">Supprimer</button>'
+      +'</td></tr>';
+  }).join('');
+}
+
+async function adminDeleteProject(id){
+  if(!confirm('Supprimer definitivement ce projet et tous ses fichiers ?'))return;
+  const token=await getAuthToken();
+  if(!token)return;
+  try{
+    const resp=await fetch('/api/projects?action=admin-delete',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body:JSON.stringify({projectId:id})
+    });
+    if(!resp.ok){const err=await resp.json();alert('Erreur: '+(err.error||resp.status));return;}
+    _adminProjects=_adminProjects.filter(p=>p.id!==id);
+    renderAdminProjectsTable();
+    if(typeof showToast==='function')showToast('Projet supprime');
+  }catch(e){alert('Erreur: '+e.message);}
 }
 
 async function deleteFromIDB(id){

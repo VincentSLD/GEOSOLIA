@@ -1,13 +1,16 @@
 /**
  * API Vercel pour la synchronisation des projets GéoSolia avec Supabase.
  * Endpoints :
- *   POST /api/projects?action=save   — Sauvegarder un projet
- *   POST /api/projects?action=list   — Lister les projets de l'utilisateur
- *   POST /api/projects?action=load   — Charger un projet
- *   POST /api/projects?action=delete — Supprimer un projet
+ *   POST /api/projects?action=save         — Sauvegarder un projet
+ *   POST /api/projects?action=list         — Lister les projets de l'utilisateur
+ *   POST /api/projects?action=load         — Charger un projet
+ *   POST /api/projects?action=delete       — Supprimer un projet
+ *   POST /api/projects?action=admin-list   — Lister TOUS les projets (admin only)
+ *   POST /api/projects?action=admin-delete — Supprimer un projet par ID (admin only)
  */
 
 const SUPABASE_URL = 'https://asuccniyofzvwgooxjah.supabase.co';
+const ADMIN_EMAILS = ['vsalaud@be-gph.fr'];
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -25,11 +28,12 @@ export default async function handler(req, res) {
   const token = authHeader.replace('Bearer ', '');
   if (!token) return res.status(401).json({ error: 'Token requis' });
 
-  // Décoder le JWT pour obtenir le user_id
-  let userId;
+  // Décoder le JWT pour obtenir le user_id et l'email
+  let userId, userEmail;
   try {
     const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
     userId = payload.sub;
+    userEmail = payload.email || '';
     if (!userId) throw new Error('No sub');
   } catch (e) {
     return res.status(401).json({ error: 'Token invalide' });
@@ -232,6 +236,46 @@ export default async function handler(req, res) {
       // Supprimer le projet
       await sbFetch(`geosolia_projects?id=eq.${projectId}&user_id=eq.${userId}`, { method: 'DELETE' });
 
+      return res.status(200).json({ ok: true });
+
+    } else if (action === 'admin-list') {
+      // Admin only : lister TOUS les projets de tous les utilisateurs
+      if (!ADMIN_EMAILS.includes(userEmail)) return res.status(403).json({ error: 'Accès réservé aux administrateurs' });
+      let r = await sbFetch(
+        `geosolia_projects?select=id,user_id,project_ref,project_name,updated_at,addr:project_data->>projectAddr,cp:project_data->>projectCp,ville:project_data->>projectVille&order=updated_at.desc&limit=10000`
+      );
+      let data;
+      if (r.ok) {
+        data = await r.json();
+        const projects = (data || []).map(p => ({
+          id: p.id, user_id: p.user_id,
+          project_ref: p.project_ref, project_name: p.project_name,
+          project_addr: p.addr || '', project_cp: p.cp || '', project_ville: p.ville || '',
+          updated_at: p.updated_at
+        }));
+        return res.status(200).json({ projects });
+      }
+      // Fallback sans opérateurs JSON
+      r = await sbFetch(
+        `geosolia_projects?select=id,user_id,project_ref,project_name,project_data,updated_at&order=updated_at.desc&limit=10000`
+      );
+      data = await r.json();
+      if (!r.ok) return res.status(r.status).json({ error: data.message || JSON.stringify(data) });
+      const projects = (data || []).map(p => ({
+        id: p.id, user_id: p.user_id,
+        project_ref: p.project_ref, project_name: p.project_name,
+        project_addr: p.project_data?.projectAddr || '', project_cp: p.project_data?.projectCp || '', project_ville: p.project_data?.projectVille || '',
+        updated_at: p.updated_at
+      }));
+      return res.status(200).json({ projects });
+
+    } else if (action === 'admin-delete') {
+      // Admin only : supprimer un projet par ID (sans restriction user_id)
+      if (!ADMIN_EMAILS.includes(userEmail)) return res.status(403).json({ error: 'Accès réservé aux administrateurs' });
+      const { projectId } = req.body;
+      if (!projectId) return res.status(400).json({ error: 'projectId requis' });
+      await sbFetch(`geosolia_project_files?project_id=eq.${projectId}`, { method: 'DELETE' });
+      await sbFetch(`geosolia_projects?id=eq.${projectId}`, { method: 'DELETE' });
       return res.status(200).json({ ok: true });
 
     } else {
