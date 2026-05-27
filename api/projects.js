@@ -169,19 +169,20 @@ export default async function handler(req, res) {
       });
 
     } else if (action === 'list') {
+      // Utiliser les opérateurs JSON PostgREST pour extraire uniquement les champs nécessaires
+      // sans télécharger l'intégralité de project_data (qui peut être très volumineux)
       const r = await sbFetch(
-        `geosolia_projects?user_id=eq.${userId}&select=id,project_ref,project_name,project_data,updated_at&order=updated_at.desc`
+        `geosolia_projects?user_id=eq.${userId}&select=id,project_ref,project_name,updated_at,addr:project_data->>projectAddr,cp:project_data->>projectCp,ville:project_data->>projectVille&order=updated_at.desc&limit=10000`
       );
       const data = await r.json();
       if (!r.ok) return res.status(r.status).json({ error: data.message || JSON.stringify(data) });
-      // Extraire seulement les champs utiles pour la liste (eviter de renvoyer tout le JSON)
       const projects = (data || []).map(p => ({
         id: p.id,
         project_ref: p.project_ref,
         project_name: p.project_name,
-        project_addr: p.project_data?.projectAddr || '',
-        project_cp: p.project_data?.projectCp || '',
-        project_ville: p.project_data?.projectVille || '',
+        project_addr: p.addr || '',
+        project_cp: p.cp || '',
+        project_ville: p.ville || '',
         updated_at: p.updated_at
       }));
       return res.status(200).json({ projects });
