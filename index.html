@@ -1024,7 +1024,8 @@
       <button onclick="document.getElementById('cloud-projects-modal').style.display='none'" style="background:none;border:none;font-size:24px;cursor:pointer;color:#fff">&times;</button>
     </div>
     <div style="padding:12px 22px;border-bottom:1px solid var(--gray-200);display:flex;gap:10px;align-items:center;background:var(--gray-50)">
-      <input type="text" id="cloud-search" placeholder="🔍 Rechercher (numéro, nom, adresse, ville...)" oninput="renderCloudProjectsTable()" style="flex:1;padding:8px 12px;border:1px solid var(--gray-200);border-radius:6px;font-size:13px;font-family:inherit">
+      <input type="text" id="cloud-search" placeholder="Rechercher (numero, nom, adresse, ville...)" oninput="renderCloudProjectsTable()" style="flex:1;padding:8px 12px;border:1px solid var(--gray-200);border-radius:6px;font-size:13px;font-family:inherit">
+      <button onclick="bulkImportToCloud()" style="padding:7px 14px;background:#2E7D32;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Importer fichiers locaux</button>
       <span id="cloud-projects-count" style="font-size:12px;color:var(--gray-500);font-weight:700"></span>
     </div>
     <div style="flex:1;overflow:auto;padding:0 22px">
@@ -2599,6 +2600,80 @@ async function deleteCloudProject(id){
   if(!confirm('Supprimer ce projet du cloud ?'))return;
   await cloudDeleteProject(id);
   openCloudProjects();
+}
+
+// ═══ IMPORT EN MASSE DE FICHIERS .geosolia VERS LE CLOUD ═══
+async function bulkImportToCloud(){
+  const token=await getAuthToken();
+  if(!token){alert('Vous devez etre connecte pour importer.');return;}
+  // Sélectionner plusieurs fichiers .geosolia
+  const input=document.createElement('input');
+  input.type='file';input.accept='.geosolia';input.multiple=true;
+  input.onchange=async function(){
+    const files=Array.from(input.files);
+    if(!files.length)return;
+    // Barre de progression
+    const countSpan=document.getElementById('cloud-projects-count');
+    const total=files.length;
+    let imported=0,skipped=0,errors=0;
+    const existingRefs=new Set(_cloudProjects.map(p=>(p.project_ref||'').toLowerCase()));
+    for(let i=0;i<files.length;i++){
+      const f=files[i];
+      if(countSpan)countSpan.textContent='Import '+(i+1)+'/'+total+'...';
+      try{
+        const text=await f.text();
+        const project=JSON.parse(text);
+        const ref=project.projectRef||'';
+        if(!ref){skipped++;continue;}
+        // Vérifier si ce projet existe déjà dans le cloud
+        if(existingRefs.has(ref.toLowerCase())){skipped++;continue;}
+        // Préparer les données cloud (extraire les images volumineuses)
+        const dataClean=JSON.parse(JSON.stringify(project));
+        const cloudFiles=[];
+        if(dataClean.planImgSrc){cloudFiles.push({key:'plan_current',data:dataClean.planImgSrc});delete dataClean.planImgSrc;}
+        if(dataClean.pages){dataClean.pages.forEach((p,idx)=>{if(p.planImgSrc){cloudFiles.push({key:'plan_page_'+idx,data:p.planImgSrc});delete p.planImgSrc;}});}
+        if(dataClean.photos){dataClean.photos.forEach((p,idx)=>{if(p.dataUrl){cloudFiles.push({key:'photo_'+idx,data:p.dataUrl});p.dataUrl='__cloud__photo_'+idx;}});}
+        if(dataClean.elements){dataClean.elements.forEach((el,idx)=>{if(el.type==='image'&&el.imgSrc&&el.imgSrc.startsWith('data:')){cloudFiles.push({key:'img_el_'+idx,data:el.imgSrc});el.imgSrc='__cloud__img_el_'+idx;}if(el.type==='legend'&&el.imgSrc&&el.imgSrc.startsWith('data:')){cloudFiles.push({key:'legend_'+idx,data:el.imgSrc});el.imgSrc='__cloud__legend_'+idx;}});}
+        if(dataClean.pages){dataClean.pages.forEach((pg,pi)=>{if(pg.elements){pg.elements.forEach((el,ei)=>{if(el.type==='image'&&el.imgSrc&&el.imgSrc.startsWith('data:')){cloudFiles.push({key:'img_p'+pi+'_e'+ei,data:el.imgSrc});el.imgSrc='__cloud__img_p'+pi+'_e'+ei;}});}});}
+        if(dataClean.geocartoData&&dataClean.geocartoData.riskMaps){const rm=dataClean.geocartoData.riskMaps;Object.keys(rm).forEach(k=>{if(rm[k]&&rm[k].startsWith('data:')){cloudFiles.push({key:'riskmap_'+k,data:rm[k]});rm[k]='__cloud__riskmap_'+k;}});}
+        // Sauvegarder les métadonnées
+        const resp=await fetch('/api/projects?action=save',{
+          method:'POST',
+          headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+          body:JSON.stringify({projectRef:ref,projectName:project.projectName||'',projectData:dataClean,files:[]})
+        });
+        if(!resp.ok){errors++;continue;}
+        const result=await resp.json();
+        const projectId=result.id;
+        // Envoyer les fichiers un par un
+        if(projectId&&cloudFiles.length>0){
+          for(const cf of cloudFiles){
+            try{
+              await fetch('/api/projects?action=savefile',{
+                method:'POST',
+                headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+                body:JSON.stringify({projectId:projectId,fileKey:cf.key,fileData:cf.data})
+              });
+            }catch(e){console.warn('[BulkImport] file upload failed:',cf.key,e);}
+          }
+        }
+        imported++;
+        existingRefs.add(ref.toLowerCase());
+      }catch(e){console.error('[BulkImport] Erreur fichier:',f.name,e);errors++;}
+    }
+    // Résultat
+    const msg=imported+' projet'+(imported>1?'s':'')+' importe'+(imported>1?'s':'')
+      +(skipped?' | '+skipped+' deja present'+(skipped>1?'s':''):'')
+      +(errors?' | '+errors+' erreur'+(errors>1?'s':''):'');
+    if(countSpan)countSpan.textContent=msg;
+    if(typeof showToast==='function')showToast(msg);
+    // Rafraîchir la liste
+    if(imported>0){
+      _cloudProjects=await cloudListProjects();
+      renderCloudProjectsTable();
+    }
+  };
+  input.click();
 }
 
 async function deleteFromIDB(id){
