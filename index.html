@@ -1024,7 +1024,7 @@
       <button onclick="document.getElementById('cloud-projects-modal').style.display='none'" style="background:none;border:none;font-size:24px;cursor:pointer;color:#fff">&times;</button>
     </div>
     <div style="padding:12px 22px;border-bottom:1px solid var(--gray-200);display:flex;gap:10px;align-items:center;background:var(--gray-50)">
-      <input type="text" id="cloud-search" placeholder="Rechercher (numero, nom, adresse, ville...)" oninput="renderCloudProjectsTable()" style="flex:1;padding:8px 12px;border:1px solid var(--gray-200);border-radius:6px;font-size:13px;font-family:inherit">
+      <input type="text" id="cloud-search" placeholder="Rechercher (numero, nom, adresse, ville, mission...)" oninput="renderCloudProjectsTable()" style="flex:1;padding:8px 12px;border:1px solid var(--gray-200);border-radius:6px;font-size:13px;font-family:inherit">
       <button onclick="bulkImportToCloud()" style="padding:7px 14px;background:#2E7D32;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Importer fichiers locaux</button>
       <span id="cloud-projects-count" style="font-size:12px;color:var(--gray-500);font-weight:700"></span>
     </div>
@@ -1037,11 +1037,12 @@
             <th style="text-align:left;padding:10px 8px;font-weight:800;color:var(--black);cursor:pointer" onclick="sortCloudProjects('addr')">Adresse <span data-sort="addr"></span></th>
             <th style="text-align:left;padding:10px 8px;font-weight:800;color:var(--black);cursor:pointer" onclick="sortCloudProjects('cp')">CP <span data-sort="cp"></span></th>
             <th style="text-align:left;padding:10px 8px;font-weight:800;color:var(--black);cursor:pointer" onclick="sortCloudProjects('ville')">Ville <span data-sort="ville"></span></th>
+            <th style="text-align:left;padding:10px 8px;font-weight:800;color:var(--black);cursor:pointer" onclick="sortCloudProjects('mission')">Mission <span data-sort="mission"></span></th>
             <th style="text-align:left;padding:10px 8px;font-weight:800;color:var(--black);cursor:pointer" onclick="sortCloudProjects('updated')">Dernière modif <span data-sort="updated"></span></th>
             <th style="text-align:right;padding:10px 8px"></th>
           </tr>
         </thead>
-        <tbody id="cloud-projects-tbody"><tr><td colspan="7" style="padding:30px;text-align:center;color:var(--gray-500)">Chargement...</td></tr></tbody>
+        <tbody id="cloud-projects-tbody"><tr><td colspan="8" style="padding:30px;text-align:center;color:var(--gray-500)">Chargement...</td></tr></tbody>
       </table>
     </div>
     <div style="padding:10px 22px;border-top:1px solid var(--gray-200);background:var(--gray-50);display:flex;justify-content:space-between;align-items:center;gap:10px">
@@ -2538,7 +2539,7 @@ async function openCloudProjects(){
   const modal=document.getElementById('cloud-projects-modal');
   modal.style.display='flex';
   const tbody=document.getElementById('cloud-projects-tbody');
-  if(tbody)tbody.innerHTML='<tr><td colspan="7" style="padding:30px;text-align:center;color:var(--gray-500)">Chargement...</td></tr>';
+  if(tbody)tbody.innerHTML='<tr><td colspan="8" style="padding:30px;text-align:center;color:var(--gray-500)">Chargement...</td></tr>';
   const search=document.getElementById('cloud-search');
   if(search)search.value='';
   _cloudPageIdx=0;
@@ -2562,9 +2563,11 @@ function renderCloudProjectsTable(){
   if(!tbody)return;
   const search=(document.getElementById('cloud-search')?.value||'').toLowerCase().trim();
   let list=_cloudProjects.slice();
+  const _missionLabelsShort={G1_ES:'G1 REGAR',G1_PGC:'G1 PGC',EXE_PLUS:'EXE+',G2_AVP:'G2 AVP',G2_PRO:'G2 AVP+PRO',G3:'G3',G4:'G4',G5:'G5'};
   if(search){
     list=list.filter(p=>{
-      const fields=[p.project_ref,p.project_name,p.project_addr,p.project_cp,p.project_ville].map(x=>(x||'').toLowerCase());
+      const ml=_missionLabelsShort[p.project_mission]||p.project_mission||'';
+      const fields=[p.project_ref,p.project_name,p.project_addr,p.project_cp,p.project_ville,ml].map(x=>(x||'').toLowerCase());
       return fields.some(f=>f.includes(search));
     });
   }
@@ -2576,6 +2579,7 @@ function renderCloudProjectsTable(){
     else if(_cloudSortField==='addr'){va=a.project_addr||'';vb=b.project_addr||'';}
     else if(_cloudSortField==='cp'){va=a.project_cp||'';vb=b.project_cp||'';}
     else if(_cloudSortField==='ville'){va=a.project_ville||'';vb=b.project_ville||'';}
+    else if(_cloudSortField==='mission'){va=a.project_mission||'';vb=b.project_mission||'';}
     else{va=a.updated_at||'';vb=b.updated_at||'';}
     const cmp=String(va).localeCompare(String(vb),'fr',{numeric:true});
     return _cloudSortDesc?-cmp:cmp;
@@ -2600,7 +2604,7 @@ function renderCloudProjectsTable(){
   });
 
   if(pageItems.length===0){
-    tbody.innerHTML='<tr><td colspan="7" style="padding:30px;text-align:center;color:var(--gray-500)">'+(search?'Aucun projet ne correspond à la recherche.':'Aucun projet sauvegardé dans le cloud.')+'</td></tr>';
+    tbody.innerHTML='<tr><td colspan="8" style="padding:30px;text-align:center;color:var(--gray-500)">'+(search?'Aucun projet ne correspond à la recherche.':'Aucun projet sauvegardé dans le cloud.')+'</td></tr>';
     return;
   }
   tbody.innerHTML=pageItems.map(p=>{
@@ -2611,6 +2615,7 @@ function renderCloudProjectsTable(){
       +'<td style="padding:8px;color:var(--gray-500);font-size:11px">'+(p.project_addr||'')+'</td>'
       +'<td style="padding:8px;font-family:monospace;font-size:11px">'+(p.project_cp||'')+'</td>'
       +'<td style="padding:8px;font-size:11px">'+(p.project_ville||'')+'</td>'
+      +'<td style="padding:8px;font-size:11px;font-weight:600;color:var(--accent-blue,#1976d2)">'+(_missionLabelsShort[p.project_mission]||'')+'</td>'
       +'<td style="padding:8px;font-size:11px;color:var(--gray-500)">'+date+'</td>'
       +'<td style="padding:8px;text-align:right;white-space:nowrap">'
       +'<button onclick="restoreCloudProject(\''+p.id+'\')" style="padding:5px 12px;background:var(--accent-blue,#1976d2);color:#fff;border:none;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;margin-right:4px">Ouvrir</button>'

@@ -175,7 +175,7 @@ export default async function handler(req, res) {
     } else if (action === 'list') {
       // Essayer d'abord avec les opérateurs JSON PostgREST (léger)
       let r = await sbFetch(
-        `geosolia_projects?user_id=eq.${userId}&select=id,project_ref,project_name,updated_at,addr:project_data->>projectAddr,cp:project_data->>projectCp,ville:project_data->>projectVille&order=updated_at.desc&limit=10000`
+        `geosolia_projects?user_id=eq.${userId}&select=id,project_ref,project_name,updated_at,addr:project_data->>projectAddr,cp:project_data->>projectCp,ville:project_data->>projectVille,mission:project_data->>projectMission&order=updated_at.desc&limit=10000`
       );
       let data;
       if (r.ok) {
@@ -187,6 +187,7 @@ export default async function handler(req, res) {
           project_addr: p.addr || '',
           project_cp: p.cp || '',
           project_ville: p.ville || '',
+          project_mission: p.mission || '',
           updated_at: p.updated_at
         }));
         return res.status(200).json({ projects });
@@ -204,6 +205,7 @@ export default async function handler(req, res) {
         project_addr: p.project_data?.projectAddr || '',
         project_cp: p.project_data?.projectCp || '',
         project_ville: p.project_data?.projectVille || '',
+        project_mission: p.project_data?.projectMission || '',
         updated_at: p.updated_at
       }));
       return res.status(200).json({ projects });
