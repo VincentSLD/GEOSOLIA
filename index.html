@@ -6726,6 +6726,8 @@ async function createNewStudy(){
   }
   closeNewStudyModal();
   activateApp();
+  // Sync cloud immédiat à la création
+  try{const p=buildProjectJSON();cloudSaveProject(p).catch(e=>console.warn('Cloud sync creation:',e));}catch(e){}
   // Lancer l'enquête GéoCarto si une adresse est saisie
   if(projectLat!=null&&projectLng!=null){
     document.getElementById('ia-geo-lat').value=projectLat;
