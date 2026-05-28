@@ -2626,8 +2626,7 @@ function renderCloudProjectsTable(){
       +'<td style="padding:8px;font-size:11px;font-family:monospace;color:#1565C0;font-weight:600">'+(p.commande_ref||'')+'</td>'
       +'<td style="padding:8px;font-size:11px;color:var(--gray-500)">'+date+'</td>'
       +'<td style="padding:8px;text-align:right;white-space:nowrap">'
-      +'<button onclick="restoreCloudProject(\''+p.id+'\')" style="padding:5px 12px;background:var(--accent-blue,#1976d2);color:#fff;border:none;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;margin-right:4px">Ouvrir</button>'
-      +'<button onclick="deleteCloudProject(\''+p.id+'\')" style="padding:5px 8px;background:none;border:1px solid #ddd;border-radius:5px;font-size:11px;cursor:pointer;color:var(--gray-500)">🗑</button>'
+      +'<button onclick="restoreCloudProject(\''+p.id+'\')" style="padding:5px 12px;background:var(--accent-blue,#1976d2);color:#fff;border:none;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer">Ouvrir</button>'
       +'</td></tr>';
   }).join('');
 }
