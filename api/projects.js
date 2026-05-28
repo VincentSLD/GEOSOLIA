@@ -83,12 +83,43 @@ export default async function handler(req, res) {
       }
 
       if (!projectId) {
-        // INSERT ou UPSERT par ref
+        // Chercher si un projet avec la même ref existe déjà pour cet utilisateur
+        const rLookup = await sbFetch(
+          `geosolia_projects?user_id=eq.${userId}&project_ref=eq.${encodeURIComponent(projectRef)}&select=id&limit=1`
+        );
+        if (rLookup.ok) {
+          const existing = await rLookup.json();
+          if (existing && existing.length > 0) {
+            // Mettre à jour le projet existant (évite les doublons)
+            projectId = existing[0].id;
+            const rPatch = await sbFetch(
+              `geosolia_projects?id=eq.${projectId}&user_id=eq.${userId}`,
+              {
+                method: 'PATCH',
+                prefer: 'return=representation',
+                body: JSON.stringify({
+                  project_ref: projectRef,
+                  project_name: projectName || '',
+                  project_data: projectData,
+                  updated_at: new Date().toISOString()
+                })
+              }
+            );
+            const patchData = await rPatch.json();
+            if (rPatch.ok && patchData.length) {
+              projectId = patchData[0].id;
+            }
+          }
+        }
+      }
+
+      if (!projectId) {
+        // Aucun projet existant : INSERT
         const r = await sbFetch(
-          `geosolia_projects?on_conflict=user_id,project_ref`,
+          `geosolia_projects`,
           {
             method: 'POST',
-            prefer: 'resolution=merge-duplicates,return=representation',
+            prefer: 'return=representation',
             body: JSON.stringify({
               user_id: userId,
               project_ref: projectRef,
