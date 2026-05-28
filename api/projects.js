@@ -51,6 +51,49 @@ export default async function handler(req, res) {
     }
   });
 
+  // Fonction partagée : enrichir les projets avec file_count et commande_ref
+  async function enrichProjects(projects, sbFetch) {
+    // Compter les fichiers par projet
+    try {
+      const rFiles = await sbFetch(`geosolia_project_files?select=project_id&limit=50000`);
+      if (rFiles.ok) {
+        const filesData = await rFiles.json();
+        const fileCounts = {};
+        (filesData || []).forEach(f => { fileCounts[f.project_id] = (fileCounts[f.project_id] || 0) + 1; });
+        projects.forEach(p => { p.file_count = fileCounts[p.id] || 0; });
+      }
+    } catch (e) { /* ignore */ }
+
+    // Liens commande depuis geoplan_interventions + geoplan_settings
+    try {
+      const cmdMap = {};
+      const rInt = await sbFetch(`geoplan_interventions?select=geosolia_id,commande_id,commande_ref&limit=10000`);
+      if (rInt.ok) {
+        const intData = await rInt.json();
+        const cmdIdToRef = {};
+        (intData || []).forEach(i => {
+          if (i.commande_id && i.commande_ref) cmdIdToRef[i.commande_id] = i.commande_ref;
+          if (i.geosolia_id && i.commande_ref) cmdMap[i.geosolia_id] = i.commande_ref;
+        });
+        try {
+          const rSettings = await sbFetch(`geoplan_settings?key=eq.geoplan_cmd_geosolia&select=value`);
+          if (rSettings.ok) {
+            const settingsData = await rSettings.json();
+            if (settingsData && settingsData[0] && settingsData[0].value) {
+              const links = settingsData[0].value;
+              Object.entries(links).forEach(([cmdId, geoId]) => {
+                if (geoId && !cmdMap[geoId]) {
+                  cmdMap[geoId] = cmdIdToRef[cmdId] || cmdId;
+                }
+              });
+            }
+          }
+        } catch (e2) { /* ignore */ }
+      }
+      projects.forEach(p => { if (cmdMap[p.id]) p.commande_ref = cmdMap[p.id]; });
+    } catch (e) { /* ignore */ }
+  }
+
   try {
     if (action === 'save') {
       const { projectRef, projectName, projectData, files, projectId: existingId } = req.body;
@@ -209,9 +252,10 @@ export default async function handler(req, res) {
         `geosolia_projects?user_id=eq.${userId}&select=id,project_ref,project_name,updated_at,addr:project_data->>projectAddr,cp:project_data->>projectCp,ville:project_data->>projectVille,mission:project_data->>projectMission&order=updated_at.desc&limit=10000`
       );
       let data;
+      let projects;
       if (r.ok) {
         data = await r.json();
-        const projects = (data || []).map(p => ({
+        projects = (data || []).map(p => ({
           id: p.id,
           project_ref: p.project_ref,
           project_name: p.project_name,
@@ -219,26 +263,28 @@ export default async function handler(req, res) {
           project_cp: p.cp || '',
           project_ville: p.ville || '',
           project_mission: p.mission || '',
-          updated_at: p.updated_at
+          updated_at: p.updated_at, file_count: 0, commande_ref: ''
         }));
-        return res.status(200).json({ projects });
+      } else {
+        // Fallback : requête sans opérateurs JSON (plus lourd mais compatible)
+        r = await sbFetch(
+          `geosolia_projects?user_id=eq.${userId}&select=id,project_ref,project_name,project_data,updated_at&order=updated_at.desc&limit=10000`
+        );
+        data = await r.json();
+        if (!r.ok) return res.status(r.status).json({ error: data.message || JSON.stringify(data) });
+        projects = (data || []).map(p => ({
+          id: p.id,
+          project_ref: p.project_ref,
+          project_name: p.project_name,
+          project_addr: p.project_data?.projectAddr || '',
+          project_cp: p.project_data?.projectCp || '',
+          project_ville: p.project_data?.projectVille || '',
+          project_mission: p.project_data?.projectMission || '',
+          updated_at: p.updated_at, file_count: 0, commande_ref: ''
+        }));
       }
-      // Fallback : requête sans opérateurs JSON (plus lourd mais compatible)
-      r = await sbFetch(
-        `geosolia_projects?user_id=eq.${userId}&select=id,project_ref,project_name,project_data,updated_at&order=updated_at.desc&limit=10000`
-      );
-      data = await r.json();
-      if (!r.ok) return res.status(r.status).json({ error: data.message || JSON.stringify(data) });
-      const projects = (data || []).map(p => ({
-        id: p.id,
-        project_ref: p.project_ref,
-        project_name: p.project_name,
-        project_addr: p.project_data?.projectAddr || '',
-        project_cp: p.project_data?.projectCp || '',
-        project_ville: p.project_data?.projectVille || '',
-        project_mission: p.project_data?.projectMission || '',
-        updated_at: p.updated_at
-      }));
+      // Enrichir avec fichiers + commandes
+      await enrichProjects(projects, sbFetch);
       return res.status(200).json({ projects });
 
     } else if (action === 'load') {
@@ -302,51 +348,8 @@ export default async function handler(req, res) {
         }));
       }
 
-      // Compter les fichiers par projet
-      try {
-        const rFiles = await sbFetch(`geosolia_project_files?select=project_id&limit=50000`);
-        if (rFiles.ok) {
-          const filesData = await rFiles.json();
-          const fileCounts = {};
-          (filesData || []).forEach(f => { fileCounts[f.project_id] = (fileCounts[f.project_id] || 0) + 1; });
-          projects.forEach(p => { p.file_count = fileCounts[p.id] || 0; });
-        }
-      } catch (e) { /* ignore */ }
-
-      // Récupérer les liens commande depuis geoplan_interventions + geoplan_settings
-      try {
-        const cmdMap = {}; // geosolia_id → commande_ref
-
-        // Source 1 : interventions avec geosolia_id et commande_ref
-        const rInt = await sbFetch(`geoplan_interventions?select=geosolia_id,commande_id,commande_ref&limit=10000`);
-        if (rInt.ok) {
-          const intData = await rInt.json();
-          const cmdIdToRef = {}; // commande_id → commande_ref (pour résoudre les refs depuis settings)
-          (intData || []).forEach(i => {
-            if (i.commande_id && i.commande_ref) cmdIdToRef[i.commande_id] = i.commande_ref;
-            if (i.geosolia_id && i.commande_ref) cmdMap[i.geosolia_id] = i.commande_ref;
-          });
-
-          // Source 2 : geoplan_settings clé geoplan_cmd_geosolia { commandeId: geosoliaId }
-          try {
-            const rSettings = await sbFetch(`geoplan_settings?key=eq.geoplan_cmd_geosolia&select=value`);
-            if (rSettings.ok) {
-              const settingsData = await rSettings.json();
-              if (settingsData && settingsData[0] && settingsData[0].value) {
-                const links = settingsData[0].value; // { commandeId: geosoliaId }
-                Object.entries(links).forEach(([cmdId, geoId]) => {
-                  if (geoId && !cmdMap[geoId]) {
-                    cmdMap[geoId] = cmdIdToRef[cmdId] || cmdId; // ref si dispo, sinon id
-                  }
-                });
-              }
-            }
-          } catch (e2) { /* ignore */ }
-        }
-
-        projects.forEach(p => { if (cmdMap[p.id]) p.commande_ref = cmdMap[p.id]; });
-      } catch (e) { /* ignore */ }
-
+      // Enrichir avec fichiers + commandes
+      await enrichProjects(projects, sbFetch);
       return res.status(200).json({ projects });
 
     } else if (action === 'admin-delete') {

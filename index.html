@@ -1038,11 +1038,13 @@
             <th style="text-align:left;padding:10px 8px;font-weight:800;color:var(--black);cursor:pointer" onclick="sortCloudProjects('cp')">CP <span data-sort="cp"></span></th>
             <th style="text-align:left;padding:10px 8px;font-weight:800;color:var(--black);cursor:pointer" onclick="sortCloudProjects('ville')">Ville <span data-sort="ville"></span></th>
             <th style="text-align:left;padding:10px 8px;font-weight:800;color:var(--black);cursor:pointer" onclick="sortCloudProjects('mission')">Mission <span data-sort="mission"></span></th>
+            <th style="text-align:center;padding:10px 8px;font-weight:800;color:var(--black);cursor:pointer" onclick="sortCloudProjects('files')">Fichiers <span data-sort="files"></span></th>
+            <th style="text-align:left;padding:10px 8px;font-weight:800;color:var(--black);cursor:pointer" onclick="sortCloudProjects('commande')">Commande <span data-sort="commande"></span></th>
             <th style="text-align:left;padding:10px 8px;font-weight:800;color:var(--black);cursor:pointer" onclick="sortCloudProjects('updated')">Dernière modif <span data-sort="updated"></span></th>
             <th style="text-align:right;padding:10px 8px"></th>
           </tr>
         </thead>
-        <tbody id="cloud-projects-tbody"><tr><td colspan="8" style="padding:30px;text-align:center;color:var(--gray-500)">Chargement...</td></tr></tbody>
+        <tbody id="cloud-projects-tbody"><tr><td colspan="10" style="padding:30px;text-align:center;color:var(--gray-500)">Chargement...</td></tr></tbody>
       </table>
     </div>
     <div style="padding:10px 22px;border-top:1px solid var(--gray-200);background:var(--gray-50);display:flex;justify-content:space-between;align-items:center;gap:10px">
@@ -2542,7 +2544,7 @@ async function openCloudProjects(){
   const modal=document.getElementById('cloud-projects-modal');
   modal.style.display='flex';
   const tbody=document.getElementById('cloud-projects-tbody');
-  if(tbody)tbody.innerHTML='<tr><td colspan="8" style="padding:30px;text-align:center;color:var(--gray-500)">Chargement...</td></tr>';
+  if(tbody)tbody.innerHTML='<tr><td colspan="10" style="padding:30px;text-align:center;color:var(--gray-500)">Chargement...</td></tr>';
   const search=document.getElementById('cloud-search');
   if(search)search.value='';
   _cloudPageIdx=0;
@@ -2570,7 +2572,7 @@ function renderCloudProjectsTable(){
   if(search){
     list=list.filter(p=>{
       const ml=_missionLabelsShort[p.project_mission]||p.project_mission||'';
-      const fields=[p.project_ref,p.project_name,p.project_addr,p.project_cp,p.project_ville,ml].map(x=>(x||'').toLowerCase());
+      const fields=[p.project_ref,p.project_name,p.project_addr,p.project_cp,p.project_ville,ml,p.commande_ref].map(x=>(x||'').toLowerCase());
       return fields.some(f=>f.includes(search));
     });
   }
@@ -2583,6 +2585,8 @@ function renderCloudProjectsTable(){
     else if(_cloudSortField==='cp'){va=a.project_cp||'';vb=b.project_cp||'';}
     else if(_cloudSortField==='ville'){va=a.project_ville||'';vb=b.project_ville||'';}
     else if(_cloudSortField==='mission'){va=a.project_mission||'';vb=b.project_mission||'';}
+    else if(_cloudSortField==='files'){va=a.file_count||0;vb=b.file_count||0;}
+    else if(_cloudSortField==='commande'){va=a.commande_ref||'';vb=b.commande_ref||'';}
     else{va=a.updated_at||'';vb=b.updated_at||'';}
     const cmp=String(va).localeCompare(String(vb),'fr',{numeric:true});
     return _cloudSortDesc?-cmp:cmp;
@@ -2607,7 +2611,7 @@ function renderCloudProjectsTable(){
   });
 
   if(pageItems.length===0){
-    tbody.innerHTML='<tr><td colspan="8" style="padding:30px;text-align:center;color:var(--gray-500)">'+(search?'Aucun projet ne correspond à la recherche.':'Aucun projet sauvegardé dans le cloud.')+'</td></tr>';
+    tbody.innerHTML='<tr><td colspan="10" style="padding:30px;text-align:center;color:var(--gray-500)">'+(search?'Aucun projet ne correspond à la recherche.':'Aucun projet sauvegardé dans le cloud.')+'</td></tr>';
     return;
   }
   tbody.innerHTML=pageItems.map(p=>{
@@ -2619,6 +2623,8 @@ function renderCloudProjectsTable(){
       +'<td style="padding:8px;font-family:monospace;font-size:11px">'+(p.project_cp||'')+'</td>'
       +'<td style="padding:8px;font-size:11px">'+(p.project_ville||'')+'</td>'
       +'<td style="padding:8px;font-size:11px;font-weight:600;color:var(--accent-blue,#1976d2)">'+(_missionLabelsShort[p.project_mission]||'')+'</td>'
+      +'<td style="padding:8px;text-align:center;font-size:11px;font-weight:700;color:'+(p.file_count?'#2E7D32':'#ccc')+'">'+(p.file_count||0)+'</td>'
+      +'<td style="padding:8px;font-size:11px;font-family:monospace;color:#1565C0;font-weight:600">'+(p.commande_ref||'')+'</td>'
       +'<td style="padding:8px;font-size:11px;color:var(--gray-500)">'+date+'</td>'
       +'<td style="padding:8px;text-align:right;white-space:nowrap">'
       +'<button onclick="restoreCloudProject(\''+p.id+'\')" style="padding:5px 12px;background:var(--accent-blue,#1976d2);color:#fff;border:none;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;margin-right:4px">Ouvrir</button>'
