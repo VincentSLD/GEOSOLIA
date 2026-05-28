@@ -102,9 +102,9 @@ export default async function handler(req, res) {
       let projectId = existingId || null;
 
       if (projectId) {
-        // UPDATE existant (la ref a pu changer)
+        // UPDATE existant par ID (sans filtre user_id pour pouvoir modifier un projet d'un autre utilisateur)
         const r = await sbFetch(
-          `geosolia_projects?id=eq.${projectId}&user_id=eq.${userId}`,
+          `geosolia_projects?id=eq.${projectId}`,
           {
             method: 'PATCH',
             prefer: 'return=representation',
@@ -126,9 +126,9 @@ export default async function handler(req, res) {
       }
 
       if (!projectId) {
-        // Chercher si un projet avec la même ref existe déjà pour cet utilisateur
+        // Chercher si un projet avec la même ref existe déjà (tous utilisateurs)
         const rLookup = await sbFetch(
-          `geosolia_projects?user_id=eq.${userId}&project_ref=eq.${encodeURIComponent(projectRef)}&select=id&limit=1`
+          `geosolia_projects?project_ref=eq.${encodeURIComponent(projectRef)}&select=id&limit=1`
         );
         if (rLookup.ok) {
           const existing = await rLookup.json();
@@ -136,7 +136,7 @@ export default async function handler(req, res) {
             // Mettre à jour le projet existant (évite les doublons)
             projectId = existing[0].id;
             const rPatch = await sbFetch(
-              `geosolia_projects?id=eq.${projectId}&user_id=eq.${userId}`,
+              `geosolia_projects?id=eq.${projectId}`,
               {
                 method: 'PATCH',
                 prefer: 'return=representation',
@@ -232,7 +232,7 @@ export default async function handler(req, res) {
       if (!projectRef) return res.status(400).json({ error: 'projectRef requis' });
 
       const r = await sbFetch(
-        `geosolia_projects?user_id=eq.${userId}&project_ref=eq.${encodeURIComponent(projectRef)}&select=id,updated_at`
+        `geosolia_projects?project_ref=eq.${encodeURIComponent(projectRef)}&select=id,updated_at`
       );
       const data = await r.json();
       if (!r.ok || !data.length) return res.status(200).json({ exists: false });
@@ -313,7 +313,7 @@ export default async function handler(req, res) {
       // Supprimer les fichiers d'abord
       await sbFetch(`geosolia_project_files?project_id=eq.${projectId}`, { method: 'DELETE' });
       // Supprimer le projet
-      await sbFetch(`geosolia_projects?id=eq.${projectId}&user_id=eq.${userId}`, { method: 'DELETE' });
+      await sbFetch(`geosolia_projects?id=eq.${projectId}`, { method: 'DELETE' });
 
       return res.status(200).json({ ok: true });
 
