@@ -285,7 +285,7 @@ export default async function handler(req, res) {
           id: p.id, user_id: p.user_id,
           project_ref: p.project_ref, project_name: p.project_name,
           project_addr: p.addr || '', project_cp: p.cp || '', project_ville: p.ville || '',
-          updated_at: p.updated_at, has_files: false, commande_ref: ''
+          updated_at: p.updated_at, file_count: 0, commande_ref: ''
         }));
       } else {
         // Fallback sans opérateurs JSON
@@ -298,17 +298,18 @@ export default async function handler(req, res) {
           id: p.id, user_id: p.user_id,
           project_ref: p.project_ref, project_name: p.project_name,
           project_addr: p.project_data?.projectAddr || '', project_cp: p.project_data?.projectCp || '', project_ville: p.project_data?.projectVille || '',
-          updated_at: p.updated_at, has_files: false, commande_ref: ''
+          updated_at: p.updated_at, file_count: 0, commande_ref: ''
         }));
       }
 
-      // Récupérer les project_id qui ont des fichiers cloud
+      // Compter les fichiers par projet
       try {
-        const rFiles = await sbFetch(`geosolia_project_files?select=project_id&limit=10000`);
+        const rFiles = await sbFetch(`geosolia_project_files?select=project_id&limit=50000`);
         if (rFiles.ok) {
           const filesData = await rFiles.json();
-          const idsWithFiles = new Set((filesData || []).map(f => f.project_id));
-          projects.forEach(p => { if (idsWithFiles.has(p.id)) p.has_files = true; });
+          const fileCounts = {};
+          (filesData || []).forEach(f => { fileCounts[f.project_id] = (fileCounts[f.project_id] || 0) + 1; });
+          projects.forEach(p => { p.file_count = fileCounts[p.id] || 0; });
         }
       } catch (e) { /* ignore */ }
 

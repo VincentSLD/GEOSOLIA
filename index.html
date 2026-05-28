@@ -1074,7 +1074,7 @@
             <th style="text-align:left;padding:10px 8px;font-weight:800;cursor:pointer" onclick="sortAdminProjects('addr')">Adresse <span data-admsort="addr"></span></th>
             <th style="text-align:left;padding:10px 8px;font-weight:800;cursor:pointer" onclick="sortAdminProjects('cp')">CP <span data-admsort="cp"></span></th>
             <th style="text-align:left;padding:10px 8px;font-weight:800;cursor:pointer" onclick="sortAdminProjects('ville')">Ville <span data-admsort="ville"></span></th>
-            <th style="text-align:center;padding:10px 8px;font-weight:800;cursor:pointer" onclick="sortAdminProjects('files')">Cloud <span data-admsort="files"></span></th>
+            <th style="text-align:center;padding:10px 8px;font-weight:800;cursor:pointer" onclick="sortAdminProjects('files')">Fichiers <span data-admsort="files"></span></th>
             <th style="text-align:left;padding:10px 8px;font-weight:800;cursor:pointer" onclick="sortAdminProjects('commande')">Commande <span data-admsort="commande"></span></th>
             <th style="text-align:left;padding:10px 8px;font-weight:800;cursor:pointer" onclick="sortAdminProjects('updated')">Modif <span data-admsort="updated"></span></th>
             <th style="text-align:right;padding:10px 8px"></th>
@@ -2789,7 +2789,7 @@ function renderAdminProjectsTable(){
     else if(_adminProjSortField==='addr'){va=a.project_addr||'';vb=b.project_addr||'';}
     else if(_adminProjSortField==='cp'){va=a.project_cp||'';vb=b.project_cp||'';}
     else if(_adminProjSortField==='ville'){va=a.project_ville||'';vb=b.project_ville||'';}
-    else if(_adminProjSortField==='files'){va=a.has_files?1:0;vb=b.has_files?1:0;}
+    else if(_adminProjSortField==='files'){va=a.file_count||0;vb=b.file_count||0;}
     else if(_adminProjSortField==='commande'){va=a.commande_ref||'';vb=b.commande_ref||'';}
     else{va=a.updated_at||'';vb=b.updated_at||'';}
     const cmp=String(va).localeCompare(String(vb),'fr',{numeric:true});
@@ -2821,7 +2821,7 @@ function renderAdminProjectsTable(){
       +'<td style="padding:8px;color:var(--gray-500);font-size:11px">'+(p.project_addr||'')+'</td>'
       +'<td style="padding:8px;font-family:monospace;font-size:11px">'+(p.project_cp||'')+'</td>'
       +'<td style="padding:8px;font-size:11px">'+(p.project_ville||'')+'</td>'
-      +'<td style="padding:8px;text-align:center;font-size:13px">'+(p.has_files?'<span style="color:#2E7D32" title="Fichiers cloud presents">V</span>':'<span style="color:#ccc">-</span>')+'</td>'
+      +'<td style="padding:8px;text-align:center;font-size:11px;font-weight:700;color:'+(p.file_count?'#2E7D32':'#ccc')+'">'+(p.file_count||0)+'</td>'
       +'<td style="padding:8px;font-size:11px;font-family:monospace;color:#1565C0;font-weight:600">'+(p.commande_ref||'')+'</td>'
       +'<td style="padding:8px;font-size:11px;color:var(--gray-500)">'+date+'</td>'
       +'<td style="padding:8px;text-align:right;white-space:nowrap">'
