@@ -293,7 +293,7 @@ export default async function handler(req, res) {
 
       // Charger les métadonnées
       const r = await sbFetch(
-        `geosolia_projects?id=eq.${projectId}&user_id=eq.${userId}&select=*`
+        `geosolia_projects?id=eq.${projectId}&select=*`
       );
       const data = await r.json();
       if (!r.ok || !data.length) return res.status(404).json({ error: 'Projet non trouvé' });
