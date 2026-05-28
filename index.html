@@ -1060,7 +1060,7 @@
       <button onclick="document.getElementById('admin-projects-modal').style.display='none'" style="background:none;border:none;font-size:24px;cursor:pointer;color:#fff">&times;</button>
     </div>
     <div style="padding:12px 22px;border-bottom:1px solid var(--gray-200);display:flex;gap:10px;align-items:center;background:var(--gray-50)">
-      <input type="text" id="admin-proj-search" placeholder="Rechercher (numero, nom, adresse, ville, utilisateur...)" oninput="renderAdminProjectsTable()" style="flex:1;padding:8px 12px;border:1px solid var(--gray-200);border-radius:6px;font-size:13px;font-family:inherit">
+      <input type="text" id="admin-proj-search" placeholder="Rechercher (numero, nom, adresse, ville, utilisateur, commande...)" oninput="renderAdminProjectsTable()" style="flex:1;padding:8px 12px;border:1px solid var(--gray-200);border-radius:6px;font-size:13px;font-family:inherit">
       <span id="admin-proj-count" style="font-size:12px;color:var(--gray-500);font-weight:700"></span>
     </div>
     <div style="flex:1;overflow:auto;padding:0 22px">
@@ -1073,11 +1073,13 @@
             <th style="text-align:left;padding:10px 8px;font-weight:800;cursor:pointer" onclick="sortAdminProjects('addr')">Adresse <span data-admsort="addr"></span></th>
             <th style="text-align:left;padding:10px 8px;font-weight:800;cursor:pointer" onclick="sortAdminProjects('cp')">CP <span data-admsort="cp"></span></th>
             <th style="text-align:left;padding:10px 8px;font-weight:800;cursor:pointer" onclick="sortAdminProjects('ville')">Ville <span data-admsort="ville"></span></th>
+            <th style="text-align:center;padding:10px 8px;font-weight:800;cursor:pointer" onclick="sortAdminProjects('files')">Cloud <span data-admsort="files"></span></th>
+            <th style="text-align:left;padding:10px 8px;font-weight:800;cursor:pointer" onclick="sortAdminProjects('commande')">Commande <span data-admsort="commande"></span></th>
             <th style="text-align:left;padding:10px 8px;font-weight:800;cursor:pointer" onclick="sortAdminProjects('updated')">Modif <span data-admsort="updated"></span></th>
             <th style="text-align:right;padding:10px 8px"></th>
           </tr>
         </thead>
-        <tbody id="admin-proj-tbody"><tr><td colspan="8" style="padding:30px;text-align:center;color:var(--gray-500)">Chargement...</td></tr></tbody>
+        <tbody id="admin-proj-tbody"><tr><td colspan="10" style="padding:30px;text-align:center;color:var(--gray-500)">Chargement...</td></tr></tbody>
       </table>
     </div>
     <div style="padding:10px 22px;border-top:1px solid var(--gray-200);background:var(--gray-50);display:flex;justify-content:space-between;align-items:center;gap:10px">
@@ -2728,7 +2730,7 @@ async function openAdminProjects(){
   const modal=document.getElementById('admin-projects-modal');
   modal.style.display='flex';
   const tbody=document.getElementById('admin-proj-tbody');
-  if(tbody)tbody.innerHTML='<tr><td colspan="8" style="padding:30px;text-align:center;color:var(--gray-500)">Chargement...</td></tr>';
+  if(tbody)tbody.innerHTML='<tr><td colspan="10" style="padding:30px;text-align:center;color:var(--gray-500)">Chargement...</td></tr>';
   const search=document.getElementById('admin-proj-search');
   if(search)search.value='';
   _adminProjPageIdx=0;
@@ -2751,7 +2753,7 @@ async function openAdminProjects(){
     }catch(e){}
     renderAdminProjectsTable();
   }catch(e){
-    if(tbody)tbody.innerHTML='<tr><td colspan="8" style="padding:30px;text-align:center;color:#D94040">Erreur: '+e.message+'</td></tr>';
+    if(tbody)tbody.innerHTML='<tr><td colspan="10" style="padding:30px;text-align:center;color:#D94040">Erreur: '+e.message+'</td></tr>';
   }
 }
 
@@ -2773,7 +2775,8 @@ function renderAdminProjectsTable(){
   let list=_adminProjects.map(p=>({...p,_email:_adminProjUserMap[p.user_id]||p.user_id?.substring(0,8)||''}));
   if(search){
     list=list.filter(p=>{
-      const fields=[p._email,p.project_ref,p.project_name,p.project_addr,p.project_cp,p.project_ville].map(x=>(x||'').toLowerCase());
+      const fields=[p._email,p.project_ref,p.project_name,p.project_addr,p.project_cp,p.project_ville,p.commande_ref].map(x=>(x||'').toLowerCase());
+      if(search==='cloud')return p.has_files;
       return fields.some(f=>f.includes(search));
     });
   }
@@ -2785,6 +2788,8 @@ function renderAdminProjectsTable(){
     else if(_adminProjSortField==='addr'){va=a.project_addr||'';vb=b.project_addr||'';}
     else if(_adminProjSortField==='cp'){va=a.project_cp||'';vb=b.project_cp||'';}
     else if(_adminProjSortField==='ville'){va=a.project_ville||'';vb=b.project_ville||'';}
+    else if(_adminProjSortField==='files'){va=a.has_files?1:0;vb=b.has_files?1:0;}
+    else if(_adminProjSortField==='commande'){va=a.commande_ref||'';vb=b.commande_ref||'';}
     else{va=a.updated_at||'';vb=b.updated_at||'';}
     const cmp=String(va).localeCompare(String(vb),'fr',{numeric:true});
     return _adminProjSortDesc?-cmp:cmp;
@@ -2802,7 +2807,7 @@ function renderAdminProjectsTable(){
     el.textContent=el.dataset.admsort===_adminProjSortField?(_adminProjSortDesc?' ▼':' ▲'):'';
   });
   if(pageItems.length===0){
-    tbody.innerHTML='<tr><td colspan="8" style="padding:30px;text-align:center;color:var(--gray-500)">'+(search?'Aucun projet ne correspond.':'Aucun projet.')+'</td></tr>';
+    tbody.innerHTML='<tr><td colspan="10" style="padding:30px;text-align:center;color:var(--gray-500)">'+(search?'Aucun projet ne correspond.':'Aucun projet.')+'</td></tr>';
     return;
   }
   tbody.innerHTML=pageItems.map(p=>{
@@ -2815,6 +2820,8 @@ function renderAdminProjectsTable(){
       +'<td style="padding:8px;color:var(--gray-500);font-size:11px">'+(p.project_addr||'')+'</td>'
       +'<td style="padding:8px;font-family:monospace;font-size:11px">'+(p.project_cp||'')+'</td>'
       +'<td style="padding:8px;font-size:11px">'+(p.project_ville||'')+'</td>'
+      +'<td style="padding:8px;text-align:center;font-size:13px">'+(p.has_files?'<span style="color:#2E7D32" title="Fichiers cloud presents">V</span>':'<span style="color:#ccc">-</span>')+'</td>'
+      +'<td style="padding:8px;font-size:11px;font-family:monospace;color:#1565C0;font-weight:600">'+(p.commande_ref||'')+'</td>'
       +'<td style="padding:8px;font-size:11px;color:var(--gray-500)">'+date+'</td>'
       +'<td style="padding:8px;text-align:right;white-space:nowrap">'
       +'<button onclick="adminDeleteProject(\''+p.id+'\')" style="padding:5px 10px;background:#D32F2F;color:#fff;border:none;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer">Supprimer</button>'

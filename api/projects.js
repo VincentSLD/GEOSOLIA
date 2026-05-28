@@ -247,28 +247,53 @@ export default async function handler(req, res) {
         `geosolia_projects?select=id,user_id,project_ref,project_name,updated_at,addr:project_data->>projectAddr,cp:project_data->>projectCp,ville:project_data->>projectVille&order=updated_at.desc&limit=10000`
       );
       let data;
+      let projects;
       if (r.ok) {
         data = await r.json();
-        const projects = (data || []).map(p => ({
+        projects = (data || []).map(p => ({
           id: p.id, user_id: p.user_id,
           project_ref: p.project_ref, project_name: p.project_name,
           project_addr: p.addr || '', project_cp: p.cp || '', project_ville: p.ville || '',
-          updated_at: p.updated_at
+          updated_at: p.updated_at, has_files: false, commande_ref: ''
         }));
-        return res.status(200).json({ projects });
+      } else {
+        // Fallback sans opérateurs JSON
+        r = await sbFetch(
+          `geosolia_projects?select=id,user_id,project_ref,project_name,project_data,updated_at&order=updated_at.desc&limit=10000`
+        );
+        data = await r.json();
+        if (!r.ok) return res.status(r.status).json({ error: data.message || JSON.stringify(data) });
+        projects = (data || []).map(p => ({
+          id: p.id, user_id: p.user_id,
+          project_ref: p.project_ref, project_name: p.project_name,
+          project_addr: p.project_data?.projectAddr || '', project_cp: p.project_data?.projectCp || '', project_ville: p.project_data?.projectVille || '',
+          updated_at: p.updated_at, has_files: false, commande_ref: ''
+        }));
       }
-      // Fallback sans opérateurs JSON
-      r = await sbFetch(
-        `geosolia_projects?select=id,user_id,project_ref,project_name,project_data,updated_at&order=updated_at.desc&limit=10000`
-      );
-      data = await r.json();
-      if (!r.ok) return res.status(r.status).json({ error: data.message || JSON.stringify(data) });
-      const projects = (data || []).map(p => ({
-        id: p.id, user_id: p.user_id,
-        project_ref: p.project_ref, project_name: p.project_name,
-        project_addr: p.project_data?.projectAddr || '', project_cp: p.project_data?.projectCp || '', project_ville: p.project_data?.projectVille || '',
-        updated_at: p.updated_at
-      }));
+
+      // Récupérer les project_id qui ont des fichiers cloud
+      try {
+        const rFiles = await sbFetch(`geosolia_project_files?select=project_id&limit=10000`);
+        if (rFiles.ok) {
+          const filesData = await rFiles.json();
+          const idsWithFiles = new Set((filesData || []).map(f => f.project_id));
+          projects.forEach(p => { if (idsWithFiles.has(p.id)) p.has_files = true; });
+        }
+      } catch (e) { /* ignore */ }
+
+      // Récupérer les liens commande depuis geoplan_interventions
+      try {
+        const rInt = await sbFetch(`geoplan_interventions?select=geosolia_id,commande_ref&geosolia_id=not.is.null&limit=10000`);
+        if (rInt.ok) {
+          const intData = await rInt.json();
+          const cmdMap = {};
+          (intData || []).forEach(i => {
+            if (i.geosolia_id && i.commande_ref) cmdMap[i.geosolia_id] = i.commande_ref;
+          });
+          projects.forEach(p => { if (cmdMap[p.id]) p.commande_ref = cmdMap[p.id]; });
+        }
+      } catch (e) { /* ignore */ }
+
       return res.status(200).json({ projects });
 
     } else if (action === 'admin-delete') {
