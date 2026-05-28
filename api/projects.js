@@ -313,17 +313,38 @@ export default async function handler(req, res) {
         }
       } catch (e) { /* ignore */ }
 
-      // Récupérer les liens commande depuis geoplan_interventions
+      // Récupérer les liens commande depuis geoplan_interventions + geoplan_settings
       try {
-        const rInt = await sbFetch(`geoplan_interventions?select=geosolia_id,commande_ref&geosolia_id=not.is.null&limit=10000`);
+        const cmdMap = {}; // geosolia_id → commande_ref
+
+        // Source 1 : interventions avec geosolia_id et commande_ref
+        const rInt = await sbFetch(`geoplan_interventions?select=geosolia_id,commande_id,commande_ref&limit=10000`);
         if (rInt.ok) {
           const intData = await rInt.json();
-          const cmdMap = {};
+          const cmdIdToRef = {}; // commande_id → commande_ref (pour résoudre les refs depuis settings)
           (intData || []).forEach(i => {
+            if (i.commande_id && i.commande_ref) cmdIdToRef[i.commande_id] = i.commande_ref;
             if (i.geosolia_id && i.commande_ref) cmdMap[i.geosolia_id] = i.commande_ref;
           });
-          projects.forEach(p => { if (cmdMap[p.id]) p.commande_ref = cmdMap[p.id]; });
+
+          // Source 2 : geoplan_settings clé geoplan_cmd_geosolia { commandeId: geosoliaId }
+          try {
+            const rSettings = await sbFetch(`geoplan_settings?key=eq.geoplan_cmd_geosolia&select=value`);
+            if (rSettings.ok) {
+              const settingsData = await rSettings.json();
+              if (settingsData && settingsData[0] && settingsData[0].value) {
+                const links = settingsData[0].value; // { commandeId: geosoliaId }
+                Object.entries(links).forEach(([cmdId, geoId]) => {
+                  if (geoId && !cmdMap[geoId]) {
+                    cmdMap[geoId] = cmdIdToRef[cmdId] || cmdId; // ref si dispo, sinon id
+                  }
+                });
+              }
+            }
+          } catch (e2) { /* ignore */ }
         }
+
+        projects.forEach(p => { if (cmdMap[p.id]) p.commande_ref = cmdMap[p.id]; });
       } catch (e) { /* ignore */ }
 
       return res.status(200).json({ projects });
