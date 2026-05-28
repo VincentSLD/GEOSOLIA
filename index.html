@@ -1061,6 +1061,7 @@
     </div>
     <div style="padding:12px 22px;border-bottom:1px solid var(--gray-200);display:flex;gap:10px;align-items:center;background:var(--gray-50)">
       <input type="text" id="admin-proj-search" placeholder="Rechercher (numero, nom, adresse, ville, utilisateur, commande...)" oninput="renderAdminProjectsTable()" style="flex:1;padding:8px 12px;border:1px solid var(--gray-200);border-radius:6px;font-size:13px;font-family:inherit">
+      <button onclick="adminDedupProjects()" style="padding:7px 14px;background:#FF6F00;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Supprimer doublons</button>
       <span id="admin-proj-count" style="font-size:12px;color:var(--gray-500);font-weight:700"></span>
     </div>
     <div style="flex:1;overflow:auto;padding:0 22px">
@@ -2843,6 +2844,23 @@ async function adminDeleteProject(id){
     _adminProjects=_adminProjects.filter(p=>p.id!==id);
     renderAdminProjectsTable();
     if(typeof showToast==='function')showToast('Projet supprime');
+  }catch(e){alert('Erreur: '+e.message);}
+}
+
+async function adminDedupProjects(){
+  if(!confirm('Supprimer tous les doublons (garde le plus recent par ref) ?'))return;
+  const token=await getAuthToken();
+  if(!token)return;
+  try{
+    const resp=await fetch('/api/projects?action=admin-dedup',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body:'{}'
+    });
+    if(!resp.ok){const err=await resp.json();alert('Erreur: '+(err.error||resp.status));return;}
+    const data=await resp.json();
+    if(typeof showToast==='function')showToast(data.deleted+' doublon'+(data.deleted>1?'s':'')+' supprime'+(data.deleted>1?'s':''));
+    openAdminProjects();
   }catch(e){alert('Erreur: '+e.message);}
 }
 
@@ -7091,6 +7109,7 @@ async function getAuthToken(){
 let _cloudLastSyncAt=null; // horodatage de la dernière sync cloud réussie
 let _cloudProjectId=null; // ID Supabase du projet en cours
 let _cloudConflictPending=false; // flag pour éviter les popups en boucle
+let _cloudSaving=false; // verrou pour éviter les sauvegardes concurrentes
 
 async function cloudCheckConflict(ref){
   if(!navigator.onLine)return null;
@@ -7108,7 +7127,11 @@ async function cloudCheckConflict(ref){
 }
 
 async function cloudSaveProject(project){
-  if(!navigator.onLine||_cloudConflictPending)return;
+  if(!navigator.onLine||_cloudConflictPending||_cloudSaving)return;
+  _cloudSaving=true;
+  try{ return await _cloudSaveProjectInner(project); }finally{ _cloudSaving=false; }
+}
+async function _cloudSaveProjectInner(project){
   const token=await getAuthToken();
   if(!token)return;
   const _dot=document.getElementById('cloud-sync-dot');

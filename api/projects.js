@@ -336,6 +336,29 @@ export default async function handler(req, res) {
       await sbFetch(`geosolia_projects?id=eq.${projectId}`, { method: 'DELETE' });
       return res.status(200).json({ ok: true });
 
+    } else if (action === 'admin-dedup') {
+      // Admin only : supprimer les doublons (garder le plus récent par user_id+project_ref)
+      if (!ADMIN_EMAILS.includes(userEmail)) return res.status(403).json({ error: 'Accès réservé aux administrateurs' });
+      const r = await sbFetch(`geosolia_projects?select=id,user_id,project_ref,updated_at&order=updated_at.desc&limit=10000`);
+      if (!r.ok) return res.status(r.status).json({ error: 'Erreur lecture projets' });
+      const all = await r.json();
+      const seen = {};
+      const toDelete = [];
+      for (const p of all) {
+        const key = (p.user_id || '') + '|' + (p.project_ref || '');
+        if (seen[key]) {
+          toDelete.push(p.id); // doublon (plus ancien car trié desc)
+        } else {
+          seen[key] = p.id;
+        }
+      }
+      // Supprimer les doublons et leurs fichiers
+      for (const id of toDelete) {
+        await sbFetch(`geosolia_project_files?project_id=eq.${id}`, { method: 'DELETE' });
+        await sbFetch(`geosolia_projects?id=eq.${id}`, { method: 'DELETE' });
+      }
+      return res.status(200).json({ deleted: toDelete.length });
+
     } else {
       return res.status(400).json({ error: 'Action inconnue: ' + action });
     }
