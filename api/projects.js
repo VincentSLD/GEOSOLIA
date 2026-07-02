@@ -199,45 +199,85 @@ export default async function handler(req, res) {
         }
       }
 
-      // Sync infoGeotechnicien → commandes GéoPlan (commentaires)
-      if (projectId && projectData && projectData.infoGeotechnicien !== undefined) {
+      // Sync commentaires → GéoPlan (commandes) + Akuiteo (custom_data)
+      const comment = (projectData && (
+        (projectData.geocartoData && projectData.geocartoData.infosGeotech) ||
+        projectData.infoGeotechnicien
+      )) || '';
+      if (projectId && comment !== undefined) {
         try {
-          const comment = projectData.infoGeotechnicien || '';
-          // Trouver les commandes liées via geoplan_interventions
+          // 1. Trouver les commandes liées via geoplan_interventions
+          const cmdIds = new Set();
           const rInt = await sbFetch(`geoplan_interventions?geosolia_id=eq.${projectId}&select=commande_id&limit=100`);
           if (rInt.ok) {
             const ints = await rInt.json();
-            const cmdIds = [...new Set((ints || []).map(i => i.commande_id).filter(Boolean))];
-            for (const cmdId of cmdIds) {
-              // Lire la commande pour récupérer son custom_data
-              const rCmd = await sbFetch(`commandes?id=eq.${encodeURIComponent(cmdId)}&select=id,custom_data`);
-              if (rCmd.ok) {
-                const cmds = await rCmd.json();
-                if (cmds && cmds[0]) {
-                  const cd = cmds[0].custom_data || {};
-                  // Trouver la clé Commentaires dans les custom_data
-                  let commentKey = null;
-                  for (const k in cd) {
-                    if (cd[k] && cd[k].name) {
-                      const n = cd[k].name.toLowerCase();
-                      if (n === 'commentaires' || n === 'commentaire') { commentKey = k; break; }
-                    }
-                  }
-                  if (!commentKey) {
-                    for (const k in cd) {
-                      if (cd[k] && cd[k].name && cd[k].name.toLowerCase().indexOf('commentaire') >= 0) { commentKey = k; break; }
-                    }
-                  }
-                  if (commentKey) cd[commentKey].value = comment || null;
-                  await sbFetch(`commandes?id=eq.${encodeURIComponent(cmdId)}`, {
-                    method: 'PATCH',
-                    body: JSON.stringify({ description: comment, custom_data: cd })
-                  });
-                }
+            (ints || []).forEach(i => { if (i.commande_id) cmdIds.add(i.commande_id); });
+          }
+          // 2. Aussi vérifier geoplan_settings pour les liens commande↔geosolia
+          try {
+            const rSettings = await sbFetch(`geoplan_settings?key=eq.geoplan_cmd_geosolia&select=value`);
+            if (rSettings.ok) {
+              const settingsData = await rSettings.json();
+              if (settingsData && settingsData[0] && settingsData[0].value) {
+                const links = settingsData[0].value;
+                Object.entries(links).forEach(([cmdId, geoId]) => {
+                  if (geoId === projectId) cmdIds.add(cmdId);
+                });
               }
             }
+          } catch (e2) { /* ignore */ }
+
+          // 3. Mettre à jour chaque commande liée
+          for (const cmdId of cmdIds) {
+            const rCmd = await sbFetch(`commandes?id=eq.${encodeURIComponent(cmdId)}&select=id,ref,custom_data`);
+            if (!rCmd.ok) continue;
+            const cmds = await rCmd.json();
+            if (!cmds || !cmds[0]) continue;
+            const cmd = cmds[0];
+            const cd = cmd.custom_data || {};
+            // Trouver la clé Commentaires (match exact puis partiel)
+            let commentKey = null;
+            for (const k in cd) {
+              if (cd[k] && cd[k].name) {
+                const n = cd[k].name.trim().toLowerCase();
+                if (n === 'commentaires' || n === 'commentaire') { commentKey = k; break; }
+              }
+            }
+            if (!commentKey) {
+              for (const k in cd) {
+                if (cd[k] && cd[k].name && cd[k].name.toLowerCase().indexOf('commentaire') >= 0) { commentKey = k; break; }
+              }
+            }
+            if (commentKey) cd[commentKey].value = comment || null;
+            // 3a. Supabase : commandes.description + custom_data
+            await sbFetch(`commandes?id=eq.${encodeURIComponent(cmdId)}`, {
+              method: 'PATCH',
+              body: JSON.stringify({ description: comment, custom_data: cd })
+            });
+            // 3b. Supabase : interventions.infos_adv
+            await sbFetch(`geoplan_interventions?commande_id=eq.${encodeURIComponent(cmdId)}`, {
+              method: 'PATCH',
+              body: JSON.stringify({ infos_adv: comment })
+            });
+            // 3c. Akuiteo : push custom_data via batch-update
+            if (commentKey && cmd.ref) {
+              try {
+                const akUrl = process.env.AKUITEO_BASE_URL || 'https://novamingenierie-test.myakuiteo.com/akuiteo/rest';
+                const akUser = process.env.AKUITEO_USER || 'API1';
+                const akPass = process.env.AKUITEO_PASS || 'API1';
+                const akAuth = 'Basic ' + Buffer.from(akUser + ':' + akPass).toString('base64');
+                await fetch(akUrl + '/sales/orders/custom-data/batch-update', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': akAuth },
+                  body: JSON.stringify({
+                    ids: [cmd.ref],
+                    customData: { [commentKey]: { type: cd[commentKey].type || 'ALPHANUMERIC', value: comment || null } }
+                  })
+                });
+              } catch (akErr) { console.warn('[Sync Akuiteo] Erreur:', akErr.message); }
+            }
           }
-        } catch (e) { console.warn('[Sync GéoPlan] Erreur sync commentaires:', e.message); }
+        } catch (e) { console.warn('[Sync GéoPlan+Akuiteo] Erreur sync commentaires:', e.message); }
       }
 
       return res.status(200).json({ ok: true, id: projectId });
