@@ -262,9 +262,10 @@ export default async function handler(req, res) {
             // 3c. Akuiteo : push custom_data via batch-update
             if (commentKey && cmd.ref) {
               try {
-                const akUrl = process.env.AKUITEO_BASE_URL || 'https://novamingenierie-test.myakuiteo.com/akuiteo/rest';
-                const akUser = process.env.AKUITEO_USER || 'API1';
-                const akPass = process.env.AKUITEO_PASS || 'API1';
+                const akUrl = process.env.AKUITEO_BASE_URL;
+                const akUser = process.env.AKUITEO_USER;
+                const akPass = process.env.AKUITEO_PASS;
+                if (!akUrl || !akUser || !akPass) throw new Error('Variables AKUITEO manquantes');
                 const akAuth = 'Basic ' + Buffer.from(akUser + ':' + akPass).toString('base64');
                 await fetch(akUrl + '/sales/orders/custom-data/batch-update', {
                   method: 'POST',
