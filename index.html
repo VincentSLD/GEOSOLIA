@@ -2638,6 +2638,7 @@ async function restoreCloudProject(id){
   _cloudLastSyncAt=new Date().toISOString();
   _cloudProjectId=id;
   _cloudConflictPending=false;
+  subscribeRealtimeComment();
   const file=new File([JSON.stringify(project)],'cloud.geosolia',{type:'application/json'});
   const input=document.getElementById('projectInput');
   const dt=new DataTransfer();
@@ -7451,6 +7452,44 @@ async function cloudDeleteProject(projectId){
     });
   }catch(e){}
 }
+
+var _geoterCommentChannel=null;
+function subscribeRealtimeComment(){
+  unsubscribeRealtimeComment();
+  if(!_cloudProjectId)return;
+  _geoterCommentChannel=sbAuth.channel('geoter-comment-'+_cloudProjectId)
+    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'geosolia_projects',filter:'id=eq.'+_cloudProjectId},function(payload){
+      if(!payload.new||!payload.new.project_data)return;
+      var pd=payload.new.project_data;
+      var comment=pd.geocartoData?pd.geocartoData.infosGeotech:(pd.infoGeotechnicien||'');
+      var ta=document.getElementById('gc-infos-geotech');
+      if(ta&&document.activeElement!==ta){
+        ta.value=comment||'';
+        if(geocartoData)geocartoData.infosGeotech=comment||'';
+        if(project)project.infoGeotechnicien=comment||'';
+      }
+      console.log('[Realtime] MAJ commentaire projet');
+    })
+    .subscribe();
+}
+function unsubscribeRealtimeComment(){
+  if(_geoterCommentChannel){sbAuth.removeChannel(_geoterCommentChannel);_geoterCommentChannel=null;}
+}
+document.addEventListener('visibilitychange',async function(){
+  if(document.hidden||!_cloudProjectId)return;
+  try{
+    var{data}=await sbAuth.from('geosolia_projects').select('project_data').eq('id',_cloudProjectId).maybeSingle();
+    if(!data||!data.project_data)return;
+    var pd=data.project_data;
+    var comment=pd.geocartoData?pd.geocartoData.infosGeotech:(pd.infoGeotechnicien||'');
+    var ta=document.getElementById('gc-infos-geotech');
+    if(ta&&document.activeElement!==ta){
+      ta.value=comment||'';
+      if(geocartoData)geocartoData.infosGeotech=comment||'';
+      if(project)project.infoGeotechnicien=comment||'';
+    }
+  }catch(e){}
+});
 
 function startAutoSave(){
   if(autoSaveInterval)clearInterval(autoSaveInterval);
