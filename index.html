@@ -7104,6 +7104,22 @@ async function silentSave(){
   cloudSaveProject(project).catch(e=>console.warn('Cloud sync failed:',e));
 }
 
+// ═══ TOAST SYNC ═══
+function _showSyncToast(msg, color){
+  let el=document.getElementById('sync-toast');
+  if(!el){
+    el=document.createElement('div');
+    el.id='sync-toast';
+    el.style.cssText='position:fixed;bottom:12px;left:50%;transform:translateX(-50%);padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;font-family:inherit;color:#fff;z-index:99999;transition:opacity 0.3s;pointer-events:none;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.2)';
+    document.body.appendChild(el);
+  }
+  el.textContent=msg;
+  el.style.background=color||'#333';
+  el.style.opacity='1';
+  clearTimeout(el._t);
+  el._t=setTimeout(()=>{el.style.opacity='0';},5000);
+}
+
 // ═══ SYNC CLOUD SUPABASE ═══
 async function getAuthToken(){
   try{const{data}=await sbAuth.auth.getSession();return data?.session?.access_token||null;}catch(e){return null;}
@@ -7262,6 +7278,22 @@ async function _cloudSaveProjectInner(project){
 
     _cloudLastSyncAt=new Date().toISOString();
     console.log('[Cloud] Sync OK — '+files.length+' fichiers');
+    // Afficher le statut de sync GéoPlan/Akuiteo
+    if(saveResult.sync){
+      const s=saveResult.sync;
+      if(s.noLink){
+        _showSyncToast('☁️ Cloud OK — Pas de liaison GéoPlan/Akuiteo pour ce projet','#6B7280');
+      } else {
+        const parts=[];
+        if(s.geoplan)parts.push('GéoPlan ✓');
+        if(s.akuiteo)parts.push('Akuiteo ✓');
+        if(!s.geoplan&&!s.noLink)parts.push('GéoPlan ✗');
+        if(!s.akuiteo&&!s.noLink)parts.push('Akuiteo ✗');
+        if(s.error)parts.push(s.error);
+        const allOk=s.geoplan&&s.akuiteo;
+        _showSyncToast('☁️ Cloud OK — Sync : '+parts.join(' · '),allOk?'#16A34A':'#D97706');
+      }
+    }
     if(_dot){_dot.textContent='☁️';_dot.style.opacity='1';_dot.title='Sync cloud OK — '+new Date().toLocaleTimeString('fr-FR');setTimeout(()=>{_dot.style.opacity='0.5';},3000);}
   }catch(e){
     console.warn('Cloud save network error:',e);

@@ -204,7 +204,8 @@ export default async function handler(req, res) {
         (projectData.geocartoData && projectData.geocartoData.infosGeotech) ||
         projectData.infoGeotechnicien
       )) || '';
-      if (projectId && comment !== undefined) {
+      const sync = { geoplan: false, akuiteo: false, noLink: true, error: null };
+      if (projectId) {
         try {
           // 1. Trouver les commandes liées via geoplan_interventions
           const cmdIds = new Set();
@@ -227,61 +228,66 @@ export default async function handler(req, res) {
             }
           } catch (e2) { /* ignore */ }
 
-          // 3. Mettre à jour chaque commande liée
-          for (const cmdId of cmdIds) {
-            const rCmd = await sbFetch(`commandes?id=eq.${encodeURIComponent(cmdId)}&select=id,ref,custom_data`);
-            if (!rCmd.ok) continue;
-            const cmds = await rCmd.json();
-            if (!cmds || !cmds[0]) continue;
-            const cmd = cmds[0];
-            const cd = cmd.custom_data || {};
-            // Trouver la clé Commentaires (match exact puis partiel)
-            let commentKey = null;
-            for (const k in cd) {
-              if (cd[k] && cd[k].name) {
-                const n = cd[k].name.trim().toLowerCase();
-                if (n === 'commentaires' || n === 'commentaire') { commentKey = k; break; }
-              }
-            }
-            if (!commentKey) {
+          if (cmdIds.size > 0) {
+            sync.noLink = false;
+            // 3. Mettre à jour chaque commande liée
+            for (const cmdId of cmdIds) {
+              const rCmd = await sbFetch(`commandes?id=eq.${encodeURIComponent(cmdId)}&select=id,ref,custom_data`);
+              if (!rCmd.ok) continue;
+              const cmds = await rCmd.json();
+              if (!cmds || !cmds[0]) continue;
+              const cmd = cmds[0];
+              const cd = cmd.custom_data || {};
+              // Trouver la clé Commentaires (match exact puis partiel)
+              let commentKey = null;
               for (const k in cd) {
-                if (cd[k] && cd[k].name && cd[k].name.toLowerCase().indexOf('commentaire') >= 0) { commentKey = k; break; }
+                if (cd[k] && cd[k].name) {
+                  const n = cd[k].name.trim().toLowerCase();
+                  if (n === 'commentaires' || n === 'commentaire') { commentKey = k; break; }
+                }
               }
-            }
-            if (commentKey) cd[commentKey].value = comment || null;
-            // 3a. Supabase : commandes.description + custom_data
-            await sbFetch(`commandes?id=eq.${encodeURIComponent(cmdId)}`, {
-              method: 'PATCH',
-              body: JSON.stringify({ description: comment, custom_data: cd })
-            });
-            // 3b. Supabase : interventions.infos_adv
-            await sbFetch(`geoplan_interventions?commande_id=eq.${encodeURIComponent(cmdId)}`, {
-              method: 'PATCH',
-              body: JSON.stringify({ infos_adv: comment })
-            });
-            // 3c. Akuiteo : push custom_data via batch-update
-            if (commentKey && cmd.ref) {
-              try {
-                const akUrl = process.env.AKUITEO_BASE_URL;
-                const akUser = process.env.AKUITEO_USER;
-                const akPass = process.env.AKUITEO_PASS;
-                if (!akUrl || !akUser || !akPass) throw new Error('Variables AKUITEO manquantes');
-                const akAuth = 'Basic ' + Buffer.from(akUser + ':' + akPass).toString('base64');
-                await fetch(akUrl + '/sales/orders/custom-data/batch-update', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': akAuth },
-                  body: JSON.stringify({
-                    ids: [cmd.ref],
-                    customData: { [commentKey]: { type: cd[commentKey].type || 'ALPHANUMERIC', value: comment || null } }
-                  })
-                });
-              } catch (akErr) { console.warn('[Sync Akuiteo] Erreur:', akErr.message); }
+              if (!commentKey) {
+                for (const k in cd) {
+                  if (cd[k] && cd[k].name && cd[k].name.toLowerCase().indexOf('commentaire') >= 0) { commentKey = k; break; }
+                }
+              }
+              if (commentKey) cd[commentKey].value = comment || null;
+              // 3a. Supabase : commandes.description + custom_data
+              const rPatch = await sbFetch(`commandes?id=eq.${encodeURIComponent(cmdId)}`, {
+                method: 'PATCH',
+                body: JSON.stringify({ description: comment, custom_data: cd })
+              });
+              if (rPatch.ok) sync.geoplan = true;
+              // 3b. Supabase : interventions.infos_adv
+              await sbFetch(`geoplan_interventions?commande_id=eq.${encodeURIComponent(cmdId)}`, {
+                method: 'PATCH',
+                body: JSON.stringify({ infos_adv: comment })
+              });
+              // 3c. Akuiteo : push custom_data via batch-update
+              if (commentKey && cmd.ref) {
+                try {
+                  const akUrl = process.env.AKUITEO_BASE_URL;
+                  const akUser = process.env.AKUITEO_USER;
+                  const akPass = process.env.AKUITEO_PASS;
+                  if (!akUrl || !akUser || !akPass) throw new Error('Variables AKUITEO manquantes');
+                  const akAuth = 'Basic ' + Buffer.from(akUser + ':' + akPass).toString('base64');
+                  const akResp = await fetch(akUrl + '/sales/orders/custom-data/batch-update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': akAuth },
+                    body: JSON.stringify({
+                      ids: [cmd.ref],
+                      customData: { [commentKey]: { type: cd[commentKey].type || 'ALPHANUMERIC', value: comment || null } }
+                    })
+                  });
+                  if (akResp.ok) sync.akuiteo = true;
+                } catch (akErr) { sync.error = (sync.error || '') + ' Akuiteo: ' + akErr.message; }
+              }
             }
           }
-        } catch (e) { console.warn('[Sync GéoPlan+Akuiteo] Erreur sync commentaires:', e.message); }
+        } catch (e) { sync.error = e.message; }
       }
 
-      return res.status(200).json({ ok: true, id: projectId });
+      return res.status(200).json({ ok: true, id: projectId, sync });
 
     } else if (action === 'savefile') {
       // Sauvegarder un fichier individuel (plan, photo, image)
