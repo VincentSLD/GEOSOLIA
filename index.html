@@ -2480,7 +2480,7 @@ async function restoreFromIDB(id){
   projectVille=project.projectVille||'';
   if(project.projectAddr){projectAddr=project.projectAddr;projectLat=project.projectLat||null;projectLng=project.projectLng||null;projectInsee=project.projectInsee||null;}
   if(project.projectMission)projectMission=project.projectMission;
-  if(project.geocartoData){geocartoData=project.geocartoData;try{renderGeocartoPanel();}catch(e){}}
+  if(project.geocartoData){geocartoData=project.geocartoData;if(!geocartoData.infosGeotech&&project.infoGeotechnicien)geocartoData.infosGeotech=project.infoGeotechnicien;try{renderGeocartoPanel();}catch(e){}}
   const ms0=document.getElementById('rpt-mission-select');if(ms0&&projectMission)ms0.value=projectMission;
   if(project.reportChapters)reportChapters=project.reportChapters;
   if(project.modeleFormations)modeleFormations=project.modeleFormations;
@@ -7606,7 +7606,7 @@ function importProject(e){
     // Restore données GéoCarto (avant le return pour projet sans plan)
     if(project.projectAddr){projectAddr=project.projectAddr;projectLat=project.projectLat||null;projectLng=project.projectLng||null;projectInsee=project.projectInsee||null;}
     if(project.projectMission)projectMission=project.projectMission;
-    if(project.geocartoData){geocartoData=project.geocartoData;try{renderGeocartoPanel();}catch(e){console.warn('renderGeocartoPanel error:',e);}}
+    if(project.geocartoData){geocartoData=project.geocartoData;if(!geocartoData.infosGeotech&&project.infoGeotechnicien)geocartoData.infosGeotech=project.infoGeotechnicien;try{renderGeocartoPanel();}catch(e){console.warn('renderGeocartoPanel error:',e);}}
     const ms1=document.getElementById('rpt-mission-select');if(ms1&&projectMission)ms1.value=projectMission;
     if(project.reportChapters)reportChapters=project.reportChapters;
     if(project.modeleFormations)modeleFormations=project.modeleFormations;
