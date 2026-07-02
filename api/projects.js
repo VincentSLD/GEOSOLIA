@@ -199,6 +199,47 @@ export default async function handler(req, res) {
         }
       }
 
+      // Sync infoGeotechnicien → commandes GéoPlan (commentaires)
+      if (projectId && projectData && projectData.infoGeotechnicien !== undefined) {
+        try {
+          const comment = projectData.infoGeotechnicien || '';
+          // Trouver les commandes liées via geoplan_interventions
+          const rInt = await sbFetch(`geoplan_interventions?geosolia_id=eq.${projectId}&select=commande_id&limit=100`);
+          if (rInt.ok) {
+            const ints = await rInt.json();
+            const cmdIds = [...new Set((ints || []).map(i => i.commande_id).filter(Boolean))];
+            for (const cmdId of cmdIds) {
+              // Lire la commande pour récupérer son custom_data
+              const rCmd = await sbFetch(`commandes?id=eq.${encodeURIComponent(cmdId)}&select=id,custom_data`);
+              if (rCmd.ok) {
+                const cmds = await rCmd.json();
+                if (cmds && cmds[0]) {
+                  const cd = cmds[0].custom_data || {};
+                  // Trouver la clé Commentaires dans les custom_data
+                  let commentKey = null;
+                  for (const k in cd) {
+                    if (cd[k] && cd[k].name) {
+                      const n = cd[k].name.toLowerCase();
+                      if (n === 'commentaires' || n === 'commentaire') { commentKey = k; break; }
+                    }
+                  }
+                  if (!commentKey) {
+                    for (const k in cd) {
+                      if (cd[k] && cd[k].name && cd[k].name.toLowerCase().indexOf('commentaire') >= 0) { commentKey = k; break; }
+                    }
+                  }
+                  if (commentKey) cd[commentKey].value = comment || null;
+                  await sbFetch(`commandes?id=eq.${encodeURIComponent(cmdId)}`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ description: comment, custom_data: cd })
+                  });
+                }
+              }
+            }
+          }
+        } catch (e) { console.warn('[Sync GéoPlan] Erreur sync commentaires:', e.message); }
+      }
+
       return res.status(200).json({ ok: true, id: projectId });
 
     } else if (action === 'savefile') {
