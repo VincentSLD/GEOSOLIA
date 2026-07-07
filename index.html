@@ -5814,13 +5814,13 @@ function gcApplyDefaultProgram(){
 
   if(!_gcManualPenetro){
     let nbPenetro=emprise<100?2:3;
-    if(emprise>200)nbPenetro+=Math.floor((emprise-200)/50);
+    if(emprise>200)nbPenetro+=Math.ceil((emprise-200)/50);
     gcMissionField('nbPenetro',nbPenetro);
     if(f('gc-nb-penetro'))f('gc-nb-penetro').value=nbPenetro;
   }
   if(!_gcManualTariere){
     let nbTariere=1;
-    if(emprise>200)nbTariere+=Math.floor((emprise-200)/50);
+    if(emprise>200)nbTariere+=Math.ceil((emprise-200)/50);
     gcMissionField('nbTariere',nbTariere);
     if(f('gc-nb-tariere'))f('gc-nb-tariere').value=nbTariere;
   }
