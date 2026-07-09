@@ -960,6 +960,11 @@
       <h1>Geo<span>Solia'</span></h1>
       <p>by GPH</p>
     </div>
+    <!-- CONNEXION MICROSOFT -->
+    <button type="button" id="msLoginBtn" onclick="signInWithMicrosoft()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 14px;border:1px solid #d1d5db;border-radius:8px;background:#fff;color:#1a1a1a;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:12px;">
+      <svg width="18" height="18" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
+      Se connecter avec Microsoft
+    </button>
     <!-- CONNEXION -->
     <form id="login-form" autocomplete="on">
       <div class="login-field">
@@ -2147,6 +2152,15 @@ async function adminAction(userId, action) {
   } catch (e) {
     actions.innerHTML = '<span style="color:var(--red);font-size:11px">Erreur</span>';
   }
+}
+
+async function signInWithMicrosoft() {
+  const btn = document.getElementById('msLoginBtn');
+  if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
+  try {
+    const { error } = await sbAuth.auth.signInWithOAuth({ provider: 'azure', options: { scopes: 'openid email profile', redirectTo: window.location.origin } });
+    if (error) throw error;
+  } catch (e) { if (btn) { btn.disabled = false; btn.style.opacity = '1'; } alert('Connexion Microsoft indisponible : ' + (e.message || e)); }
 }
 
 // Formulaire login
