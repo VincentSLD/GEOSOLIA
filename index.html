@@ -2047,7 +2047,7 @@ function showApp(user) {
   document.getElementById('auth-user-bar').classList.add('visible');
   checkAdmin(user);
   // Journal de connexion
-  try { sbAuth.from('connexions_log').insert({ user_id: user.id, email: user.email || null, nom: user.user_metadata?.full_name || (user.email ? user.email.split('@')[0] : null) }).then(() => {}, () => {}); } catch (e) {}
+  try { sbAuth.from('connexions_log').insert({ user_id: user.id, email: user.email || null, nom: user.user_metadata?.full_name || (user.email ? user.email.split('@')[0] : null), app: 'geoter' }).then(() => {}, () => {}); } catch (e) {}
 }
 
 // Affiche le login et masque l'app
@@ -2156,7 +2156,7 @@ let _connexLogPage = 0, _connexLogTotal = 0;
 const CONNEX_LOG_PAGE = 100;
 function _connexLogCutoff6m() { const d = new Date(); d.setMonth(d.getMonth() - 6); return d.toISOString(); }
 function _connexLogBaseQuery(withCount) {
-  let q = sbAuth.from('connexions_log').select('email,nom,created_at', withCount ? { count: 'exact' } : undefined).order('created_at', { ascending: false });
+  let q = sbAuth.from('connexions_log').select('email,nom,created_at', withCount ? { count: 'exact' } : undefined).eq('app', 'geoter').order('created_at', { ascending: false });
   const s = (_connexLogSearch || '').trim();
   if (s) q = q.or(`email.ilike.%${s}%,nom.ilike.%${s}%`);
   if (_connexLogFrom) q = q.gte('created_at', _connexLogFrom + 'T00:00:00');
@@ -2169,7 +2169,7 @@ async function loadConnexionsLog() {
   const el = document.getElementById('connexionsLogContainer');
   if (!el) return;
   el.innerHTML = 'Chargement...';
-  try { sbAuth.from('connexions_log').delete().lt('created_at', _connexLogCutoff6m()).then(() => {}, () => {}); } catch (e) {}
+  try { sbAuth.from('connexions_log').delete().eq('app', 'geoter').lt('created_at', _connexLogCutoff6m()).then(() => {}, () => {}); } catch (e) {}
   try {
     const from = _connexLogPage * CONNEX_LOG_PAGE;
     const { data, error, count } = await _connexLogBaseQuery(true).range(from, from + CONNEX_LOG_PAGE - 1);
