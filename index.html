@@ -2215,8 +2215,9 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
 })();
 
 // Écouter les changements d'auth (refresh token, etc.)
-sbAuth.auth.onAuthStateChange((event, session) => {
+sbAuth.auth.onAuthStateChange(async (event, session) => {
   if (event === 'SIGNED_OUT') showLogin();
+  if (event === 'SIGNED_IN' && session?.user && !currentAuthUser) { showApp(session.user); }
 });
 
 // Toggle connexion / inscription
