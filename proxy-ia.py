@@ -16,7 +16,7 @@ import ssl
 
 PORT = 3456
 API_URL = "https://api.anthropic.com/v1/messages"
-MODEL = "claude-sonnet-4-20250514"
+MODEL = "claude-sonnet-4-6"
 KEY_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "api-key.txt")
 
 def get_api_key():
