@@ -6947,17 +6947,23 @@ function openEnqueteSol(){
 function openEnqueteSolFromSite(){
   let ref=document.getElementById('project-ref').value.trim();
   if(projectName&&ref.endsWith(projectName))ref=ref.slice(0,-projectName.length).trim();
+  const g=geocartoData||{};
+  // Position : projet en priorité, sinon enquête GéoCarto, sinon champs d'investigation
+  const inLat=parseFloat((document.getElementById('ia-geo-lat')||{}).value);
+  const inLng=parseFloat((document.getElementById('ia-geo-lng')||{}).value);
+  const lat=(projectLat!=null)?projectLat:(g.lat!=null?g.lat:(isNaN(inLat)?null:inLat));
+  const lng=(projectLng!=null)?projectLng:(g.lng!=null?g.lng:(isNaN(inLng)?null:inLng));
   const params=new URLSearchParams();
   if(ref)params.set('ref',ref);
   if(projectName)params.set('nom',projectName);
-  if(projectLat!=null)params.set('lat',projectLat);
-  if(projectLng!=null)params.set('lng',projectLng);
-  if(projectAddr)params.set('addr',projectAddr);
-  if(projectCp)params.set('cp',projectCp);
-  if(projectVille)params.set('ville',projectVille);
-  if(projectInsee)params.set('insee',projectInsee);
-  if(geocartoData&&geocartoData.parcelle){
-    const p=geocartoData.parcelle;
+  if(lat!=null&&!isNaN(lat))params.set('lat',lat);
+  if(lng!=null&&!isNaN(lng))params.set('lng',lng);
+  const addr=projectAddr||g.addr||'';if(addr)params.set('addr',addr);
+  const cp=projectCp||g.codePostal||'';if(cp)params.set('cp',cp);
+  const ville=projectVille||g.commune||'';if(ville)params.set('ville',ville);
+  const insee=projectInsee||g.insee||'';if(insee)params.set('insee',insee);
+  if(g.parcelle){
+    const p=g.parcelle;
     if(p.section)params.set('section',p.section);
     if(p.numero)params.set('numero',p.numero);
   }
