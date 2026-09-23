@@ -593,11 +593,11 @@
   /* ═══ MODAL NOUVEAU PROJET ═══ */
   #new-study-modal{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;z-index:950;backdrop-filter:blur(4px)}
   #new-study-modal.open{display:flex}
-  #new-study-inner{background:var(--white);border-radius:var(--radius-lg);padding:22px;width:900px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);border-top:4px solid var(--yellow)}
+  #new-study-inner{background:var(--white);border-radius:var(--radius-lg);padding:22px;width:1120px;max-width:96vw;max-height:92vh;overflow-y:auto;box-shadow:var(--shadow-lg);border-top:4px solid var(--yellow)}
   #new-study-layout{display:flex;gap:18px}
   #new-study-left{flex:1;min-width:0}
   #new-study-right{flex:1;min-width:0;display:flex;flex-direction:column}
-  #new-study-right #new-study-map{height:100%!important;min-height:260px}
+  #new-study-right #new-study-map{height:100%!important;min-height:420px}
   @media(max-width:700px){#new-study-layout{flex-direction:column}#new-study-inner{width:540px}#new-study-right #new-study-map{min-height:200px}}
   #new-study-inner h2{font-size:18px;font-weight:900;color:var(--black);margin:0 0 6px}
   #new-study-inner p{font-size:12px;color:var(--gray-500);margin:0 0 8px}
@@ -645,6 +645,12 @@
   #new-study-modal.fullscreen-map .btn-create-study{background:var(--yellow)!important;color:var(--black)!important}
   #new-study-modal.fullscreen-map .new-study-error{margin-top:6px}
   #new-study-modal:not(.fullscreen-map) .new-study-form-overlay{display:contents}
+  /* Carte tournable (boussole) dans Nouveau Projet */
+  #new-study-map-canvas{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(0deg);transform-origin:center center}
+  #study-compass{position:absolute;top:48px;right:10px;width:52px;height:52px;z-index:600;cursor:grab;touch-action:none;user-select:none;filter:drop-shadow(0 2px 5px rgba(0,0,0,0.4))}
+  #study-compass:active{cursor:grabbing}
+  #study-compass .sc-rose{width:100%;height:100%;display:block}
+  #study-map-credit{position:absolute;bottom:2px;right:4px;z-index:500;font-size:8px;font-weight:600;color:#333;background:rgba(255,255,255,0.72);padding:0 4px;border-radius:3px;pointer-events:none}
   /* ═══ PHOTO NAME + CROP MODAL ═══ */
   #photo-name-modal{position:fixed;inset:0;background:rgba(0,0,0,0.85);display:none;align-items:center;justify-content:center;z-index:960;backdrop-filter:blur(4px);flex-direction:column;gap:14px;padding:16px}
   #photo-name-modal.open{display:flex}
@@ -1640,8 +1646,18 @@
           </div>
           <div id="new-study-right">
             <div id="new-study-map-section" style="flex:1;display:flex;flex-direction:column">
-              <div id="new-study-map" style="width:100%;flex:1;min-height:260px;border-radius:var(--radius);border:2px solid var(--gray-200);overflow:hidden;cursor:crosshair;position:relative">
+              <div id="new-study-map" style="width:100%;flex:1;min-height:420px;border-radius:var(--radius);border:2px solid var(--gray-200);overflow:hidden;cursor:crosshair;position:relative">
                 <button type="button" id="btn-study-fullscreen" onclick="toggleStudyMapFullscreen()" title="Plein écran">⛶</button>
+                <div id="study-compass" title="Glisser pour tourner la carte · Double-clic pour revenir au nord">
+                  <svg class="sc-rose" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="50" r="46" fill="rgba(255,255,255,0.92)" stroke="#1a1a1a" stroke-width="3"/>
+                    <polygon points="50,7 41,52 59,52" fill="#D94040"/>
+                    <polygon points="50,93 41,48 59,48" fill="#3a3a3a"/>
+                    <circle cx="50" cy="50" r="4.5" fill="#1a1a1a"/>
+                    <text x="50" y="26" text-anchor="middle" font-size="16" font-weight="800" fill="#fff" font-family="Arial,sans-serif">N</text>
+                  </svg>
+                </div>
+                <div id="study-map-credit">© OSM · Esri · IGN</div>
               </div>
               <div id="new-study-map-btns" style="display:flex;align-items:center;gap:6px;margin-top:6px;justify-content:flex-end">
                 <button type="button" id="btn-study-locate" onclick="newStudyLocateMe()" title="Me localiser (GPS)">🎯</button>
@@ -4722,10 +4738,27 @@ function openEditSiteModal(){
 // ═══ CARTE LEAFLET DANS MODAL NOUVEAU PROJET ═══
 let studyMap=null,studyMarker=null,studyOsmLayer=null,studySatLayer=null;
 let studyCadastreLayer=null,studyCadastreVisible=false,studyCurrentLayer='osm';
+let studyMapRotation=0,_studyResizeBound=false,_studyCompassInit=false;
 
 function initStudyMap(){
-  if(studyMap){studyMap.invalidateSize();return;}
-  studyMap=L.map('new-study-map',{center:[46.6,2.5],zoom:5,zoomControl:false});
+  if(studyMap){sizeStudyCanvas(true);return;}
+  const clip=document.getElementById('new-study-map');
+  // Canvas interne carré (côté = diagonale) monté à la place du conteneur : permet la rotation sans coins vides
+  let canvas=document.getElementById('new-study-map-canvas');
+  if(canvas)canvas.remove();
+  canvas=document.createElement('div');
+  canvas.id='new-study-map-canvas';
+  clip.insertBefore(canvas,clip.firstChild);
+  studyMapRotation=0;
+  sizeStudyCanvasElement();
+  studyMap=L.map(canvas,{center:[46.6,2.5],zoom:5,zoomControl:false});
+  // Clic correct même carte tournée : reprojette le pointeur dans le repère non tourné du canvas
+  studyMap.mouseEventToContainerPoint=function(e){
+    const c=this._container,r=c.getBoundingClientRect();
+    const dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2);
+    const a=studyMapRotation*Math.PI/180,cs=Math.cos(a),sn=Math.sin(a);
+    return L.point(c.offsetWidth/2+dx*cs+dy*sn, c.offsetHeight/2-dx*sn+dy*cs);
+  };
   L.control.zoom({position:'bottomleft'}).addTo(studyMap);
   studyOsmLayer=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OSM',maxZoom:19});
   studySatLayer=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'&copy; Esri',maxZoom:19});
@@ -4737,6 +4770,47 @@ function initStudyMap(){
     reverseGeocodeStudy(e.latlng.lat,e.latlng.lng);
     reverseCadastreStudy(e.latlng.lat,e.latlng.lng);
   });
+  setupStudyCompass();
+  if(!_studyResizeBound){_studyResizeBound=true;window.addEventListener('resize',()=>{if(studyMap)sizeStudyCanvas(true);});}
+  setTimeout(()=>sizeStudyCanvas(true),60);
+}
+
+function sizeStudyCanvasElement(){
+  const clip=document.getElementById('new-study-map');
+  const canvas=document.getElementById('new-study-map-canvas');
+  if(!clip||!canvas)return;
+  const w=clip.clientWidth||clip.offsetWidth||300,h=clip.clientHeight||clip.offsetHeight||300;
+  const d=Math.ceil(Math.hypot(w,h))||300;
+  canvas.style.width=d+'px';canvas.style.height=d+'px';
+  applyStudyRotation();
+}
+function sizeStudyCanvas(invalidate){
+  sizeStudyCanvasElement();
+  if(invalidate&&studyMap)studyMap.invalidateSize();
+}
+function applyStudyRotation(){
+  const canvas=document.getElementById('new-study-map-canvas');
+  if(canvas)canvas.style.transform='translate(-50%,-50%) rotate('+studyMapRotation+'deg)';
+  const rose=document.querySelector('#study-compass .sc-rose');
+  if(rose)rose.style.transform='rotate('+studyMapRotation+'deg)';
+}
+function rotateStudyMap(deg){
+  studyMapRotation=((deg%360)+360)%360;
+  applyStudyRotation();
+}
+function setupStudyCompass(){
+  const comp=document.getElementById('study-compass');
+  if(!comp){applyStudyRotation();return;}
+  applyStudyRotation();
+  if(_studyCompassInit)return;
+  _studyCompassInit=true;
+  let dragging=false,startAng=0,startRot=0;
+  const angOf=(e)=>{const r=comp.getBoundingClientRect();return Math.atan2(e.clientY-(r.top+r.height/2),e.clientX-(r.left+r.width/2))*180/Math.PI;};
+  comp.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();dragging=true;startAng=angOf(e);startRot=studyMapRotation;try{comp.setPointerCapture(e.pointerId);}catch(_){}});
+  comp.addEventListener('pointermove',e=>{if(!dragging)return;rotateStudyMap(startRot+(angOf(e)-startAng));});
+  const end=e=>{dragging=false;try{comp.releasePointerCapture(e.pointerId);}catch(_){}};
+  comp.addEventListener('pointerup',end);comp.addEventListener('pointercancel',end);
+  comp.addEventListener('dblclick',e=>{e.preventDefault();e.stopPropagation();rotateStudyMap(0);});
 }
 
 function updateStudyMarker(lat,lng,flyTo){
@@ -4887,7 +4961,7 @@ function toggleStudyMapFullscreen(){
   const actions=document.querySelector('.new-study-actions');
   if(isFs){mapSection.appendChild(overlay);mapSection.appendChild(mapBtns);overlay.appendChild(parcel);overlay.appendChild(parcelResult);overlay.appendChild(coords);overlay.appendChild(errDiv);overlay.appendChild(actions);}
   else{inner.insertBefore(overlay,mapSection);const map=mapSection.querySelector('#new-study-map');map.after(mapBtns);mapBtns.after(parcel);parcel.after(parcelResult);parcelResult.after(coords);inner.appendChild(errDiv);inner.appendChild(actions);}
-  setTimeout(()=>{if(studyMap)studyMap.invalidateSize();},200);
+  setTimeout(()=>{if(studyMap)sizeStudyCanvas(true);},200);
 }
 
 function newStudyToggleCadastre(){
