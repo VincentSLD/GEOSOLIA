@@ -1362,6 +1362,7 @@
       <div class="rpt2-title">🧾 <span id="rpt2-dossier-label">Rapport de sol</span></div>
       <div class="rpt2-tools">
         <button class="rpt2-close" id="rpt2-toggle-preview" onclick="rpt2TogglePreview()" title="Afficher / masquer l'aperçu du rapport à droite">👁 Masquer aperçu</button>
+        <button class="rpt2-close" onclick="rpt2Detach()" title="Ouvrir le rapport dans une fenêtre séparée (2e écran) — mise à jour automatique">🗔 Détacher</button>
         <label class="rpt2-hideempty"><input type="checkbox" id="rpt2-hideempty" checked onchange="rpt2SetHideEmpty(this.checked)"> Masquer blocs vides</label>
         <select class="rpt2-etat-sel" id="rpt2-etat" onchange="rpt2SetEtat(this.value)" title="État du dossier">
           <option value="en_enquete">En enquête</option>
@@ -7142,7 +7143,7 @@ function buildProjectJSON(){
   return project;
 }
 
-function markDirty(){_projectDirty=true;}
+function markDirty(){_projectDirty=true;if(typeof rpt2SyncDetached==='function')rpt2SyncDetached();}
 // Marquer dirty sur les changements de champs dans le panneau Enquête Sol
 document.addEventListener('input',function(e){if(e.target.closest('#geocarto-panel'))markDirty();});
 document.addEventListener('change',function(e){if(e.target.closest('#geocarto-panel'))markDirty();});
@@ -8653,6 +8654,10 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10.5pt;line-height:1.55;co
 .r2-tbl2{border-collapse:collapse;width:100%;font-size:9.5pt;margin-top:6px}
 .r2-tbl2 th,.r2-tbl2 td{border:1px solid #ccc;padding:5px 8px;text-align:center}
 .r2-tbl2 th{background:#f5f5f5;font-weight:700}
+.r2-toolbar{position:fixed;top:0;left:0;right:0;background:#1a1a1a;color:#fff;display:flex;gap:10px;align-items:center;padding:6px 12px;z-index:99999;font-size:11px}
+.r2-toolbar button{background:#F2B705;border:none;border-radius:6px;padding:6px 12px;font-weight:800;cursor:pointer;font-family:inherit}
+body.r2-hastoolbar{padding-top:42px}
+@media print{.r2-toolbar{display:none!important}body.r2-hastoolbar{padding-top:0}}
 `;
 function rpt2ReportChapters(){return RPT2_TABS.filter(t=>['mission','enquete','invest','conclu'].includes(t.id));}
 function rpt2MissionTitle(){return RPT2_MISSION_TITLES[rpt2Get('mission','type')]||['ÉTUDE GÉOTECHNIQUE','Selon la norme NF P94-500'];}
@@ -8741,7 +8746,7 @@ function rpt2NivTableHtml(esc){
   h+='</table></section>';
   return h;
 }
-function rpt2BuildReportHtml(){
+function rpt2ReportContentHtml(){
   const esc=rpt2Esc;
   const hideEmpty=!(report2&&report2.hideEmpty===false);
   const dossier=rpt2Get('coord','dossier')||'—';
@@ -8749,7 +8754,7 @@ function rpt2BuildReportHtml(){
   const adr=rpt2Get('coord','adresse')||[projectAddr,projectCp,projectVille].filter(Boolean).join(' ');
   const mt=rpt2MissionTitle(),titre=mt[0],phase=mt[1];
   const redacteur=rpt2Get('coord','redacteur'),relecteur=rpt2Get('coord','relecteur'),dateInter=rpt2Get('coord','date_inter');
-  let h='<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Rapport '+esc(dossier)+'</title><style>'+RPT2_REPORT_CSS+'</style></head><body>';
+  let h='';
   h+='<div class="r2-runhead"><span>'+esc(dossier)+(rpt2Get('mission','type')?' — '+esc(rpt2Get('mission','type')):'')+'</span><span>'+esc(proj)+'</span></div>';
   h+='<div class="r2-runfoot"><span>be-gph.fr</span><span>Confidentiel</span></div>';
   // Cover
@@ -8786,11 +8791,58 @@ function rpt2BuildReportHtml(){
     h+='<section class="r2-chap"><div class="r2-chap-h"><span class="r2-chap-n">5.2</span><span class="r2-chap-t">Plan d\'implantation des sondages</span></div><div style="text-align:center"><img src="'+planImgSrc+'" style="max-width:100%;max-height:680px;border:1px solid #ddd"></div></section>';
   }
   h+=rpt2AnnexSondagesHtml(esc);
+  h+=rpt2AnnexPhotosHtml(esc);
+  h+=rpt2AnnexRiskMapsHtml(esc);
   h+=rpt2SyntheseHtml(esc);
   h+=rpt2NivTableHtml(esc);
-  h+='</body></html>';
   return h;
 }
+function rpt2BuildReportHtml(withToolbar){
+  const toolbar=withToolbar?'<div class="r2-toolbar"><button onclick="window.print()">🖨 Imprimer / PDF</button><button onclick="if(window.opener&&window.opener.rpt2ForceSyncDetached)window.opener.rpt2ForceSyncDetached()">🔄 Actualiser</button><span>Rapport géotechnique — mise à jour automatique depuis GéoSolia</span></div>':'';
+  return '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Rapport de sol</title><style>'+RPT2_REPORT_CSS+'</style></head><body'+(withToolbar?' class="r2-hastoolbar"':'')+'>'+toolbar+'<div id="r2-root">'+rpt2ReportContentHtml()+'</div></body></html>';
+}
+function rpt2AnnexPhotosHtml(esc){
+  const ph=(typeof photos!=='undefined'?photos:[])||[];
+  const list=ph.filter(p=>p&&(p.dataUrl||p.src)&&p.checked!==false);
+  if(!list.length)return '';
+  let h='<section class="r2-chap"><div class="r2-chap-h"><span class="r2-chap-n">A</span><span class="r2-chap-t">Planches photographiques</span></div><div style="display:flex;flex-wrap:wrap;gap:16px;justify-content:center">';
+  list.forEach((p,i)=>{if(i>0&&i%4===0)h+='</div><div style="page-break-before:always;display:flex;flex-wrap:wrap;gap:16px;justify-content:center;padding-top:16px">';h+='<div style="width:45%;text-align:center"><img src="'+(p.dataUrl||p.src)+'" style="max-width:100%;max-height:280px;border:1px solid #ddd"><div style="font-size:9pt;font-weight:700;margin-top:4px">'+esc(p.name||('Photo '+(i+1)))+'</div></div>';});
+  h+='</div></section>';return h;
+}
+function rpt2AnnexRiskMapsHtml(esc){
+  const rm=(typeof geocartoData!=='undefined'&&geocartoData&&geocartoData.riskMaps)?geocartoData.riskMaps:null;
+  if(!rm)return '';
+  const entries=[['localisation','Localisation du site (Plan IGN)'],['geologie','Carte géologique (BRGM 1/50 000)'],['sismique','Zonage sismique'],['argiles','Aléa retrait-gonflement des argiles'],['nappes','Remontée de nappes']].filter(e=>rm[e[0]]);
+  if(!entries.length)return '';
+  let h='<section class="r2-chap"><div class="r2-chap-h"><span class="r2-chap-n">A</span><span class="r2-chap-t">Cartes des risques</span></div><div style="display:flex;flex-wrap:wrap;gap:18px;justify-content:center">';
+  entries.forEach((e,i)=>{if(i>0&&i%2===0)h+='</div><div style="page-break-before:always;display:flex;flex-wrap:wrap;gap:18px;justify-content:center;padding-top:16px">';h+='<div style="width:46%;text-align:center"><div style="font-size:10pt;font-weight:700;margin-bottom:6px">'+esc(e[1])+'</div><img src="'+rm[e[0]]+'" style="max-width:100%;max-height:300px;border:1px solid #ccc"></div>';});
+  h+='</div></section>';return h;
+}
+// Fenêtre détachée (2e écran), mise à jour automatique
+let rpt2DetachedWin=null,rpt2SyncTimer=null,rpt2Syncing=false;
+function rpt2Detach(){
+  if(!report2){if(typeof showToast==='function')showToast('Ouvrez d\'abord un rapport');return;}
+  if(rpt2DetachedWin&&!rpt2DetachedWin.closed){rpt2DetachedWin.focus();rpt2ForceSyncDetached();return;}
+  rpt2DetachedWin=window.open('','rpt2report','width=820,height=1000');
+  if(!rpt2DetachedWin){alert('Autorisez les popups pour détacher le rapport.');return;}
+  try{rpt2DetachedWin.document.open();rpt2DetachedWin.document.write(rpt2BuildReportHtml(true));rpt2DetachedWin.document.close();}catch(e){console.warn(e);}
+  if(typeof showToast==='function')showToast('Rapport détaché — déplacez la fenêtre sur votre 2e écran');
+}
+function rpt2WriteDetached(){
+  if(!rpt2DetachedWin||rpt2DetachedWin.closed)return;
+  rpt2Syncing=true;
+  try{
+    const doc=rpt2DetachedWin.document,root=doc.getElementById('r2-root');
+    if(root){const sy=rpt2DetachedWin.scrollY||0;root.innerHTML=rpt2ReportContentHtml();try{rpt2DetachedWin.scrollTo(0,sy);}catch(e){}}
+    else{doc.open();doc.write(rpt2BuildReportHtml(true));doc.close();}
+  }catch(e){console.warn('rpt2WriteDetached',e);}
+  rpt2Syncing=false;
+}
+function rpt2SyncDetached(){
+  if(rpt2Syncing||!rpt2DetachedWin||rpt2DetachedWin.closed)return;
+  clearTimeout(rpt2SyncTimer);rpt2SyncTimer=setTimeout(rpt2WriteDetached,500);
+}
+function rpt2ForceSyncDetached(){if(rpt2DetachedWin&&!rpt2DetachedWin.closed)rpt2WriteDetached();}
 function rpt2PrintFullReport(){
   if(!report2){if(typeof showToast==='function')showToast('Rien à générer — remplissez d\'abord le rapport');return;}
   let html;try{html=rpt2BuildReportHtml();}catch(e){console.error('rpt2BuildReportHtml',e);alert('Erreur lors de la génération du rapport : '+e.message);return;}
