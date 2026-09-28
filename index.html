@@ -1379,7 +1379,8 @@
       <div class="rpt2-rail">
         <button class="primary" onclick="rpt2Valider()"><span class="rpt2-rail-ico">✔️</span>Valider</button>
         <button onclick="rpt2AutoAll()" title="Remplir tous les champs vides depuis GéoCarto et les sondages"><span class="rpt2-rail-ico">⚡</span>Auto-remplir</button>
-        <button onclick="rpt2PrintPreview()"><span class="rpt2-rail-ico">📄</span>Rapport de sol</button>
+        <button onclick="rpt2PrintFullReport()"><span class="rpt2-rail-ico">📄</span>Rapport de sol</button>
+        <button onclick="rpt2PrintPreview()" title="Impression rapide de l'aperçu à l'écran"><span class="rpt2-rail-ico">👁️</span>Aperçu rapide</button>
         <button onclick="rpt2PrintFiche()"><span class="rpt2-rail-ico">🔎</span>Fiche enquête</button>
         <button onclick="rpt2PrintPenetros()"><span class="rpt2-rail-ico">📈</span>Impr. pénétros</button>
         <button onclick="rpt2ShowExchanges()"><span class="rpt2-rail-ico">💬</span>Échange</button>
@@ -8584,6 +8585,213 @@ function rpt2ShowExchanges(){
 function rpt2GetComment(tabId){return (report2&&report2.comments&&report2.comments[tabId])||'';}
 function rpt2SetComment(tabId,val){if(!report2)report2=rpt2New();if(!report2.comments)report2.comments={};report2.comments[tabId]=val;rpt2RenderTabsMain();if(typeof markDirty==='function')markDirty();}
 function rpt2CommentHtml(tabId){return `<div class="rpt2-comment"><div class="rpt2-comment-head">💬 Commentaires internes (rédacteur / relecteur) — non imprimés dans le rapport</div><textarea class="rpt2-comment-ta" oninput="rpt2SetComment('${tabId}',this.value)" placeholder="Notes internes, demandes de correction, rappels de calcul, infos appels client…">${rpt2Esc(rpt2GetComment(tabId))}</textarea></div>`;}
+
+// ── Phase F : génération du rapport de sol A4 complet (garde + sommaire + chapitres + annexes) ──
+const RPT2_MISSION_TITLES={
+  'G1 ES':['ÉTUDE GÉOTECHNIQUE PRÉALABLE','Phase Étude de Site (mission G1 ES selon la norme NF P94-500)'],
+  'G1 PGC':['ÉTUDE GÉOTECHNIQUE PRÉALABLE','Phase Principes Généraux de Construction (mission G1 PGC selon la norme NF P94-500)'],
+  'G2 AVP':['ÉTUDE GÉOTECHNIQUE DE CONCEPTION','Phase Avant-Projet (mission G2 AVP selon la norme NF P94-500)'],
+  'G2 PRO':['ÉTUDE GÉOTECHNIQUE DE CONCEPTION','Phase Projet (mission G2 PRO selon la norme NF P94-500)'],
+  'G2 AVP+PRO':['ÉTUDE GÉOTECHNIQUE DE CONCEPTION','Phases Avant-Projet et Projet (mission G2 AVP/PRO selon la norme NF P94-500)'],
+  'G3':["ÉTUDE ET SUIVI GÉOTECHNIQUES D'EXÉCUTION",'Mission G3 selon la norme NF P94-500'],
+  'G4':["SUPERVISION GÉOTECHNIQUE D'EXÉCUTION",'Mission G4 selon la norme NF P94-500'],
+  'G5':['DIAGNOSTIC GÉOTECHNIQUE','Mission G5 selon la norme NF P94-500']
+};
+const RPT2_REPORT_CSS=`
+@page{size:A4;margin:18mm 16mm 16mm 16mm}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,Helvetica,sans-serif;font-size:10.5pt;line-height:1.55;color:#1a1a1a;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.r2-runhead{position:fixed;top:2mm;left:0;right:0;display:flex;justify-content:space-between;font-size:7.5pt;color:#999}
+.r2-runfoot{position:fixed;bottom:2mm;left:0;right:0;display:flex;justify-content:space-between;font-size:7.5pt;color:#bbb}
+.r2-cover{page-break-after:always;display:flex;flex-direction:column;align-items:center;min-height:94vh;padding-top:16mm}
+.r2-logo{width:110px;height:110px;border-radius:50%;background:#1a1a1a;display:flex;align-items:center;justify-content:center;position:relative;margin-bottom:34px}
+.r2-logo-txt{color:#fff;font-size:34pt;font-weight:800;letter-spacing:-2px}
+.r2-logo-dot{position:absolute;top:30px;right:28px;width:11px;height:11px;border-radius:50%;background:#F2B705}
+.r2-cover-grid{display:flex;width:100%;max-width:640px;min-height:150px}
+.r2-cover-yellow{flex:1;background:#F2B705;padding:22px;display:flex;flex-direction:column;justify-content:center}
+.r2-cover-title{font-size:19pt;font-weight:800;color:#1a1a1a;line-height:1.15}
+.r2-cover-phase{font-size:10pt;color:#333;margin-top:14px}
+.r2-cover-white{flex:1;background:#fff;border:1px solid #eee;padding:22px;display:flex;flex-direction:column;justify-content:center}
+.r2-cover-doss{font-weight:800;font-size:12pt}
+.r2-cover-proj{font-size:13pt;font-weight:700;margin-top:10px}
+.r2-cover-desc{font-size:10pt;color:#444;margin-top:8px}
+.r2-cover-addr{margin-top:36px;background:#F2B705;font-size:8.5pt;font-weight:600;padding:6px 14px;text-align:center;width:100%;max-width:720px}
+.r2-sign{margin-top:22px;border-collapse:collapse;width:100%;max-width:720px;font-size:8.5pt}
+.r2-sign th,.r2-sign td{border:1px solid #999;padding:6px 8px;text-align:left;vertical-align:top;height:38px}
+.r2-sign th{font-weight:700;background:#f5f5f5}
+.r2-toc{page-break-after:always;padding-top:4mm}
+.r2-toc h2{font-size:17pt;font-weight:800;background:#F2B705;padding:6px 14px;margin-bottom:18px}
+.r2-toc-item{display:flex;gap:10px;padding:6px 0;border-bottom:1px dotted #ccc}
+.r2-toc-num{font-weight:800;width:28px}
+.r2-toc-t{font-weight:700}
+.r2-toc-sub{padding:3px 0 3px 40px;font-size:9.5pt;color:#555;border-bottom:1px dotted #eee}
+.r2-chap{page-break-before:always;padding-top:3mm}
+.r2-chap-h{display:flex;gap:10px;align-items:baseline;border-bottom:2px solid #F2B705;padding-bottom:8px;margin-bottom:14px}
+.r2-chap-n{font-size:20pt;font-weight:800;color:#F2B705}
+.r2-chap-t{font-size:15pt;font-weight:800;text-transform:uppercase}
+.r2-h3{font-size:11.5pt;font-weight:800;margin:14px 0 5px}
+.r2-h4{font-size:10.5pt;font-weight:800;margin:10px 0 4px;color:#333}
+.r2-p{white-space:pre-wrap;text-align:justify;margin:0 0 8px}
+.r2-empty{color:#bbb;font-style:italic}
+.r2-annex-cover{page-break-before:always;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh}
+.r2-annex-cover h2{font-size:24pt;font-weight:800;margin:14px 0}
+.r2-annex-band{width:200px;height:4px;background:#F2B705}
+.r2-sond{margin-bottom:16px}
+.r2-sond-h{font-size:12pt;font-weight:800;border-bottom:1px solid #F2B705;padding-bottom:3px;margin-bottom:4px}
+.r2-sond-meta{font-size:8.5pt;color:#555;margin-bottom:6px}
+.r2-tbl{border-collapse:collapse;width:100%;font-size:9.5pt;margin-top:6px}
+.r2-tbl th{width:34%;text-align:left;background:#f5f5f5;border:1px solid #ccc;padding:6px 8px;font-weight:700;vertical-align:top}
+.r2-tbl td{border:1px solid #ccc;padding:6px 8px;white-space:pre-wrap;vertical-align:top}
+.r2-tbl2{border-collapse:collapse;width:100%;font-size:9.5pt;margin-top:6px}
+.r2-tbl2 th,.r2-tbl2 td{border:1px solid #ccc;padding:5px 8px;text-align:center}
+.r2-tbl2 th{background:#f5f5f5;font-weight:700}
+`;
+function rpt2ReportChapters(){return RPT2_TABS.filter(t=>['mission','enquete','invest','conclu'].includes(t.id));}
+function rpt2MissionTitle(){return RPT2_MISSION_TITLES[rpt2Get('mission','type')]||['ÉTUDE GÉOTECHNIQUE','Selon la norme NF P94-500'];}
+function rpt2SubBodyHtml(s,esc){
+  if(s.id==='fondations'){
+    const F=report2&&report2.fondations;
+    if(!F||!F.variantes||!F.variantes.some(v=>v.type||v.qd||v.encastrement||v.sol))return '';
+    let b='';
+    F.variantes.forEach((v,i)=>{const txt=rpt2FondText(v);if(F.variantes.length>1)b+='<h4 class="r2-h4">'+esc(v.nom||('Variante '+(i+1)))+'</h4>';if(txt)b+='<p class="r2-p">'+esc(txt)+'</p>';});
+    return b;
+  }
+  const schema=rpt2SchemaFor(s);
+  if(!schema.some(f=>String(rpt2Get(s.id,f.key)||'').trim()!==''))return '';
+  let b='';
+  schema.forEach(f=>{const v=rpt2Get(s.id,f.key);if(!v||f.type==='date')return;
+    if(f.type==='select'||(schema.length>1&&f.key!=='content'))b+='<p class="r2-p"><b>'+esc(f.label)+' :</b> '+esc(v)+'</p>';
+    else b+='<p class="r2-p">'+esc(v)+'</p>';});
+  return b;
+}
+function rpt2AnnexSondagesHtml(esc){
+  const arr=(typeof sondages!=='undefined'?sondages:[]);
+  if(!arr.length)return '';
+  let h='<section class="r2-chap"><div class="r2-chap-h"><span class="r2-chap-n">5.3</span><span class="r2-chap-t">Sondages</span></div>';
+  let n=0;
+  arr.forEach((s,si)=>{
+    let cvsId='sondage-canvas',ok=true;
+    try{
+      if(s.type==='penetro_dyn'){renderQdGraph(s);cvsId='qd-canvas';}
+      else if(s.type==='penetro_stat'){renderPenetroStatGraph(s);}
+      else if(s.type==='tariere'||s.type==='pelle_meca'){renderStratiGraph(s);}
+      else if(s.type==='pressio'){renderPressioGraph(s);}
+      else if(s.type==='spt'){renderSPTGraph(s);}
+      else if(s.type==='piezometre'){renderPiezoGraph(s);}
+      else if(s.type==='infiltro'){renderInfiltroGraph(s);}
+      else if(s.type==='forage_destr'){renderForageDestrGraph(s);}
+      else ok=false;
+    }catch(e){ok=false;}
+    if(!ok)return;
+    let dataUrl='';try{const cvs=document.getElementById(cvsId);if(cvs)dataUrl=cvs.toDataURL('image/png');}catch(e){}
+    if(!dataUrl)return;
+    if(n>0)h+='<div style="page-break-before:always"></div>';
+    n++;
+    const lbl=(typeof SONDAGE_LABELS!=='undefined'&&SONDAGE_LABELS[s.type])||s.type;
+    const meta=[];
+    if(s.tnAltitude!=null)meta.push('Cote GPH : '+Number(s.tnAltitude).toFixed(2)+' m NGF');
+    if(s.machine)meta.push('Machine : '+s.machine);
+    if(s.sondageDepth!=null)meta.push('Profondeur : '+Number(s.sondageDepth).toFixed(2)+' m');
+    meta.push('Critère de fin : '+(s.stopCriterion||(s.refusal?'refus':'arrêt')));
+    meta.push("Niveau d'eau : "+(s.waterLevel!=null?Number(s.waterLevel).toFixed(2)+' m':"pas d'eau"));
+    h+='<div class="r2-sond"><div class="r2-sond-h">'+esc(lbl)+' — '+esc(s.name||('Sondage '+(si+1)))+'</div>';
+    h+='<div class="r2-sond-meta">'+esc(meta.join('   ·   '))+'</div>';
+    h+='<div style="text-align:center"><img src="'+dataUrl+'" style="max-width:100%;max-height:640px"></div></div>';
+  });
+  h+='</section>';
+  return n>0?h:'';
+}
+function rpt2SyntheseHtml(esc){
+  const F=report2&&report2.fondations;
+  const v=F&&F.variantes&&F.variantes[Math.min(F.active||0,F.variantes.length-1)];
+  const rows=[];
+  const nb=rpt2Get('niveaubas','content');if(nb)rows.push(['Traitement du niveau bas',nb]);
+  if(v){
+    const r=rpt2FondCompute(v);
+    if(v.type)rows.push(['Type de fondation',v.type]);
+    if(r)rows.push(['Contrainte admissible (DTU 13-12)','qa (ELS) = '+r.qa+' MPa (soit '+r.qaBar+' bar) ; q (ELU) = '+r.qELU+' MPa']);
+    if(r)rows.push(['Contrainte nette (Eurocode 7)','qnet = '+r.qnet+' MPa (soit '+r.qnetBar+' bar)']);
+    const sol=[v.sol,v.formation].filter(Boolean).join(' — ');if(sol)rows.push(['Sol de fondation',sol]);
+    const rgaL={nulle:'nulle',faible:'faible',moyenne:'moyenne',forte:'forte',tres_forte:'très forte'}[v.rga];if(rgaL)rows.push(['Susceptibilité au retrait-gonflement des argiles',rgaL]);
+    if(v.encastrement)rows.push(['Encastrement',v.encastrement]);
+    if(v.ancrage)rows.push(['Ancrage',v.ancrage+' m']);
+    if(v.horsGel)rows.push(['Mise hors gel',v.horsGel+' m']);
+    if(v.horsDess)rows.push(['Mise hors dessiccation',v.horsDess+' m']);
+  }
+  const sis=rpt2Get('sismique','content');if(sis)rows.push(['Sismicité / liquéfaction',sis]);
+  if(!rows.length)return '';
+  let h='<section class="r2-chap"><div class="r2-chap-h"><span class="r2-chap-n">5.4</span><span class="r2-chap-t">Synthèse sol</span></div><table class="r2-tbl">';
+  rows.forEach(r=>{h+='<tr><th>'+esc(r[0])+'</th><td>'+esc(r[1])+'</td></tr>';});
+  h+='</table></section>';
+  return h;
+}
+function rpt2NivTableHtml(esc){
+  const arr=(typeof sondages!=='undefined'?sondages:[]).filter(s=>s.tnAltitude!=null||s.sondageDepth!=null);
+  if(!arr.length)return '';
+  let h='<section class="r2-chap"><div class="r2-chap-h"><span class="r2-chap-n"></span><span class="r2-chap-t">Nivellement des sondages</span></div><table class="r2-tbl2"><tr><th>Sondage</th><th>Nivellement (NGF)</th><th>Profondeur atteinte (m)</th></tr>';
+  arr.forEach(s=>{h+='<tr><td>'+esc(s.name||s.id)+'</td><td>'+(s.tnAltitude!=null?Number(s.tnAltitude).toFixed(2):'')+'</td><td>'+(s.sondageDepth!=null?Number(s.sondageDepth).toFixed(2):'')+'</td></tr>';});
+  h+='</table></section>';
+  return h;
+}
+function rpt2BuildReportHtml(){
+  const esc=rpt2Esc;
+  const hideEmpty=!(report2&&report2.hideEmpty===false);
+  const dossier=rpt2Get('coord','dossier')||'—';
+  const proj=rpt2Get('coord','moa')||projectName||'Projet';
+  const adr=rpt2Get('coord','adresse')||[projectAddr,projectCp,projectVille].filter(Boolean).join(' ');
+  const mt=rpt2MissionTitle(),titre=mt[0],phase=mt[1];
+  const redacteur=rpt2Get('coord','redacteur'),relecteur=rpt2Get('coord','relecteur'),dateInter=rpt2Get('coord','date_inter');
+  let h='<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Rapport '+esc(dossier)+'</title><style>'+RPT2_REPORT_CSS+'</style></head><body>';
+  h+='<div class="r2-runhead"><span>'+esc(dossier)+(rpt2Get('mission','type')?' — '+esc(rpt2Get('mission','type')):'')+'</span><span>'+esc(proj)+'</span></div>';
+  h+='<div class="r2-runfoot"><span>be-gph.fr</span><span>Confidentiel</span></div>';
+  // Cover
+  h+='<section class="r2-cover"><div class="r2-logo"><span class="r2-logo-txt">gph</span><span class="r2-logo-dot"></span></div>';
+  h+='<div class="r2-cover-grid"><div class="r2-cover-yellow"><div class="r2-cover-title">'+esc(titre)+'</div><div class="r2-cover-phase">'+esc(phase)+'</div></div>';
+  h+='<div class="r2-cover-white"><div class="r2-cover-doss">Dossier '+esc(dossier)+'</div><div class="r2-cover-proj">'+esc(proj)+'</div>'+(adr?'<div class="r2-cover-desc">'+esc(adr)+'</div>':'')+'</div></div>';
+  h+='<div class="r2-cover-addr">108 route de la Roche-Sur-Yon - 85300 - T : 02 51 26 25 80 - contact@be-gph.fr - be-gph.fr</div>';
+  h+='<table class="r2-sign"><tr><th>Indice</th><th>Date</th><th>Établi par</th><th>Validé par</th><th>Modification / Commentaire</th></tr>';
+  h+='<tr><td>Version 1</td><td>'+esc(dateInter||'')+'</td><td>'+esc(redacteur||'')+'</td><td>'+esc(relecteur||'')+'</td><td></td></tr></table></section>';
+  // Sommaire
+  h+='<section class="r2-toc"><h2>Sommaire</h2>';
+  rpt2ReportChapters().forEach(t=>{
+    h+='<div class="r2-toc-item"><span class="r2-toc-num">'+esc(t.num||'')+'</span><span class="r2-toc-t">'+esc(t.title)+'</span></div>';
+    if(t.subs.length>1)t.subs.forEach(s=>{h+='<div class="r2-toc-sub">'+esc(s.title)+'</div>';});
+  });
+  h+='<div class="r2-toc-item"><span class="r2-toc-num">5</span><span class="r2-toc-t">Annexes</span></div>';
+  h+='<div class="r2-toc-sub">5.2 Plan d\'implantation des sondages</div><div class="r2-toc-sub">5.3 Sondages</div><div class="r2-toc-sub">5.4 Synthèse sol</div></section>';
+  // Chapters
+  rpt2ReportChapters().forEach(t=>{
+    let body='';
+    t.subs.forEach(s=>{
+      if(!rpt2PrintOn(s.id))return;
+      const sub=rpt2SubBodyHtml(s,esc);
+      if(!sub&&hideEmpty)return;
+      if(t.subs.length>1)body+='<h3 class="r2-h3">'+esc(s.title)+'</h3>';
+      body+=sub||'<p class="r2-empty">(à compléter)</p>';
+    });
+    if(!body&&hideEmpty)return;
+    h+='<section class="r2-chap"><div class="r2-chap-h"><span class="r2-chap-n">'+esc(t.num||'')+'</span><span class="r2-chap-t">'+esc(t.title)+'</span></div>'+(body||'<p class="r2-empty">…</p>')+'</section>';
+  });
+  // Annexes
+  h+='<section class="r2-annex-cover"><div class="r2-annex-band"></div><h2>Annexes</h2><div class="r2-annex-band"></div></section>';
+  if(typeof planImgSrc!=='undefined'&&planImgSrc){
+    h+='<section class="r2-chap"><div class="r2-chap-h"><span class="r2-chap-n">5.2</span><span class="r2-chap-t">Plan d\'implantation des sondages</span></div><div style="text-align:center"><img src="'+planImgSrc+'" style="max-width:100%;max-height:680px;border:1px solid #ddd"></div></section>';
+  }
+  h+=rpt2AnnexSondagesHtml(esc);
+  h+=rpt2SyntheseHtml(esc);
+  h+=rpt2NivTableHtml(esc);
+  h+='</body></html>';
+  return h;
+}
+function rpt2PrintFullReport(){
+  if(!report2){if(typeof showToast==='function')showToast('Rien à générer — remplissez d\'abord le rapport');return;}
+  let html;try{html=rpt2BuildReportHtml();}catch(e){console.error('rpt2BuildReportHtml',e);alert('Erreur lors de la génération du rapport : '+e.message);return;}
+  const w=window.open('','_blank','width=920,height=1000');
+  if(!w){alert('Autorisez les popups pour générer le rapport de sol.');return;}
+  w.document.write(html);w.document.close();
+  w.onload=function(){setTimeout(function(){try{w.print();}catch(e){}},500);};
+  if(typeof showToast==='function')showToast('Rapport de sol généré');
+}
 
 // ── Phase B : remplissage des onglets depuis les données existantes (GéoCarto + sondages) ──
 function rpt2PenetrosText(){
