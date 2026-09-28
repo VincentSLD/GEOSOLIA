@@ -8697,21 +8697,23 @@ function rpt2AnnexSondagesHtml(esc,num){
   let h='<section class="r2-chap"><div class="r2-chap-h"><span class="r2-chap-n">'+(num!=null?num:'5.3')+'</span><span class="r2-chap-t">Sondages</span></div>';
   let n=0;
   arr.forEach((s,si)=>{
-    let cvsId='sondage-canvas',ok=true;
+    let dataUrl='',ok=true;
     try{
-      if(s.type==='penetro_dyn'){renderQdGraph(s);cvsId='qd-canvas';}
-      else if(s.type==='penetro_stat'){renderPenetroStatGraph(s);}
-      else if(s.type==='tariere'||s.type==='pelle_meca'){renderStratiGraph(s);}
-      else if(s.type==='pressio'){renderPressioGraph(s);}
-      else if(s.type==='spt'){renderSPTGraph(s);}
-      else if(s.type==='piezometre'){renderPiezoGraph(s);}
-      else if(s.type==='infiltro'){renderInfiltroGraph(s);}
-      else if(s.type==='forage_destr'){renderForageDestrGraph(s);}
-      else ok=false;
+      if(s.type==='penetro_dyn'){dataUrl=rpt2PenetroWithValues(s)||'';if(!dataUrl)ok=false;}
+      else{
+        let cvsId='sondage-canvas';
+        if(s.type==='penetro_stat')renderPenetroStatGraph(s);
+        else if(s.type==='tariere'||s.type==='pelle_meca')renderStratiGraph(s);
+        else if(s.type==='pressio')renderPressioGraph(s);
+        else if(s.type==='spt')renderSPTGraph(s);
+        else if(s.type==='piezometre')renderPiezoGraph(s);
+        else if(s.type==='infiltro')renderInfiltroGraph(s);
+        else if(s.type==='forage_destr')renderForageDestrGraph(s);
+        else ok=false;
+        if(ok){const cvs=document.getElementById(cvsId);if(cvs)dataUrl=cvs.toDataURL('image/png');}
+      }
     }catch(e){ok=false;}
-    if(!ok)return;
-    let dataUrl='';try{const cvs=document.getElementById(cvsId);if(cvs)dataUrl=cvs.toDataURL('image/png');}catch(e){}
-    if(!dataUrl)return;
+    if(!ok||!dataUrl)return;
     if(n>0)h+='<div style="page-break-before:always"></div>';
     n++;
     const lbl=(typeof SONDAGE_LABELS!=='undefined'&&SONDAGE_LABELS[s.type])||s.type;
@@ -8728,14 +8730,35 @@ function rpt2AnnexSondagesHtml(esc,num){
   h+='</section>';
   return n>0?h:'';
 }
+// Graphe pénétro dynamique + colonne N/qd dessinée en face de chaque profondeur (aligné au repère du graphe)
+function rpt2PenetroWithValues(s){
+  const filled=(s.data||[]).filter(d=>d.blows!=null&&d.blows>=0);
+  if(!filled.length)return null;
+  try{renderQdGraph(s);}catch(e){return null;}
+  const src=document.getElementById('qd-canvas');
+  if(!src||!src.width)return null;
+  const dataMaxD=filled[filled.length-1].depth+0.60;
+  const maxDepth=s.sondageDepth!=null?Math.max(dataMaxD,s.sondageDepth+0.60):dataMaxD;
+  const mt=95,rowH=22,rows=Math.round(maxDepth/0.20),ph=rows*rowH;
+  const colW=108;
+  const c=document.createElement('canvas');c.width=src.width+colW;c.height=src.height;
+  const ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);
+  ctx.drawImage(src,0,0);
+  const x0=src.width+4,xN=x0+8,xQ=x0+58;
+  ctx.textAlign='left';
+  ctx.fillStyle='#1A1A1A';ctx.font='bold 9px Arial';ctx.fillText('N',xN,mt-6);ctx.fillText('qd',xQ,mt-6);
+  ctx.fillStyle='#888';ctx.font='7px Arial';ctx.fillText('coups',xN-4,mt-16);ctx.fillText('MPa',xQ,mt-16);
+  ctx.strokeStyle='#ddd';ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(x0,mt);ctx.lineTo(x0,mt+ph);ctx.stroke();
+  filled.forEach(d=>{
+    const y=mt+(d.depth/maxDepth)*ph;if(y<mt-2||y>mt+ph+2)return;
+    const qd=(typeof calcQd==='function')?calcQd(d.blows,d.depth):null;
+    ctx.font='8px Arial';ctx.textAlign='left';
+    ctx.fillStyle='#333';ctx.fillText(String(d.blows),xN,y+3);
+    if(qd!=null){ctx.fillStyle='#C0392B';ctx.fillText(qd.toFixed(2),xQ,y+3);}
+  });
+  try{return c.toDataURL('image/png');}catch(e){return null;}
+}
 function rpt2SondTableHtml(s,esc){
-  if(s.type==='penetro_dyn'&&s.data&&Array.isArray(s.data)){
-    const rows=s.data.filter(d=>d.blows!=null);
-    if(!rows.length)return '';
-    let t='<table class="r2-pen-tbl"><tr><th>Prof. (m)</th><th>N (coups/20 cm)</th><th>qd (MPa)</th></tr>';
-    rows.forEach((d,i)=>{const depth=(d.depth!=null?d.depth:((i+1)*0.2));let qd='';try{if(typeof calcQd==='function'){const q=calcQd(d.blows,depth);if(q!=null)qd=Number(q).toFixed(2);}}catch(e){}t+='<tr><td>'+esc(Number(depth).toFixed(2))+'</td><td>'+esc(d.blows)+'</td><td>'+esc(qd)+'</td></tr>';});
-    return t+'</table>';
-  }
   if(s.type==='penetro_stat'&&s.data&&Array.isArray(s.data)){
     const rows=s.data.filter(d=>d.qc!=null||d.fs!=null);
     if(!rows.length)return '';
