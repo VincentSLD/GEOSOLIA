@@ -1384,7 +1384,7 @@
         <button onclick="rpt2PrintFullReport()"><span class="rpt2-rail-ico">📄</span>Rapport de sol</button>
         <button onclick="rpt2PrintPreview()" title="Impression rapide de l'aperçu à l'écran"><span class="rpt2-rail-ico">👁️</span>Aperçu rapide</button>
         <button onclick="rpt2PrintFiche()"><span class="rpt2-rail-ico">🔎</span>Fiche enquête</button>
-        <button onclick="rpt2PrintPenetros()"><span class="rpt2-rail-ico">📈</span>Impr. pénétros</button>
+        <button onclick="rpt2PrintSondages()" title="Imprimer tous les sondages réalisés (courbes et logs graphiques)"><span class="rpt2-rail-ico">📈</span>Sondages</button>
         <button onclick="rpt2ShowExchanges()"><span class="rpt2-rail-ico">💬</span>Échange</button>
       </div>
     </div>
@@ -8585,6 +8585,16 @@ function rpt2PrintPenetros(){
   });
   rpt2PrintWindow('Aperçu pénétromètres',body);
 }
+function rpt2PrintSondages(){
+  const arr=(typeof sondages!=='undefined'?sondages:[]);
+  if(!arr.length){rpt2HostWin().alert('Aucun sondage réalisé dans ce projet.');return;}
+  const w=rpt2HostWin().open('','_blank','width=900,height=1000');
+  if(!w){rpt2HostWin().alert('Autorisez les popups pour imprimer les sondages.');return;}
+  const esc=rpt2Esc;
+  let body='<section class="r2-annex-cover"><div class="r2-annex-band"></div><h2>Sondages réalisés</h2><p style="color:#666;font-size:11pt">'+esc(rpt2Get('coord','moa')||projectName||'')+'</p><div class="r2-annex-band"></div></section>';
+  try{body+=rpt2AnnexSondagesHtml(esc,'');}catch(e){body+='<p>Erreur : '+esc(e.message)+'</p>';}
+  try{w.document.open();w.document.write('<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Sondages réalisés</title><style>'+RPT2_REPORT_CSS+'</style></head><body>'+body+'</body></html>');w.document.close();setTimeout(function(){try{w.focus();w.print();}catch(e){}},500);}catch(e){console.warn(e);}
+}
 function rpt2ShowExchanges(){
   const esc=rpt2Esc;let body=`<div class="rpt2-pv-cover"><div class="rpt2-pv-kicker">Échanges rédacteur / relecteur</div><div class="rpt2-pv-title">${esc(rpt2Get('coord','moa')||projectName||'Projet')}</div></div>`;
   let any=false;
@@ -8678,10 +8688,10 @@ function rpt2SubBodyHtml(s,esc){
     else b+='<p class="r2-p">'+esc(v)+'</p>';});
   return b;
 }
-function rpt2AnnexSondagesHtml(esc){
+function rpt2AnnexSondagesHtml(esc,num){
   const arr=(typeof sondages!=='undefined'?sondages:[]);
   if(!arr.length)return '';
-  let h='<section class="r2-chap"><div class="r2-chap-h"><span class="r2-chap-n">5.3</span><span class="r2-chap-t">Sondages</span></div>';
+  let h='<section class="r2-chap"><div class="r2-chap-h"><span class="r2-chap-n">'+(num!=null?num:'5.3')+'</span><span class="r2-chap-t">Sondages</span></div>';
   let n=0;
   arr.forEach((s,si)=>{
     let cvsId='sondage-canvas',ok=true;
