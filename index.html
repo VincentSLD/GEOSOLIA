@@ -830,6 +830,15 @@
   .rpt2-label-row>label{margin:0}
   .rpt2-auto-btn{border:1px solid var(--yellow);background:var(--yellow-pale);color:#7a5c00;border-radius:6px;padding:3px 9px;font-size:10.5px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0}
   .rpt2-auto-btn:hover{background:var(--yellow);color:var(--black)}
+  .rpt2-var-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:2px}
+  .rpt2-var-tab{padding:6px 12px;border:2px solid var(--gray-200);background:#fff;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--gray-600)}
+  .rpt2-var-tab.active{background:var(--black);color:#fff;border-color:var(--black)}
+  .rpt2-var-add{padding:6px 12px;border:1px dashed var(--yellow);background:var(--yellow-pale);border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;color:#7a5c00}
+  .rpt2-calc-box{background:#1f1f1f;color:#eee;border-radius:10px;padding:12px 16px;font-size:12px;line-height:1.6;margin:2px 0}
+  .rpt2-calc-row{display:flex;justify-content:space-between;gap:12px;padding:3px 0;border-bottom:1px solid #333}
+  .rpt2-calc-row b{color:var(--yellow)}
+  .rpt2-calc-formula{color:#f2b705;font-size:10.5px;font-style:italic;padding:1px 0 4px}
+  .rpt2-fond-del{border:none;background:#D94040;color:#fff;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit}
   @media(max-width:900px){.rpt2-preview-wrap{display:none}.rpt2-grid{grid-template-columns:1fr}}
 
   /* ═══ PANNEAU MODÈLE GÉOTECHNIQUE ═══ */
@@ -8366,12 +8375,18 @@ const RPT2_SCHEMA={
 function rpt2DefaultSchema(sub){return [{key:'content',label:sub.title,type:'textarea',hint:'Saisie libre pour l’instant — structuration détaillée prévue dans une prochaine phase.'}];}
 function rpt2SchemaFor(sub){return RPT2_SCHEMA[sub.id]||rpt2DefaultSchema(sub);}
 function rpt2New(){return{etat:'en_enquete',activeTab:'coord',activeSub:'coord',fields:{}};}
-function rpt2HasContent(r){return !!(r&&r.fields&&Object.keys(r.fields).some(k=>String(r.fields[k]||'').trim()!==''));}
+function rpt2HasContent(r){
+  if(!r)return false;
+  if(r.fields&&Object.keys(r.fields).some(k=>String(r.fields[k]||'').trim()!==''))return true;
+  if(r.fondations&&r.fondations.variantes&&r.fondations.variantes.some(v=>v.type||v.qd||v.encastrement||v.sol))return true;
+  if(r.comments&&Object.keys(r.comments).some(k=>String(r.comments[k]||'').trim()!==''))return true;
+  return false;
+}
 function rpt2K(sub,key){return sub+'::'+key;}
 function rpt2Get(sub,key){return (report2&&report2.fields&&report2.fields[rpt2K(sub,key)])||'';}
 function rpt2Set(sub,key,val){if(!report2)report2=rpt2New();report2.fields[rpt2K(sub,key)]=val;rpt2RenderTabsMain();rpt2RenderPreview();if(typeof markDirty==='function')markDirty();}
 function rpt2TabById(id){return RPT2_TABS.find(t=>t.id===id);}
-function rpt2TabDone(tab){return tab.subs.some(s=>rpt2SchemaFor(s).some(f=>String(rpt2Get(s.id,f.key)||'').trim()!==''));}
+function rpt2TabDone(tab){return tab.subs.some(s=>{if(s.id==='fondations')return rpt2FondHasData();return rpt2SchemaFor(s).some(f=>String(rpt2Get(s.id,f.key)||'').trim()!=='');});}
 function rpt2Esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
 
 function openRpt2(){
@@ -8417,6 +8432,7 @@ function rpt2RenderContent(){
   const schema=rpt2SchemaFor(sub);
   const isDefault=!RPT2_SCHEMA[sub.id];
   let html=`<div class="rpt2-sub-title">${rpt2Esc(sub.title)}</div>`;
+  if(sub.id==='fondations'){html+=rpt2FondationsHtml();c.innerHTML=html;return;}
   if(isDefault)html+=`<div class="rpt2-phase-note">🚧 Onglet en cours de construction : la saisie libre ci-dessous est enregistrée et apparaît dans l'aperçu. La structuration détaillée (champs, tableaux, listes de phrases-types) viendra dans les prochaines phases.</div>`;
   if(sub.id==='coord'){
     const shorts=schema.filter(f=>f.type!=='textarea'),longs=schema.filter(f=>f.type==='textarea');
@@ -8451,6 +8467,7 @@ function rpt2RenderPreview(){
       const schema=rpt2SchemaFor(s);
       const anyVal=schema.some(f=>String(g(s.id,f.key)||'').trim()!=='');
       if(t.subs.length>1)h+=`<div class="rpt2-pv-sub">${rpt2Esc(s.title)}</div>`;
+      if(s.id==='fondations'){h+=rpt2FondPreview();return;}
       if(anyVal){
         schema.forEach(f=>{const v=g(s.id,f.key);if(!v||f.type==='date')return;
           if(f.type==='select'||(schema.length>1&&f.key!=='content'))h+=`<div class="rpt2-pv-txt"><b>${rpt2Esc(f.label)} :</b> ${rpt2Esc(v)}</div>`;
@@ -8561,6 +8578,87 @@ function rpt2AutoAll(){
   rpt2RenderContent();rpt2RenderTabsMain();rpt2RenderPreview();
   if(typeof markDirty==='function')markDirty();
   if(typeof showToast==='function')showToast(n>0?(n+' champ(s) rempli(s) depuis les données'):'Rien à remplir (champs déjà remplis ou aucune donnée)');
+}
+
+// ── Phase C : moteur de calcul fondations (onglet 4.2) + variantes multiples ──
+const RPT2_FOND_TYPES=['','Semelles filantes et/ou isolées (6HA8)','Semelles filantes et/ou isolées (6HA10)','Semelles filantes/isolées linéarisées (6HA10)','Semelles linéarisées + soubassement rigidifié (non armé)','Semelles linéarisées + soubassement rigidifié (armé)','Radier','Puits + longrines','Fondations profondes (pieux / micropieux)'];
+const RPT2_RGA=[['nulle','Non argileux / rocher'],['faible','Faible'],['moyenne','Moyenne'],['forte','Forte'],['tres_forte','Très forte']];
+const RPT2_ANCRAGE=['0.1','0.2','0.3','0.4','0.5'];
+const RPT2_HORSDESS=['0.5','0.8','1.2','1.5','1.8'];
+function rpt2FondNewVariant(n){return {nom:'Variante '+n,type:'',sol:'',formation:'',rga:'faible',mode:'standard',qd:'',ancrage:'0.3',horsGel:'0.5',horsDess:'0.8',encastrement:'',bet:''};}
+function rpt2FondEnsure(){if(!report2)report2=rpt2New();if(!report2.fondations||!Array.isArray(report2.fondations.variantes)||!report2.fondations.variantes.length)report2.fondations={active:0,variantes:[rpt2FondNewVariant(1)]};}
+function rpt2FondHasData(){const F=report2&&report2.fondations;return !!(F&&F.variantes&&F.variantes.some(v=>v.type||v.qd||v.encastrement||v.sol));}
+function rpt2FondCompute(v){
+  const qd=parseFloat(String(v.qd||'').replace(',','.'));
+  if(isNaN(qd)||qd<=0)return null;
+  const stat=v.mode==='sable_statique';
+  const qa=qd/(stat?15:20),qnet=qd/(stat?5:7),qELU=qa*1.5;
+  return {qa:qa.toFixed(2),qaBar:(qa*10).toFixed(1),qELU:qELU.toFixed(2),qnet:qnet.toFixed(2),qnetBar:(qnet*10).toFixed(1),stat:stat};
+}
+function rpt2FondCalcBoxHtml(v){
+  const r=rpt2FondCompute(v);
+  if(!r)return '<div style="color:#bbb;font-style:italic">Saisir qd (MPa) pour calculer qa, q(ELU) et qnet.</div>';
+  return `<div class="rpt2-calc-row"><span><b>qa (ELS)</b> — DTU 13.12</span><span>${r.qa} MPa (${r.qaBar} bar)</span></div>`+
+    `<div class="rpt2-calc-formula">qa = qd / ${r.stat?'15 (sable / statique)':'20'}</div>`+
+    `<div class="rpt2-calc-row"><span><b>q (ELU)</b></span><span>${r.qELU} MPa</span></div>`+
+    `<div class="rpt2-calc-formula">q(ELU) = qa × 3/2</div>`+
+    `<div class="rpt2-calc-row"><span><b>qnet</b> — Eurocode 7</span><span>${r.qnet} MPa (${r.qnetBar} bar)</span></div>`+
+    `<div class="rpt2-calc-formula">qnet = qd / ${r.stat?'5 (sable / statique)':'7'}</div>`;
+}
+function rpt2FondationsHtml(){
+  rpt2FondEnsure();
+  const F=report2.fondations;const idx=Math.min(F.active||0,F.variantes.length-1);F.active=idx;const v=F.variantes[idx];
+  const opt=(arr,val)=>arr.map(o=>{const ov=Array.isArray(o)?o[0]:o,ol=Array.isArray(o)?o[1]:o;return `<option value="${rpt2Esc(ov)}" ${String(ov)===String(val)?'selected':''}>${rpt2Esc(ol||'—')}</option>`;}).join('');
+  const tInput=(key,label,ph)=>`<div class="rpt2-field"><label>${label}</label><input type="text" oninput="rpt2FondSetText(${idx},'${key}',this.value)" value="${rpt2Esc(v[key]||'')}" placeholder="${rpt2Esc(ph||'')}"></div>`;
+  const tArea=(key,label,ph)=>`<div class="rpt2-field"><label>${label}</label><textarea oninput="rpt2FondSetText(${idx},'${key}',this.value)" placeholder="${rpt2Esc(ph||'')}">${rpt2Esc(v[key]||'')}</textarea></div>`;
+  let vt=F.variantes.map((vv,i)=>`<button class="rpt2-var-tab ${i===idx?'active':''}" onclick="rpt2FondSelect(${i})">${rpt2Esc(vv.nom||('Variante '+(i+1)))}</button>`).join('');
+  vt+=`<button class="rpt2-var-add" onclick="rpt2FondAdd()">+ Variante</button>`;
+  return `<div class="rpt2-var-tabs">${vt}</div>`+
+    `<div class="rpt2-field"><div class="rpt2-label-row"><label>Nom de la variante</label>${F.variantes.length>1?`<button class="rpt2-fond-del" onclick="rpt2FondDel(${idx})">Supprimer</button>`:''}</div><input type="text" oninput="rpt2FondSetText(${idx},'nom',this.value)" value="${rpt2Esc(v.nom||'')}"></div>`+
+    `<div class="rpt2-field"><label>Type de fondation préconisée</label><select onchange="rpt2FondSetSelect(${idx},'type',this.value)">${opt(RPT2_FOND_TYPES,v.type)}</select></div>`+
+    `<div class="rpt2-grid">${tInput('sol','Sol de fondation','altération, argile…')}${tInput('formation','Formation géologique','rattaché à…')}</div>`+
+    `<div class="rpt2-grid"><div class="rpt2-field"><label>Susceptibilité RGA</label><select onchange="rpt2FondSetSelect(${idx},'rga',this.value)">${opt(RPT2_RGA,v.rga)}</select></div><div class="rpt2-field"><label>Mode de calcul</label><select onchange="rpt2FondSetSelect(${idx},'mode',this.value)">${opt([['standard','Standard (÷20 / ÷7)'],['sable_statique','Sable ou statique (÷15 / ÷5)']],v.mode)}</select></div></div>`+
+    `<div class="rpt2-grid"><div class="rpt2-field"><label>qd (ou qc) — MPa</label><input type="text" inputmode="decimal" oninput="rpt2FondSetText(${idx},'qd',this.value)" value="${rpt2Esc(v.qd||'')}" placeholder="Ex : 6,0"></div><div class="rpt2-field"><label>Ancrage (m)</label><select onchange="rpt2FondSetSelect(${idx},'ancrage',this.value)">${opt(RPT2_ANCRAGE,v.ancrage)}</select></div></div>`+
+    `<div class="rpt2-grid"><div class="rpt2-field"><label>Mise hors gel (m)</label><input type="text" inputmode="decimal" oninput="rpt2FondSetText(${idx},'horsGel',this.value)" value="${rpt2Esc(v.horsGel||'')}" placeholder="0.5"></div><div class="rpt2-field"><label>Mise hors dessiccation (m)</label><select onchange="rpt2FondSetSelect(${idx},'horsDess',this.value)">${opt(RPT2_HORSDESS,v.horsDess)}</select></div></div>`+
+    `<div class="rpt2-calc-box" id="rpt2-calc-box">${rpt2FondCalcBoxHtml(v)}</div>`+
+    tArea('encastrement','Encastrement / texte explicatif','- profondeurs variables à prévoir pour assurer l\'ancrage…')+
+    tArea('bet','BET Structures / intervenants gros-œuvre','');
+}
+function rpt2FondSetText(idx,key,val){
+  rpt2FondEnsure();const v=report2.fondations.variantes[idx];if(!v)return;v[key]=val;
+  if(key==='qd'){const b=document.getElementById('rpt2-calc-box');if(b)b.innerHTML=rpt2FondCalcBoxHtml(v);}
+  rpt2RenderTabsMain();rpt2RenderPreview();if(typeof markDirty==='function')markDirty();
+}
+function rpt2FondSetSelect(idx,key,val){
+  rpt2FondEnsure();const v=report2.fondations.variantes[idx];if(!v)return;v[key]=val;
+  if(key==='rga'){const dess={nulle:'0.5',faible:'0.8',moyenne:'1.2',forte:'1.5',tres_forte:'1.8'};const anc={nulle:'0.2',faible:'0.3',moyenne:'0.4',forte:'0.5',tres_forte:'0.5'};v.horsDess=dess[val]||v.horsDess;v.ancrage=anc[val]||v.ancrage;}
+  rpt2RenderContent();rpt2RenderTabsMain();rpt2RenderPreview();if(typeof markDirty==='function')markDirty();
+}
+function rpt2FondSelect(i){rpt2FondEnsure();report2.fondations.active=i;rpt2RenderContent();}
+function rpt2FondAdd(){rpt2FondEnsure();const F=report2.fondations;F.variantes.push(rpt2FondNewVariant(F.variantes.length+1));F.active=F.variantes.length-1;rpt2RenderContent();rpt2RenderTabsMain();rpt2RenderPreview();if(typeof markDirty==='function')markDirty();}
+function rpt2FondDel(i){rpt2FondEnsure();const F=report2.fondations;if(F.variantes.length<=1)return;if(!confirm('Supprimer cette variante ?'))return;F.variantes.splice(i,1);F.active=Math.max(0,i-1);rpt2RenderContent();rpt2RenderTabsMain();rpt2RenderPreview();if(typeof markDirty==='function')markDirty();}
+function rpt2FondText(v){
+  if(!v)return '';
+  const r=rpt2FondCompute(v);let t='';
+  if(v.type)t+='Type de fondation : '+v.type+'.\n';
+  if(v.sol||v.formation)t+='Sol de fondation : '+[v.sol,v.formation].filter(Boolean).join(' — ')+'.\n';
+  if(v.encastrement)t+=v.encastrement+'\n';
+  const a=[];if(v.ancrage)a.push('ancrage '+v.ancrage+' m');if(v.horsGel)a.push('mise hors gel '+v.horsGel+' m');if(v.horsDess)a.push('mise hors dessiccation '+v.horsDess+' m');
+  if(a.length)t+=a.join(', ')+'.\n';
+  if(r){t+='Contrainte admissible qa (ELS, DTU 13.12) : '+r.qa+' MPa (soit '+r.qaBar+' bar) ; q(ELU) : '+r.qELU+' MPa.\n';t+='Contrainte qnet (Eurocode 7) : '+r.qnet+' MPa (soit '+r.qnetBar+' bar).\n';}
+  if(v.bet)t+=v.bet+'\n';
+  return t.trim();
+}
+function rpt2FondPreview(){
+  const F=report2&&report2.fondations;
+  if(!F||!F.variantes||!F.variantes.length)return '<div class="rpt2-pv-txt rpt2-pv-empty">(à compléter)</div>';
+  let h='';
+  F.variantes.forEach((v,i)=>{
+    const txt=rpt2FondText(v);
+    if(F.variantes.length>1)h+=`<div class="rpt2-pv-sub">${rpt2Esc(v.nom||('Variante '+(i+1)))}</div>`;
+    h+= txt?`<div class="rpt2-pv-txt">${rpt2Esc(txt)}</div>`:'<div class="rpt2-pv-txt rpt2-pv-empty">(à compléter)</div>';
+  });
+  return h;
 }
 
 function rptChangeMission(val){
