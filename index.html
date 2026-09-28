@@ -8665,6 +8665,9 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10.5pt;line-height:1.55;co
 .r2-tbl2{border-collapse:collapse;width:100%;font-size:9.5pt;margin-top:6px}
 .r2-tbl2 th,.r2-tbl2 td{border:1px solid #ccc;padding:5px 8px;text-align:center}
 .r2-tbl2 th{background:#f5f5f5;font-weight:700}
+.r2-pen-tbl{border-collapse:collapse;font-size:8pt;margin:8px auto 0;width:auto}
+.r2-pen-tbl th,.r2-pen-tbl td{border:1px solid #ccc;padding:1px 8px;text-align:center}
+.r2-pen-tbl th{background:#f2f2f2;font-weight:700}
 .r2-toolbar{position:fixed;top:0;left:0;right:0;background:#1a1a1a;color:#fff;display:flex;gap:10px;align-items:center;padding:6px 12px;z-index:99999;font-size:11px}
 .r2-toolbar button{background:#F2B705;border:none;border-radius:6px;padding:6px 12px;font-weight:800;cursor:pointer;font-family:inherit}
 body.r2-hastoolbar{padding-top:42px}
@@ -8720,10 +8723,27 @@ function rpt2AnnexSondagesHtml(esc,num){
     meta.push("Niveau d'eau : "+(s.waterLevel!=null?Number(s.waterLevel).toFixed(2)+' m':"pas d'eau"));
     h+='<div class="r2-sond"><div class="r2-sond-h">'+esc(lbl)+' — '+esc(s.name||('Sondage '+(si+1)))+'</div>';
     h+='<div class="r2-sond-meta">'+esc(meta.join('   ·   '))+'</div>';
-    h+='<div style="text-align:center"><img src="'+dataUrl+'" style="max-width:100%;max-height:640px"></div></div>';
+    h+='<div style="text-align:center"><img src="'+dataUrl+'" style="max-width:100%;max-height:640px"></div>'+rpt2SondTableHtml(s,esc)+'</div>';
   });
   h+='</section>';
   return n>0?h:'';
+}
+function rpt2SondTableHtml(s,esc){
+  if(s.type==='penetro_dyn'&&s.data&&Array.isArray(s.data)){
+    const rows=s.data.filter(d=>d.blows!=null);
+    if(!rows.length)return '';
+    let t='<table class="r2-pen-tbl"><tr><th>Prof. (m)</th><th>N (coups/20 cm)</th><th>qd (MPa)</th></tr>';
+    rows.forEach((d,i)=>{const depth=(d.depth!=null?d.depth:((i+1)*0.2));let qd='';try{if(typeof calcQd==='function'){const q=calcQd(d.blows,depth);if(q!=null)qd=Number(q).toFixed(2);}}catch(e){}t+='<tr><td>'+esc(Number(depth).toFixed(2))+'</td><td>'+esc(d.blows)+'</td><td>'+esc(qd)+'</td></tr>';});
+    return t+'</table>';
+  }
+  if(s.type==='penetro_stat'&&s.data&&Array.isArray(s.data)){
+    const rows=s.data.filter(d=>d.qc!=null||d.fs!=null);
+    if(!rows.length)return '';
+    let t='<table class="r2-pen-tbl"><tr><th>Prof. (m)</th><th>qc (MPa)</th><th>fs (kPa)</th></tr>';
+    rows.forEach((d,i)=>{const depth=(d.depth!=null?d.depth:((i+1)*0.2));t+='<tr><td>'+esc(Number(depth).toFixed(2))+'</td><td>'+esc(d.qc!=null?d.qc:'')+'</td><td>'+esc(d.fs!=null?d.fs:'')+'</td></tr>';});
+    return t+'</table>';
+  }
+  return '';
 }
 function rpt2SyntheseHtml(esc){
   const F=report2&&report2.fondations;
