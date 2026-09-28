@@ -854,6 +854,10 @@
   .rpt2-phr-title{font-size:12px;font-weight:800;color:var(--black);margin-bottom:3px}
   .rpt2-phr-text{font-size:11px;color:var(--gray-600);line-height:1.5}
   .rpt2-phr-empty{color:var(--gray-400);font-size:12px;text-align:center;padding:24px 10px}
+  .rpt2-comment{margin-top:18px;border-top:2px dashed var(--gray-200);padding-top:10px}
+  .rpt2-comment-head{font-size:11px;font-weight:800;color:#b91c1c;margin-bottom:5px}
+  .rpt2-comment-ta{width:100%;min-height:70px;border:2px solid #f0d0d0;border-radius:8px;padding:8px 10px;font-size:12px;font-family:inherit;background:#fff8f8;line-height:1.5;resize:vertical;outline:none;box-sizing:border-box}
+  .rpt2-comment-ta:focus{border-color:#D94040}
   @media(max-width:900px){.rpt2-preview-wrap{display:none}.rpt2-grid{grid-template-columns:1fr}}
 
   /* ═══ PANNEAU MODÈLE GÉOTECHNIQUE ═══ */
@@ -1376,9 +1380,9 @@
         <button class="primary" onclick="rpt2Valider()"><span class="rpt2-rail-ico">✔️</span>Valider</button>
         <button onclick="rpt2AutoAll()" title="Remplir tous les champs vides depuis GéoCarto et les sondages"><span class="rpt2-rail-ico">⚡</span>Auto-remplir</button>
         <button onclick="rpt2PrintPreview()"><span class="rpt2-rail-ico">📄</span>Rapport de sol</button>
-        <button disabled title="À venir (phase ultérieure)"><span class="rpt2-rail-ico">🔎</span>Fiche enquête</button>
-        <button disabled title="À venir (phase ultérieure)"><span class="rpt2-rail-ico">📈</span>Impr. pénétros</button>
-        <button disabled title="À venir (phase ultérieure)"><span class="rpt2-rail-ico">💬</span>Échange</button>
+        <button onclick="rpt2PrintFiche()"><span class="rpt2-rail-ico">🔎</span>Fiche enquête</button>
+        <button onclick="rpt2PrintPenetros()"><span class="rpt2-rail-ico">📈</span>Impr. pénétros</button>
+        <button onclick="rpt2ShowExchanges()"><span class="rpt2-rail-ico">💬</span>Échange</button>
       </div>
     </div>
     <div id="rpt2-phrases-modal" class="rpt2-modal">
@@ -8440,7 +8444,8 @@ function rpt2RenderTabsMain(){
     const done=rpt2TabDone(t);
     const st=`<span class="rpt2-tab-st ${done?'ok':'no'}">${done?'✔':'✘'}</span>`;
     const num=t.num?`<span class="rpt2-tab-num">${t.num}</span>`:'';
-    return `<button class="rpt2-tab-main ${report2.activeTab===t.id?'active':''}" onclick="rpt2SelectTab('${t.id}')">${st}${num}<span>${rpt2Esc(t.title)}</span></button>`;
+    const cm=rpt2GetComment(t.id)?' 💬':'';
+    return `<button class="rpt2-tab-main ${report2.activeTab===t.id?'active':''}" onclick="rpt2SelectTab('${t.id}')">${st}${num}<span>${rpt2Esc(t.title)}${cm}</span></button>`;
   }).join('');
 }
 function rpt2RenderTabsSub(){
@@ -8456,7 +8461,7 @@ function rpt2RenderContent(){
   const schema=rpt2SchemaFor(sub);
   const isDefault=!RPT2_SCHEMA[sub.id];
   let html=`<div class="rpt2-sub-title">${rpt2Esc(sub.title)}</div>`+rpt2PrintToggleHtml(sub.id);
-  if(sub.id==='fondations'){html+=rpt2FondationsHtml();c.innerHTML=html;return;}
+  if(sub.id==='fondations'){html+=rpt2FondationsHtml()+rpt2CommentHtml(tab.id);c.innerHTML=html;return;}
   if(isDefault)html+=`<div class="rpt2-phase-note">🚧 Onglet en cours de construction : la saisie libre ci-dessous est enregistrée et apparaît dans l'aperçu. La structuration détaillée (champs, tableaux, listes de phrases-types) viendra dans les prochaines phases.</div>`;
   if(sub.id==='coord'){
     const shorts=schema.filter(f=>f.type!=='textarea'),longs=schema.filter(f=>f.type==='textarea');
@@ -8464,6 +8469,7 @@ function rpt2RenderContent(){
   }else{
     html+=schema.map(f=>rpt2FieldHtml(sub.id,f)).join('');
   }
+  html+=rpt2CommentHtml(tab.id);
   c.innerHTML=html;
 }
 function rpt2FieldHtml(subId,f){
@@ -8536,12 +8542,48 @@ function rpt2SetPrint(subId,on){if(!report2)report2=rpt2New();if(!report2.print)
 function rpt2SetHideEmpty(on){if(!report2)report2=rpt2New();report2.hideEmpty=!!on;rpt2RenderPreview();if(typeof markDirty==='function')markDirty();}
 function rpt2SubEmpty(s){if(s.id==='fondations')return !rpt2FondHasData();return !rpt2SchemaFor(s).some(f=>String(rpt2Get(s.id,f.key)||'').trim()!=='');}
 function rpt2PrintToggleHtml(subId){return `<label class="rpt2-print-toggle"><input type="checkbox" ${rpt2PrintOn(subId)?'checked':''} onchange="rpt2SetPrint('${subId}',this.checked)"> Imprimer ce bloc dans le rapport</label>`;}
-function rpt2PrintPreview(){
-  const html=document.getElementById('rpt2-preview').innerHTML;
+function rpt2PrintWindow(title,bodyHtml){
   const w=window.open('','_blank','width=820,height=1000');if(!w)return;
-  w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Aperçu rapport de sol</title><style>@page{size:A4;margin:18mm}body{font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#1a1a1a;line-height:1.55}.rpt2-pv-cover{border-bottom:3px solid #F2B705;padding-bottom:14px;margin-bottom:16px}.rpt2-pv-kicker{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#888;font-weight:700}.rpt2-pv-title{font-size:22px;font-weight:800;margin:4px 0}.rpt2-pv-meta{font-size:11px;color:#444}.rpt2-pv-meta b{color:#000}.rpt2-pv-h{font-size:14px;font-weight:800;border-left:4px solid #F2B705;padding-left:8px;margin:16px 0 5px}.rpt2-pv-sub{font-size:12px;font-weight:800;color:#333;margin:10px 0 3px}.rpt2-pv-txt{white-space:pre-wrap;text-align:justify;margin:0 0 6px}.rpt2-pv-empty{color:#bbb;font-style:italic}</style></head><body>'+html+'</body></html>');
+  const css='@page{size:A4;margin:18mm}body{font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#1a1a1a;line-height:1.55}.rpt2-pv-cover{border-bottom:3px solid #F2B705;padding-bottom:14px;margin-bottom:16px}.rpt2-pv-kicker{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#888;font-weight:700}.rpt2-pv-title{font-size:22px;font-weight:800;margin:4px 0}.rpt2-pv-meta{font-size:11px;color:#444}.rpt2-pv-meta b{color:#000}.rpt2-pv-h{font-size:14px;font-weight:800;border-left:4px solid #F2B705;padding-left:8px;margin:16px 0 5px}.rpt2-pv-sub{font-size:12px;font-weight:800;color:#333;margin:10px 0 3px}.rpt2-pv-txt{white-space:pre-wrap;text-align:justify;margin:0 0 6px}.rpt2-pv-empty{color:#bbb;font-style:italic}table.rpt2-pen-tbl{border-collapse:collapse;font-size:11px;margin:4px 0 10px}table.rpt2-pen-tbl th,table.rpt2-pen-tbl td{border:1px solid #ccc;padding:2px 10px;text-align:center}table.rpt2-pen-tbl th{background:#f2f2f2}';
+  w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+title+'</title><style>'+css+'</style></head><body>'+bodyHtml+'</body></html>');
   w.document.close();setTimeout(()=>{try{w.print();}catch(e){}},400);
 }
+function rpt2PrintPreview(){rpt2PrintWindow('Rapport de sol',document.getElementById('rpt2-preview').innerHTML);}
+function rpt2PrintFiche(){
+  const g=(s,k)=>rpt2Get(s,k),esc=rpt2Esc;
+  let body=`<div class="rpt2-pv-cover"><div class="rpt2-pv-kicker">Fiche enquête</div><div class="rpt2-pv-title">${esc(g('coord','moa')||projectName||'Projet')}</div><div class="rpt2-pv-meta">`;
+  const lbls={dossier:'Dossier',commande:'Commande',adresse:'Adresse',redacteur:'Rédacteur',relecteur:'Relecteur',date_inter:'Intervention'};
+  Object.keys(lbls).forEach(k=>{const v=g('coord',k);if(v)body+=`<div><b>${lbls[k]} :</b> ${esc(v)}</div>`;});
+  body+='</div></div>';
+  ['mission','enquete'].forEach(tid=>{const t=rpt2TabById(tid);if(!t)return;body+=`<div class="rpt2-pv-h">${t.num?t.num+'. ':''}${esc(t.title)}</div>`;t.subs.forEach(s=>{const schema=rpt2SchemaFor(s);if(!schema.some(f=>String(g(s.id,f.key)||'').trim()!==''))return;if(t.subs.length>1)body+=`<div class="rpt2-pv-sub">${esc(s.title)}</div>`;schema.forEach(f=>{const v=g(s.id,f.key);if(!v||f.type==='date')return;if(f.type==='select'||(schema.length>1&&f.key!=='content'))body+=`<div class="rpt2-pv-txt"><b>${esc(f.label)} :</b> ${esc(v)}</div>`;else body+=`<div class="rpt2-pv-txt">${esc(v)}</div>`;});});});
+  rpt2PrintWindow('Fiche enquête',body);
+}
+function rpt2PrintPenetros(){
+  const ps=(typeof sondages!=='undefined'?sondages:[]).filter(s=>s.type==='penetro_dyn'||s.type==='penetro_stat');
+  if(!ps.length){if(typeof showToast==='function')showToast('Aucun sondage pénétrométrique');else alert('Aucun sondage pénétrométrique.');return;}
+  const esc=rpt2Esc;
+  let body=`<div class="rpt2-pv-cover"><div class="rpt2-pv-kicker">Résultats pénétrométriques</div><div class="rpt2-pv-title">${esc(rpt2Get('coord','moa')||projectName||'Projet')}</div></div>`;
+  ps.forEach(s=>{
+    body+=`<div class="rpt2-pv-h">${esc(s.name||s.id)}</div>`;
+    const meta=[];if(s.tnAltitude!=null)meta.push('TN '+Number(s.tnAltitude).toFixed(2)+' m NGF');if(s.sondageDepth!=null)meta.push('profondeur '+Number(s.sondageDepth).toFixed(2)+' m');if(s.waterLevel!=null)meta.push('eau à '+Number(s.waterLevel).toFixed(2)+' m');if(s.refusal)meta.push('au refus');
+    if(meta.length)body+=`<div class="rpt2-pv-txt">${esc(meta.join(' — '))}</div>`;
+    if(s.data&&Array.isArray(s.data)){
+      const rows=s.data.filter(d=>d.blows!=null);
+      if(rows.length)body+='<table class="rpt2-pen-tbl"><tr><th>Prof. (m)</th><th>N (coups/20 cm)</th></tr>'+rows.map((d,i)=>`<tr><td>${esc(d.depth!=null?d.depth:((i+1)*0.2).toFixed(2))}</td><td>${esc(d.blows)}</td></tr>`).join('')+'</table>';
+    }
+  });
+  rpt2PrintWindow('Aperçu pénétromètres',body);
+}
+function rpt2ShowExchanges(){
+  const esc=rpt2Esc;let body=`<div class="rpt2-pv-cover"><div class="rpt2-pv-kicker">Échanges rédacteur / relecteur</div><div class="rpt2-pv-title">${esc(rpt2Get('coord','moa')||projectName||'Projet')}</div></div>`;
+  let any=false;
+  RPT2_TABS.forEach(t=>{const c=rpt2GetComment(t.id);if(c&&c.trim()){any=true;body+=`<div class="rpt2-pv-h">${t.num?t.num+'. ':''}${esc(t.title)}</div><div class="rpt2-pv-txt">${esc(c)}</div>`;}});
+  if(!any){if(typeof showToast==='function')showToast('Aucun commentaire saisi');else alert('Aucun commentaire saisi.');return;}
+  rpt2PrintWindow('Échanges rédacteur / relecteur',body);
+}
+function rpt2GetComment(tabId){return (report2&&report2.comments&&report2.comments[tabId])||'';}
+function rpt2SetComment(tabId,val){if(!report2)report2=rpt2New();if(!report2.comments)report2.comments={};report2.comments[tabId]=val;rpt2RenderTabsMain();if(typeof markDirty==='function')markDirty();}
+function rpt2CommentHtml(tabId){return `<div class="rpt2-comment"><div class="rpt2-comment-head">💬 Commentaires internes (rédacteur / relecteur) — non imprimés dans le rapport</div><textarea class="rpt2-comment-ta" oninput="rpt2SetComment('${tabId}',this.value)" placeholder="Notes internes, demandes de correction, rappels de calcul, infos appels client…">${rpt2Esc(rpt2GetComment(tabId))}</textarea></div>`;}
 
 // ── Phase B : remplissage des onglets depuis les données existantes (GéoCarto + sondages) ──
 function rpt2PenetrosText(){
