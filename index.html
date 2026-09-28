@@ -8554,7 +8554,7 @@ function rpt2SetHideEmpty(on){if(!report2)report2=rpt2New();report2.hideEmpty=!!
 function rpt2SubEmpty(s){if(s.id==='fondations')return !rpt2FondHasData();return !rpt2SchemaFor(s).some(f=>String(rpt2Get(s.id,f.key)||'').trim()!=='');}
 function rpt2PrintToggleHtml(subId){return `<label class="rpt2-print-toggle"><input type="checkbox" ${rpt2PrintOn(subId)?'checked':''} onchange="rpt2SetPrint('${subId}',this.checked)"> Imprimer ce bloc dans le rapport</label>`;}
 function rpt2PrintWindow(title,bodyHtml){
-  const w=window.open('','_blank','width=820,height=1000');if(!w)return;
+  const w=rpt2HostWin().open('','_blank','width=820,height=1000');if(!w){rpt2HostWin().alert('Autorisez les popups pour imprimer / générer le document.');return;}
   const css='@page{size:A4;margin:18mm}body{font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#1a1a1a;line-height:1.55}.rpt2-pv-cover{border-bottom:3px solid #F2B705;padding-bottom:14px;margin-bottom:16px}.rpt2-pv-kicker{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#888;font-weight:700}.rpt2-pv-title{font-size:22px;font-weight:800;margin:4px 0}.rpt2-pv-meta{font-size:11px;color:#444}.rpt2-pv-meta b{color:#000}.rpt2-pv-h{font-size:14px;font-weight:800;border-left:4px solid #F2B705;padding-left:8px;margin:16px 0 5px}.rpt2-pv-sub{font-size:12px;font-weight:800;color:#333;margin:10px 0 3px}.rpt2-pv-txt{white-space:pre-wrap;text-align:justify;margin:0 0 6px}.rpt2-pv-empty{color:#bbb;font-style:italic}table.rpt2-pen-tbl{border-collapse:collapse;font-size:11px;margin:4px 0 10px}table.rpt2-pen-tbl th,table.rpt2-pen-tbl td{border:1px solid #ccc;padding:2px 10px;text-align:center}table.rpt2-pen-tbl th{background:#f2f2f2}';
   w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+title+'</title><style>'+css+'</style></head><body>'+bodyHtml+'</body></html>');
   w.document.close();setTimeout(()=>{try{w.print();}catch(e){}},400);
@@ -8571,7 +8571,7 @@ function rpt2PrintFiche(){
 }
 function rpt2PrintPenetros(){
   const ps=(typeof sondages!=='undefined'?sondages:[]).filter(s=>s.type==='penetro_dyn'||s.type==='penetro_stat');
-  if(!ps.length){if(typeof showToast==='function')showToast('Aucun sondage pénétrométrique');else alert('Aucun sondage pénétrométrique.');return;}
+  if(!ps.length){rpt2HostWin().alert('Aucun sondage pénétrométrique dans ce projet.');return;}
   const esc=rpt2Esc;
   let body=`<div class="rpt2-pv-cover"><div class="rpt2-pv-kicker">Résultats pénétrométriques</div><div class="rpt2-pv-title">${esc(rpt2Get('coord','moa')||projectName||'Projet')}</div></div>`;
   ps.forEach(s=>{
@@ -8589,7 +8589,7 @@ function rpt2ShowExchanges(){
   const esc=rpt2Esc;let body=`<div class="rpt2-pv-cover"><div class="rpt2-pv-kicker">Échanges rédacteur / relecteur</div><div class="rpt2-pv-title">${esc(rpt2Get('coord','moa')||projectName||'Projet')}</div></div>`;
   let any=false;
   RPT2_TABS.forEach(t=>{const c=rpt2GetComment(t.id);if(c&&c.trim()){any=true;body+=`<div class="rpt2-pv-h">${t.num?t.num+'. ':''}${esc(t.title)}</div><div class="rpt2-pv-txt">${esc(c)}</div>`;}});
-  if(!any){if(typeof showToast==='function')showToast('Aucun commentaire saisi');else alert('Aucun commentaire saisi.');return;}
+  if(!any){rpt2HostWin().alert('Aucun commentaire interne saisi.');return;}
   rpt2PrintWindow('Échanges rédacteur / relecteur',body);
 }
 function rpt2GetComment(tabId){return (report2&&report2.comments&&report2.comments[tabId])||'';}
@@ -8823,6 +8823,7 @@ let rpt2Doc=document,rpt2DetachedWin=null,rpt2SyncTimer=null,rpt2DetachTimer=nul
 function rpt2ActiveDoc(){if(rpt2Doc&&rpt2Doc!==document&&rpt2DetachedWin&&!rpt2DetachedWin.closed)return rpt2Doc;return document;}
 function rd(id){return rpt2ActiveDoc().getElementById(id);}
 function rdq(sel){return rpt2ActiveDoc().querySelector(sel);}
+function rpt2HostWin(){return (rpt2DetachedWin&&!rpt2DetachedWin.closed)?rpt2DetachedWin:window;}
 function rpt2Detach(){
   if(!report2){if(typeof showToast==='function')showToast('Ouvrez d\'abord la Rédaction');return;}
   if(rpt2DetachedWin&&!rpt2DetachedWin.closed){rpt2DetachedWin.focus();return;}
@@ -8859,8 +8860,8 @@ function rpt2SyncDetached(){
 function rpt2PrintFullReport(){
   if(!report2){if(typeof showToast==='function')showToast('Rien à générer — remplissez d\'abord le rapport');return;}
   let html;try{html=rpt2BuildReportHtml();}catch(e){console.error('rpt2BuildReportHtml',e);alert('Erreur lors de la génération du rapport : '+e.message);return;}
-  const w=window.open('','_blank','width=920,height=1000');
-  if(!w){alert('Autorisez les popups pour générer le rapport de sol.');return;}
+  const w=rpt2HostWin().open('','_blank','width=920,height=1000');
+  if(!w){rpt2HostWin().alert('Autorisez les popups pour générer le rapport de sol.');return;}
   w.document.write(html);w.document.close();
   w.onload=function(){setTimeout(function(){try{w.print();}catch(e){}},500);};
   if(typeof showToast==='function')showToast('Rapport de sol généré');
