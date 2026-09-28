@@ -775,6 +775,58 @@
   .rpt-btn-secondary{background:var(--gray-100);color:var(--black)}
   .rpt-btn-secondary:hover{background:var(--gray-200)}
   .rpt-empty-editor{display:flex;align-items:center;justify-content:center;flex:1;color:var(--gray-400);font-size:14px;font-weight:700;text-align:center;padding:40px}
+  /* ═══ ÉDITEUR RAPPORT v2 — onglets style SolAnge (Phase A) ═══ */
+  #rpt2-panel{position:fixed;inset:0;display:none;flex-direction:column;background:var(--gray-50);z-index:10000;overflow:hidden}
+  #rpt2-panel.open{display:flex}
+  .rpt2-titlebar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 16px;background:var(--black);flex-shrink:0}
+  .rpt2-title{color:var(--yellow);font-weight:800;font-size:14px;display:flex;align-items:center;gap:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rpt2-tools{display:flex;align-items:center;gap:8px;flex-shrink:0}
+  .rpt2-etat-sel{border:none;border-radius:6px;padding:6px 10px;font-size:11px;font-weight:800;font-family:inherit;cursor:pointer;background:var(--yellow);color:var(--black)}
+  .rpt2-close{background:none;border:1px solid rgba(255,255,255,0.25);color:#fff;font-size:13px;cursor:pointer;padding:6px 12px;border-radius:6px;font-weight:700;font-family:inherit;transition:all .15s}
+  .rpt2-close:hover{background:rgba(255,255,255,0.15);border-color:rgba(255,255,255,0.45)}
+  .rpt2-tabs-main{display:flex;gap:2px;background:#2a2a2a;padding:0 8px;flex-shrink:0;overflow-x:auto}
+  .rpt2-tab-main{display:flex;align-items:center;gap:6px;padding:9px 14px;border:none;background:transparent;color:#cfcfcf;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;border-bottom:3px solid transparent;white-space:nowrap}
+  .rpt2-tab-main:hover{color:#fff;background:rgba(255,255,255,0.06)}
+  .rpt2-tab-main.active{color:var(--black);background:var(--yellow);border-bottom-color:var(--yellow)}
+  .rpt2-tab-num{font-weight:900;opacity:.85}
+  .rpt2-tab-st{font-size:11px;font-weight:900}
+  .rpt2-tab-st.ok{color:#22c55e}
+  .rpt2-tab-st.no{color:#ef4444}
+  .rpt2-tab-main.active .rpt2-tab-st.ok{color:#0f7a34}
+  .rpt2-tab-main.active .rpt2-tab-st.no{color:#b91c1c}
+  .rpt2-tabs-sub{display:flex;gap:2px;background:#f0f0f0;padding:5px 8px;flex-shrink:0;overflow-x:auto;border-bottom:1px solid var(--gray-200)}
+  .rpt2-tab-sub{padding:6px 12px;border:none;background:transparent;color:var(--gray-600);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;border-radius:6px;white-space:nowrap}
+  .rpt2-tab-sub:hover{background:#e2e2e2;color:var(--black)}
+  .rpt2-tab-sub.active{background:var(--black);color:#fff}
+  .rpt2-body{display:flex;flex:1;overflow:hidden}
+  .rpt2-content{flex:1;min-width:0;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:14px}
+  .rpt2-sub-title{font-size:15px;font-weight:800;color:var(--black);border-bottom:2px solid var(--yellow);padding-bottom:6px;margin:0}
+  .rpt2-field{display:flex;flex-direction:column;gap:4px}
+  .rpt2-field>label{font-size:11px;font-weight:800;color:var(--gray-600)}
+  .rpt2-hint{font-size:10.5px;color:var(--gray-400);font-style:italic;margin-top:-2px}
+  .rpt2-field input,.rpt2-field select,.rpt2-field textarea{border:2px solid var(--gray-200);border-radius:8px;padding:9px 12px;font-size:13px;font-family:inherit;outline:none;transition:border-color .15s;box-sizing:border-box;width:100%;background:var(--white)}
+  .rpt2-field input:focus,.rpt2-field select:focus,.rpt2-field textarea:focus{border-color:var(--yellow)}
+  .rpt2-field textarea{min-height:120px;resize:vertical;line-height:1.6}
+  .rpt2-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .rpt2-phase-note{font-size:11.5px;color:#7a5c00;background:var(--yellow-pale);border:1px dashed var(--yellow);border-radius:8px;padding:8px 12px;font-weight:600}
+  .rpt2-preview-wrap{width:46%;min-width:340px;max-width:640px;background:#585858;overflow-y:auto;flex-shrink:0;padding:18px;display:flex;justify-content:center}
+  .rpt2-page{background:#fff;width:100%;max-width:520px;min-height:720px;box-shadow:0 4px 24px rgba(0,0,0,.35);padding:32px 36px;font-size:12px;color:#1a1a1a;line-height:1.55;box-sizing:border-box;height:max-content}
+  .rpt2-pv-cover{border-bottom:3px solid var(--yellow);padding-bottom:14px;margin-bottom:14px}
+  .rpt2-pv-kicker{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#888;font-weight:700}
+  .rpt2-pv-title{font-size:20px;font-weight:800;margin:4px 0}
+  .rpt2-pv-meta{font-size:11px;color:#444;margin-top:6px}
+  .rpt2-pv-meta b{color:#000}
+  .rpt2-pv-h{font-size:13px;font-weight:800;color:#000;border-left:4px solid var(--yellow);padding-left:8px;margin:15px 0 5px}
+  .rpt2-pv-sub{font-size:11.5px;font-weight:800;color:#333;margin:9px 0 3px}
+  .rpt2-pv-txt{white-space:pre-wrap;text-align:justify;margin:0 0 6px}
+  .rpt2-pv-empty{color:#c2c2c2;font-style:italic}
+  .rpt2-rail{width:98px;background:#d9d9d9;display:flex;flex-direction:column;gap:8px;padding:10px 8px;flex-shrink:0;border-left:1px solid #bbb;overflow-y:auto}
+  .rpt2-rail button{border:1px solid #b5b5b5;background:#efefef;border-radius:8px;padding:9px 4px;font-size:10.5px;font-weight:800;color:#333;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:3px;line-height:1.15;text-align:center;transition:all .15s}
+  .rpt2-rail button:hover:not(:disabled){background:#fff;border-color:var(--yellow)}
+  .rpt2-rail button.primary{background:var(--yellow);border-color:var(--yellow);color:var(--black)}
+  .rpt2-rail button:disabled{opacity:.45;cursor:not-allowed}
+  .rpt2-rail-ico{font-size:17px}
+  @media(max-width:900px){.rpt2-preview-wrap{display:none}.rpt2-grid{grid-template-columns:1fr}}
 
   /* ═══ PANNEAU MODÈLE GÉOTECHNIQUE ═══ */
   #modele-panel{position:fixed;inset:0;display:none;flex-direction:column;background:var(--gray-50);z-index:9999;overflow:hidden}
@@ -1165,6 +1217,7 @@
     <div class="tool-sep"></div>
     <button class="tool-btn" onclick="openMiseEnPage()"><span class="icon">📐</span><span class="label">Mise en Page</span></button>
     <button class="tool-btn" onclick="openRapport()"><span class="icon">📋</span><span class="label">Rapport</span></button>
+    <button class="tool-btn" onclick="openRpt2()"><span class="icon">🧾</span><span class="label">Rédaction</span></button>
     <button class="tool-btn" onclick="openModeleGeotech()"><span class="icon">⛏️</span><span class="label">Modèle</span></button>
     <div class="tool-sep"></div>
     <div style="position:relative">
@@ -1321,6 +1374,33 @@
       </div>
       <div class="rpt-main" id="rpt-main">
         <div class="rpt-empty-editor" id="rpt-empty-editor">Sélectionnez un type de mission puis<br>cliquez sur un chapitre pour commencer</div>
+      </div>
+    </div>
+  </div>
+  <div id="rpt2-panel">
+    <div class="rpt2-titlebar">
+      <div class="rpt2-title">🧾 <span id="rpt2-dossier-label">Rapport de sol</span></div>
+      <div class="rpt2-tools">
+        <select class="rpt2-etat-sel" id="rpt2-etat" onchange="rpt2SetEtat(this.value)" title="État du dossier">
+          <option value="en_enquete">En enquête</option>
+          <option value="en_cours">En cours</option>
+          <option value="en_correction">En correction</option>
+          <option value="termine">Terminé</option>
+        </select>
+        <button class="rpt2-close" onclick="closeRpt2()">✕ Fermer</button>
+      </div>
+    </div>
+    <div class="rpt2-tabs-main" id="rpt2-tabs-main"></div>
+    <div class="rpt2-tabs-sub" id="rpt2-tabs-sub"></div>
+    <div class="rpt2-body">
+      <div class="rpt2-content" id="rpt2-content"></div>
+      <div class="rpt2-preview-wrap"><div class="rpt2-page" id="rpt2-preview"></div></div>
+      <div class="rpt2-rail">
+        <button class="primary" onclick="rpt2Valider()"><span class="rpt2-rail-ico">✔️</span>Valider</button>
+        <button onclick="rpt2PrintPreview()"><span class="rpt2-rail-ico">📄</span>Rapport de sol</button>
+        <button disabled title="À venir (phase ultérieure)"><span class="rpt2-rail-ico">🔎</span>Fiche enquête</button>
+        <button disabled title="À venir (phase ultérieure)"><span class="rpt2-rail-ico">📈</span>Impr. pénétros</button>
+        <button disabled title="À venir (phase ultérieure)"><span class="rpt2-rail-ico">💬</span>Échange</button>
       </div>
     </div>
   </div>
@@ -2417,6 +2497,7 @@ async function restoreFromIDB(id){
   if(project.geocartoData){geocartoData=project.geocartoData;if(!geocartoData.infosGeotech&&project.infoGeotechnicien)geocartoData.infosGeotech=project.infoGeotechnicien;try{renderGeocartoPanel();}catch(e){}}
   const ms0=document.getElementById('rpt-mission-select');if(ms0&&projectMission)ms0.value=projectMission;
   if(project.reportChapters)reportChapters=project.reportChapters;
+  report2=project.report2||null;
   if(project.modeleFormations)modeleFormations=project.modeleFormations;
   if(project.gpsCalib){gpsCalib=project.gpsCalib;try{gpsCalibUpdateUI();}catch(e){}}
   const hAddr0=document.getElementById('ia-geo-addr');if(hAddr0&&projectAddr)hAddr0.value=projectAddr;
@@ -7062,6 +7143,7 @@ function buildProjectJSON(){
   }
   project.projectMission=projectMission||'';
   if(Object.keys(reportChapters).length>0)project.reportChapters=reportChapters;
+  if(rpt2HasContent(report2))project.report2=report2;
   if(modeleFormations.length>0)project.modeleFormations=modeleFormations;
   if(gpsCalib.transform)project.gpsCalib={pt1:gpsCalib.pt1,pt2:gpsCalib.pt2,transform:gpsCalib.transform};
   if(window.getScan3DExportData){
@@ -7678,6 +7760,7 @@ function importProject(e){
     if(project.geocartoData){geocartoData=project.geocartoData;if(!geocartoData.infosGeotech&&project.infoGeotechnicien)geocartoData.infosGeotech=project.infoGeotechnicien;try{renderGeocartoPanel();}catch(e){console.warn('renderGeocartoPanel error:',e);}}
     const ms1=document.getElementById('rpt-mission-select');if(ms1&&projectMission)ms1.value=projectMission;
     if(project.reportChapters)reportChapters=project.reportChapters;
+    report2=project.report2||null;
     if(project.modeleFormations)modeleFormations=project.modeleFormations;
     if(project.gpsCalib){gpsCalib=project.gpsCalib;try{gpsCalibUpdateUI();}catch(e){}}
     const hAddr0=document.getElementById('ia-geo-addr');if(hAddr0&&projectAddr)hAddr0.value=projectAddr;
@@ -8255,6 +8338,160 @@ function openRapport(){
 }
 function closeRapport(){
   document.getElementById('rapport-panel').classList.remove('open');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ÉDITEUR RAPPORT v2 — coquille onglets + aperçu live (Phase A, inspiré de SolAnge)
+// ═══════════════════════════════════════════════════════════════
+let report2=null;
+const RPT2_TABS=[
+  {id:'coord',num:'',title:'Coordonnées',subs:[{id:'coord',title:'Coordonnées'}]},
+  {id:'mission',num:'1',title:'Mission',subs:[{id:'mission',title:'Présentation de la mission'}]},
+  {id:'enquete',num:'2',title:'Enquête documentaire',subs:[
+    {id:'geo',title:'2.1.1 Contexte géographique'},
+    {id:'geol',title:'2.1.2 Contexte géologique'},
+    {id:'risques',title:'2.1.3 Risques naturels'},
+    {id:'projet',title:'2.2 Descriptif général du projet'}]},
+  {id:'invest',num:'3',title:'Investigations géotechniques',subs:[
+    {id:'site',title:'3.1 Prospection sur site'},
+    {id:'geophy',title:'3.2 Prospection géophysique'},
+    {id:'penetro',title:'3.3.1 Pénétromètres'},
+    {id:'tariere',title:'3.3.2 Tarières / Pelle mécanique'},
+    {id:'eau',title:"3.4 Niveaux d'eau"},
+    {id:'autres',title:'3.5 Autres essais'}]},
+  {id:'conclu',num:'4',title:'Conclusions',subs:[
+    {id:'avis',title:'4.1 Avis géotechnique'},
+    {id:'fondations',title:'4.2 Fondations préconisées'},
+    {id:'sismique',title:'4.3 Sismicité'},
+    {id:'niveaubas',title:'4.4 Traitement du niveau bas'},
+    {id:'execution',title:'4.5 Exécution / avoisinants / eaux'}]},
+  {id:'annexes',num:'5',title:'Annexes',subs:[{id:'annexes',title:'Annexes'}]},
+  {id:'qualite',num:'',title:'Qualité / Temps',subs:[{id:'qualite',title:'Qualité / Temps'}]}
+];
+const RPT2_MISSIONS=['G1 ES','G1 PGC','G2 AVP','G2 PRO','G2 AVP+PRO','G3','G4','G5'];
+const RPT2_SCHEMA={
+  coord:[
+    {key:'dossier',label:'N° dossier',type:'text',ph:'Ex : 2607011'},
+    {key:'commande',label:'N° de commande',type:'text'},
+    {key:'moa',label:"Maître d'ouvrage / demandeur",type:'text'},
+    {key:'adresse',label:'Adresse du chantier',type:'text'},
+    {key:'redacteur',label:'Rédacteur',type:'text'},
+    {key:'relecteur',label:'Relecteur',type:'text'},
+    {key:'date_inter',label:"Date d'intervention",type:'date'},
+    {key:'date_envoi',label:"Date d'envoi prévue",type:'date'},
+    {key:'difficulte',label:'Difficulté',type:'select',opts:['','Facile','Normale','Difficile']}
+  ],
+  mission:[
+    {key:'type',label:'Type de mission',type:'select',opts:['',...RPT2_MISSIONS]},
+    {key:'conformite',label:'Préciser si prestation non conforme au devis',type:'textarea',hint:"Ex : la prospection géophysique n'a pu être réalisée (sol trop compact en surface), un sondage supplémentaire au pénétromètre a été effectué."},
+    {key:'objectifs',label:"Objectifs de l'étude",type:'textarea',hint:'Texte prérempli à ajuster ; préciser tout objectif complémentaire inclus dans la mission.'},
+    {key:'hors_mission',label:'Parties hors mission',type:'textarea',hint:"Ex : l'étude de la terrasse / de la piscine extérieure."},
+    {key:'programme',label:'Programme des investigations effectuées',type:'textarea',hint:'Ex : examen visuel de la ZIG, 4 pénétromètres dynamiques (NF EN ISO 22476-2), 1 pelle mécanique…'}
+  ]
+};
+function rpt2DefaultSchema(sub){return [{key:'content',label:sub.title,type:'textarea',hint:'Saisie libre pour l’instant — structuration détaillée prévue dans une prochaine phase.'}];}
+function rpt2SchemaFor(sub){return RPT2_SCHEMA[sub.id]||rpt2DefaultSchema(sub);}
+function rpt2New(){return{etat:'en_enquete',activeTab:'coord',activeSub:'coord',fields:{}};}
+function rpt2HasContent(r){return !!(r&&r.fields&&Object.keys(r.fields).some(k=>String(r.fields[k]||'').trim()!==''));}
+function rpt2K(sub,key){return sub+'::'+key;}
+function rpt2Get(sub,key){return (report2&&report2.fields&&report2.fields[rpt2K(sub,key)])||'';}
+function rpt2Set(sub,key,val){if(!report2)report2=rpt2New();report2.fields[rpt2K(sub,key)]=val;rpt2RenderTabsMain();rpt2RenderPreview();if(typeof markDirty==='function')markDirty();}
+function rpt2TabById(id){return RPT2_TABS.find(t=>t.id===id);}
+function rpt2TabDone(tab){return tab.subs.some(s=>rpt2SchemaFor(s).some(f=>String(rpt2Get(s.id,f.key)||'').trim()!==''));}
+function rpt2Esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+
+function openRpt2(){
+  if(!report2)report2=rpt2New();
+  const refFull=(document.getElementById('project-ref')?document.getElementById('project-ref').value:'').trim();
+  let ref=refFull; if(projectName&&ref.endsWith(projectName))ref=ref.slice(0,-projectName.length).trim();
+  if(!rpt2Get('coord','dossier')&&ref)report2.fields[rpt2K('coord','dossier')]=ref;
+  if(!rpt2Get('coord','moa')&&projectName)report2.fields[rpt2K('coord','moa')]=projectName;
+  if(!rpt2Get('coord','adresse')){const a=[projectAddr,projectCp,projectVille].filter(Boolean).join(' ');if(a)report2.fields[rpt2K('coord','adresse')]=a;}
+  if(!rpt2Get('mission','type')&&projectMission){const m=RPT2_MISSIONS.find(x=>String(projectMission).replace(/_/g,' ').includes(x));if(m)report2.fields[rpt2K('mission','type')]=m;}
+  const es=document.getElementById('rpt2-etat');if(es)es.value=report2.etat||'en_enquete';
+  const lbl=document.getElementById('rpt2-dossier-label');if(lbl)lbl.textContent='Rapport de sol'+(ref?' — '+ref:'')+(projectName?' · '+projectName:'');
+  if(!rpt2TabById(report2.activeTab))report2.activeTab='coord';
+  const at=rpt2TabById(report2.activeTab); if(!at.subs.find(s=>s.id===report2.activeSub))report2.activeSub=at.subs[0].id;
+  rpt2RenderTabsMain();rpt2RenderTabsSub();rpt2RenderContent();rpt2RenderPreview();
+  document.getElementById('rpt2-panel').classList.add('open');
+}
+function closeRpt2(){document.getElementById('rpt2-panel').classList.remove('open');if(typeof markDirty==='function')markDirty();if(typeof silentSave==='function')silentSave();}
+function rpt2SetEtat(v){if(!report2)report2=rpt2New();report2.etat=v;if(typeof markDirty==='function')markDirty();}
+function rpt2Valider(){if(typeof showToast==='function')showToast('Rapport enregistré');closeRpt2();}
+function rpt2SelectTab(id){if(!report2)return;report2.activeTab=id;report2.activeSub=rpt2TabById(id).subs[0].id;rpt2RenderTabsMain();rpt2RenderTabsSub();rpt2RenderContent();}
+function rpt2SelectSub(id){if(!report2)return;report2.activeSub=id;rpt2RenderTabsSub();rpt2RenderContent();}
+
+function rpt2RenderTabsMain(){
+  const c=document.getElementById('rpt2-tabs-main');if(!c||!report2)return;
+  c.innerHTML=RPT2_TABS.map(t=>{
+    const done=rpt2TabDone(t);
+    const st=`<span class="rpt2-tab-st ${done?'ok':'no'}">${done?'✔':'✘'}</span>`;
+    const num=t.num?`<span class="rpt2-tab-num">${t.num}</span>`:'';
+    return `<button class="rpt2-tab-main ${report2.activeTab===t.id?'active':''}" onclick="rpt2SelectTab('${t.id}')">${st}${num}<span>${rpt2Esc(t.title)}</span></button>`;
+  }).join('');
+}
+function rpt2RenderTabsSub(){
+  const c=document.getElementById('rpt2-tabs-sub');if(!c||!report2)return;
+  const tab=rpt2TabById(report2.activeTab);
+  c.style.display=tab.subs.length>1?'flex':'none';
+  c.innerHTML=tab.subs.map(s=>`<button class="rpt2-tab-sub ${report2.activeSub===s.id?'active':''}" onclick="rpt2SelectSub('${s.id}')">${rpt2Esc(s.title)}</button>`).join('');
+}
+function rpt2RenderContent(){
+  const c=document.getElementById('rpt2-content');if(!c||!report2)return;
+  const tab=rpt2TabById(report2.activeTab);
+  const sub=tab.subs.find(s=>s.id===report2.activeSub)||tab.subs[0];
+  const schema=rpt2SchemaFor(sub);
+  const isDefault=!RPT2_SCHEMA[sub.id];
+  let html=`<div class="rpt2-sub-title">${rpt2Esc(sub.title)}</div>`;
+  if(isDefault)html+=`<div class="rpt2-phase-note">🚧 Onglet en cours de construction : la saisie libre ci-dessous est enregistrée et apparaît dans l'aperçu. La structuration détaillée (champs, tableaux, listes de phrases-types) viendra dans les prochaines phases.</div>`;
+  if(sub.id==='coord'){
+    const shorts=schema.filter(f=>f.type!=='textarea'),longs=schema.filter(f=>f.type==='textarea');
+    html+=`<div class="rpt2-grid">${shorts.map(f=>rpt2FieldHtml(sub.id,f)).join('')}</div>`+longs.map(f=>rpt2FieldHtml(sub.id,f)).join('');
+  }else{
+    html+=schema.map(f=>rpt2FieldHtml(sub.id,f)).join('');
+  }
+  c.innerHTML=html;
+}
+function rpt2FieldHtml(subId,f){
+  const val=rpt2Get(subId,f.key);
+  const idAttr=`rpt2f-${subId}-${f.key}`;
+  let control;
+  if(f.type==='textarea')control=`<textarea id="${idAttr}" oninput="rpt2Set('${subId}','${f.key}',this.value)" placeholder="${rpt2Esc(f.ph||'')}">${rpt2Esc(val)}</textarea>`;
+  else if(f.type==='select')control=`<select id="${idAttr}" onchange="rpt2Set('${subId}','${f.key}',this.value)">${f.opts.map(o=>`<option value="${rpt2Esc(o)}" ${o===val?'selected':''}>${rpt2Esc(o||'—')}</option>`).join('')}</select>`;
+  else control=`<input type="${f.type}" id="${idAttr}" oninput="rpt2Set('${subId}','${f.key}',this.value)" value="${rpt2Esc(val)}" placeholder="${rpt2Esc(f.ph||'')}">`;
+  return `<div class="rpt2-field"><label>${rpt2Esc(f.label)}</label>${f.hint?`<div class="rpt2-hint">${rpt2Esc(f.hint)}</div>`:''}${control}</div>`;
+}
+function rpt2RenderPreview(){
+  const c=document.getElementById('rpt2-preview');if(!c)return;
+  const g=(sub,key)=>rpt2Get(sub,key);
+  const dossier=g('coord','dossier'),moa=g('coord','moa'),adr=g('coord','adresse'),mtype=g('mission','type');
+  let h=`<div class="rpt2-pv-cover"><div class="rpt2-pv-kicker">Rapport géotechnique — NF P 94-500</div>`+
+    `<div class="rpt2-pv-title">${rpt2Esc(moa||projectName||'Projet')}</div><div class="rpt2-pv-meta">`+
+    (dossier?`<div><b>Dossier :</b> ${rpt2Esc(dossier)}</div>`:'')+
+    (mtype?`<div><b>Mission :</b> ${rpt2Esc(mtype)}</div>`:'')+
+    (adr?`<div><b>Adresse :</b> ${rpt2Esc(adr)}</div>`:'')+`</div></div>`;
+  RPT2_TABS.filter(t=>t.id!=='coord').forEach(t=>{
+    h+=`<div class="rpt2-pv-h">${t.num?t.num+'. ':''}${rpt2Esc(t.title)}</div>`;
+    t.subs.forEach(s=>{
+      const schema=rpt2SchemaFor(s);
+      const anyVal=schema.some(f=>String(g(s.id,f.key)||'').trim()!=='');
+      if(t.subs.length>1)h+=`<div class="rpt2-pv-sub">${rpt2Esc(s.title)}</div>`;
+      if(anyVal){
+        schema.forEach(f=>{const v=g(s.id,f.key);if(!v||f.type==='date')return;
+          if(f.type==='select')h+=`<div class="rpt2-pv-txt"><b>${rpt2Esc(f.label)} :</b> ${rpt2Esc(v)}</div>`;
+          else h+=`<div class="rpt2-pv-txt">${rpt2Esc(v)}</div>`;});
+      }else{
+        h+=`<div class="rpt2-pv-txt rpt2-pv-empty">(à compléter)</div>`;
+      }
+    });
+  });
+  c.innerHTML=h;
+}
+function rpt2PrintPreview(){
+  const html=document.getElementById('rpt2-preview').innerHTML;
+  const w=window.open('','_blank','width=820,height=1000');if(!w)return;
+  w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Aperçu rapport de sol</title><style>@page{size:A4;margin:18mm}body{font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#1a1a1a;line-height:1.55}.rpt2-pv-cover{border-bottom:3px solid #F2B705;padding-bottom:14px;margin-bottom:16px}.rpt2-pv-kicker{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#888;font-weight:700}.rpt2-pv-title{font-size:22px;font-weight:800;margin:4px 0}.rpt2-pv-meta{font-size:11px;color:#444}.rpt2-pv-meta b{color:#000}.rpt2-pv-h{font-size:14px;font-weight:800;border-left:4px solid #F2B705;padding-left:8px;margin:16px 0 5px}.rpt2-pv-sub{font-size:12px;font-weight:800;color:#333;margin:10px 0 3px}.rpt2-pv-txt{white-space:pre-wrap;text-align:justify;margin:0 0 6px}.rpt2-pv-empty{color:#bbb;font-style:italic}</style></head><body>'+html+'</body></html>');
+  w.document.close();setTimeout(()=>{try{w.print();}catch(e){}},400);
 }
 
 function rptChangeMission(val){
