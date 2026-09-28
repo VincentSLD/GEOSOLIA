@@ -1362,7 +1362,7 @@
       <div class="rpt2-title">🧾 <span id="rpt2-dossier-label">Rapport de sol</span></div>
       <div class="rpt2-tools">
         <button class="rpt2-close" id="rpt2-toggle-preview" onclick="rpt2TogglePreview()" title="Afficher / masquer l'aperçu du rapport à droite">👁 Masquer aperçu</button>
-        <button class="rpt2-close" onclick="rpt2Detach()" title="Ouvrir le rapport dans une fenêtre séparée (2e écran) — mise à jour automatique">🗔 Détacher</button>
+        <button class="rpt2-close" onclick="rpt2Detach()" title="Détacher tout l'éditeur dans une fenêtre séparée (2e écran) — projet partagé en direct">🗔 Détacher</button>
         <label class="rpt2-hideempty"><input type="checkbox" id="rpt2-hideempty" checked onchange="rpt2SetHideEmpty(this.checked)"> Masquer blocs vides</label>
         <select class="rpt2-etat-sel" id="rpt2-etat" onchange="rpt2SetEtat(this.value)" title="État du dossier">
           <option value="en_enquete">En enquête</option>
@@ -8421,6 +8421,7 @@ function rpt2TabDone(tab){return tab.subs.some(s=>{if(s.id==='fondations')return
 function rpt2Esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
 
 function openRpt2(){
+  if(rpt2DetachedWin&&!rpt2DetachedWin.closed){rpt2DetachedWin.focus();return;}
   if(!report2)report2=rpt2New();
   const refFull=(document.getElementById('project-ref')?document.getElementById('project-ref').value:'').trim();
   let ref=refFull; if(projectName&&ref.endsWith(projectName))ref=ref.slice(0,-projectName.length).trim();
@@ -8428,10 +8429,10 @@ function openRpt2(){
   if(!rpt2Get('coord','moa')&&projectName)report2.fields[rpt2K('coord','moa')]=projectName;
   if(!rpt2Get('coord','adresse')){const a=[projectAddr,projectCp,projectVille].filter(Boolean).join(' ');if(a)report2.fields[rpt2K('coord','adresse')]=a;}
   if(!rpt2Get('mission','type')&&projectMission){const m=RPT2_MISSIONS.find(x=>String(projectMission).replace(/_/g,' ').includes(x));if(m)report2.fields[rpt2K('mission','type')]=m;}
-  const es=document.getElementById('rpt2-etat');if(es)es.value=report2.etat||'en_enquete';
-  const he=document.getElementById('rpt2-hideempty');if(he)he.checked=!(report2.hideEmpty===false);
+  const es=rd('rpt2-etat');if(es)es.value=report2.etat||'en_enquete';
+  const he=rd('rpt2-hideempty');if(he)he.checked=!(report2.hideEmpty===false);
   rpt2ApplyPreviewVisibility();
-  const lbl=document.getElementById('rpt2-dossier-label');if(lbl)lbl.textContent='Rapport de sol'+(ref?' — '+ref:'')+(projectName?' · '+projectName:'');
+  const lbl=rd('rpt2-dossier-label');if(lbl)lbl.textContent='Rapport de sol'+(ref?' — '+ref:'')+(projectName?' · '+projectName:'');
   if(!rpt2TabById(report2.activeTab))report2.activeTab='coord';
   const at=rpt2TabById(report2.activeTab); if(!at.subs.find(s=>s.id===report2.activeSub))report2.activeSub=at.subs[0].id;
   rpt2RenderTabsMain();rpt2RenderTabsSub();rpt2RenderContent();rpt2RenderPreview();
@@ -8439,17 +8440,17 @@ function openRpt2(){
 }
 function closeRpt2(){document.getElementById('rpt2-panel').classList.remove('open');if(typeof markDirty==='function')markDirty();if(typeof silentSave==='function')silentSave();}
 function rpt2SetEtat(v){if(!report2)report2=rpt2New();report2.etat=v;if(typeof markDirty==='function')markDirty();}
-function rpt2Valider(){if(typeof showToast==='function')showToast('Rapport enregistré');closeRpt2();}
+function rpt2Valider(){if(typeof showToast==='function')showToast('Rapport enregistré');if(rpt2DetachedWin&&!rpt2DetachedWin.closed){rpt2DetachedWin.close();}else{closeRpt2();}}
 function rpt2ApplyPreviewVisibility(){
-  const w=document.querySelector('.rpt2-preview-wrap');if(w)w.style.display=rpt2PreviewOn?'flex':'none';
-  const b=document.getElementById('rpt2-toggle-preview');if(b){b.textContent=rpt2PreviewOn?'👁 Masquer aperçu':'👁 Afficher aperçu';}
+  const w=rdq('.rpt2-preview-wrap');if(w)w.style.display=rpt2PreviewOn?'flex':'none';
+  const b=rd('rpt2-toggle-preview');if(b){b.textContent=rpt2PreviewOn?'👁 Masquer aperçu':'👁 Afficher aperçu';}
 }
 function rpt2TogglePreview(){rpt2PreviewOn=!rpt2PreviewOn;rpt2ApplyPreviewVisibility();if(rpt2PreviewOn)rpt2RenderPreview();}
 function rpt2SelectTab(id){if(!report2)return;report2.activeTab=id;report2.activeSub=rpt2TabById(id).subs[0].id;rpt2RenderTabsMain();rpt2RenderTabsSub();rpt2RenderContent();}
 function rpt2SelectSub(id){if(!report2)return;report2.activeSub=id;rpt2RenderTabsSub();rpt2RenderContent();}
 
 function rpt2RenderTabsMain(){
-  const c=document.getElementById('rpt2-tabs-main');if(!c||!report2)return;
+  const c=rd('rpt2-tabs-main');if(!c||!report2)return;
   c.innerHTML=RPT2_TABS.map(t=>{
     const done=rpt2TabDone(t);
     const st=`<span class="rpt2-tab-st ${done?'ok':'no'}">${done?'✔':'✘'}</span>`;
@@ -8459,13 +8460,13 @@ function rpt2RenderTabsMain(){
   }).join('');
 }
 function rpt2RenderTabsSub(){
-  const c=document.getElementById('rpt2-tabs-sub');if(!c||!report2)return;
+  const c=rd('rpt2-tabs-sub');if(!c||!report2)return;
   const tab=rpt2TabById(report2.activeTab);
   c.style.display=tab.subs.length>1?'flex':'none';
   c.innerHTML=tab.subs.map(s=>`<button class="rpt2-tab-sub ${report2.activeSub===s.id?'active':''}" onclick="rpt2SelectSub('${s.id}')">${rpt2Esc(s.title)}</button>`).join('');
 }
 function rpt2RenderContent(){
-  const c=document.getElementById('rpt2-content');if(!c||!report2)return;
+  const c=rd('rpt2-content');if(!c||!report2)return;
   const tab=rpt2TabById(report2.activeTab);
   const sub=tab.subs.find(s=>s.id===report2.activeSub)||tab.subs[0];
   const schema=rpt2SchemaFor(sub);
@@ -8494,7 +8495,7 @@ function rpt2FieldHtml(subId,f){
   return `<div class="rpt2-field"><div class="rpt2-label-row"><label>${rpt2Esc(f.label)}</label><span class="rpt2-btn-group">${autoBtn}${phrBtn}</span></div>${f.hint?`<div class="rpt2-hint">${rpt2Esc(f.hint)}</div>`:''}${control}</div>`;
 }
 function rpt2RenderPreview(){
-  const c=document.getElementById('rpt2-preview');if(!c)return;
+  const c=rd('rpt2-preview');if(!c)return;
   const g=(sub,key)=>rpt2Get(sub,key);
   const dossier=g('coord','dossier'),moa=g('coord','moa'),adr=g('coord','adresse'),mtype=g('mission','type');
   let h=`<div class="rpt2-pv-cover"><div class="rpt2-pv-kicker">Rapport géotechnique — NF P 94-500</div>`+
@@ -8531,10 +8532,10 @@ function rpt2PhrasesFor(subId){
   if(typeof TEXTES_TYPES!=='undefined')cats.forEach(c=>{if(TEXTES_TYPES[c])arr=arr.concat(TEXTES_TYPES[c]);});
   return arr;
 }
-function rpt2OpenPhrases(subId,key){rpt2PhrTarget={subId,key};const s=document.getElementById('rpt2-phrases-search');if(s)s.value='';rpt2RenderPhrasesList('');document.getElementById('rpt2-phrases-modal').classList.add('open');}
-function rpt2ClosePhrases(){const m=document.getElementById('rpt2-phrases-modal');if(m)m.classList.remove('open');rpt2PhrTarget=null;}
+function rpt2OpenPhrases(subId,key){rpt2PhrTarget={subId,key};const s=rd('rpt2-phrases-search');if(s)s.value='';rpt2RenderPhrasesList('');const m=rd('rpt2-phrases-modal');if(m)m.classList.add('open');}
+function rpt2ClosePhrases(){const m=rd('rpt2-phrases-modal');if(m)m.classList.remove('open');rpt2PhrTarget=null;}
 function rpt2RenderPhrasesList(filter){
-  const list=document.getElementById('rpt2-phrases-list');if(!list||!rpt2PhrTarget)return;
+  const list=rd('rpt2-phrases-list');if(!list||!rpt2PhrTarget)return;
   const f=(filter||'').toLowerCase();
   rpt2PhrList=rpt2PhrasesFor(rpt2PhrTarget.subId).filter(p=>!f||(p.title+' '+p.text).toLowerCase().includes(f));
   if(!rpt2PhrList.length){list.innerHTML='<div class="rpt2-phr-empty">Aucune phrase-type pour cette section pour l\'instant.<br>(La bibliothèque sera enrichie via votre fichier Excel.)</div>';return;}
@@ -8558,7 +8559,7 @@ function rpt2PrintWindow(title,bodyHtml){
   w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+title+'</title><style>'+css+'</style></head><body>'+bodyHtml+'</body></html>');
   w.document.close();setTimeout(()=>{try{w.print();}catch(e){}},400);
 }
-function rpt2PrintPreview(){rpt2PrintWindow('Rapport de sol',document.getElementById('rpt2-preview').innerHTML);}
+function rpt2PrintPreview(){const p=rd('rpt2-preview');rpt2PrintWindow('Rapport de sol',p?p.innerHTML:'');}
 function rpt2PrintFiche(){
   const g=(s,k)=>rpt2Get(s,k),esc=rpt2Esc;
   let body=`<div class="rpt2-pv-cover"><div class="rpt2-pv-kicker">Fiche enquête</div><div class="rpt2-pv-title">${esc(g('coord','moa')||projectName||'Projet')}</div><div class="rpt2-pv-meta">`;
@@ -8797,9 +8798,8 @@ function rpt2ReportContentHtml(){
   h+=rpt2NivTableHtml(esc);
   return h;
 }
-function rpt2BuildReportHtml(withToolbar){
-  const toolbar=withToolbar?'<div class="r2-toolbar"><button onclick="window.print()">🖨 Imprimer / PDF</button><button onclick="if(window.opener&&window.opener.rpt2ForceSyncDetached)window.opener.rpt2ForceSyncDetached()">🔄 Actualiser</button><span>Rapport géotechnique — mise à jour automatique depuis GéoSolia</span></div>':'';
-  return '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Rapport de sol</title><style>'+RPT2_REPORT_CSS+'</style></head><body'+(withToolbar?' class="r2-hastoolbar"':'')+'>'+toolbar+'<div id="r2-root">'+rpt2ReportContentHtml()+'</div></body></html>';
+function rpt2BuildReportHtml(){
+  return '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Rapport de sol</title><style>'+RPT2_REPORT_CSS+'</style></head><body><div id="r2-root">'+rpt2ReportContentHtml()+'</div></body></html>';
 }
 function rpt2AnnexPhotosHtml(esc){
   const ph=(typeof photos!=='undefined'?photos:[])||[];
@@ -8818,31 +8818,44 @@ function rpt2AnnexRiskMapsHtml(esc){
   entries.forEach((e,i)=>{if(i>0&&i%2===0)h+='</div><div style="page-break-before:always;display:flex;flex-wrap:wrap;gap:18px;justify-content:center;padding-top:16px">';h+='<div style="width:46%;text-align:center"><div style="font-size:10pt;font-weight:700;margin-bottom:6px">'+esc(e[1])+'</div><img src="'+rm[e[0]]+'" style="max-width:100%;max-height:300px;border:1px solid #ccc"></div>';});
   h+='</div></section>';return h;
 }
-// Fenêtre détachée (2e écran), mise à jour automatique
-let rpt2DetachedWin=null,rpt2SyncTimer=null,rpt2Syncing=false;
+// Éditeur détaché (fenêtre liée, mémoire partagée via window.opener) — 2e écran
+let rpt2Doc=document,rpt2DetachedWin=null,rpt2SyncTimer=null,rpt2DetachTimer=null;
+function rpt2ActiveDoc(){if(rpt2Doc&&rpt2Doc!==document&&rpt2DetachedWin&&!rpt2DetachedWin.closed)return rpt2Doc;return document;}
+function rd(id){return rpt2ActiveDoc().getElementById(id);}
+function rdq(sel){return rpt2ActiveDoc().querySelector(sel);}
 function rpt2Detach(){
-  if(!report2){if(typeof showToast==='function')showToast('Ouvrez d\'abord un rapport');return;}
-  if(rpt2DetachedWin&&!rpt2DetachedWin.closed){rpt2DetachedWin.focus();rpt2ForceSyncDetached();return;}
-  rpt2DetachedWin=window.open('','rpt2report','width=820,height=1000');
-  if(!rpt2DetachedWin){alert('Autorisez les popups pour détacher le rapport.');return;}
-  try{rpt2DetachedWin.document.open();rpt2DetachedWin.document.write(rpt2BuildReportHtml(true));rpt2DetachedWin.document.close();}catch(e){console.warn(e);}
-  if(typeof showToast==='function')showToast('Rapport détaché — déplacez la fenêtre sur votre 2e écran');
-}
-function rpt2WriteDetached(){
-  if(!rpt2DetachedWin||rpt2DetachedWin.closed)return;
-  rpt2Syncing=true;
+  if(!report2){if(typeof showToast==='function')showToast('Ouvrez d\'abord la Rédaction');return;}
+  if(rpt2DetachedWin&&!rpt2DetachedWin.closed){rpt2DetachedWin.focus();return;}
+  const heads=Array.from(document.querySelectorAll('head style, head link[rel="stylesheet"]')).map(el=>el.outerHTML).join('\n');
+  const panel=document.getElementById('rpt2-panel');
+  const panelHtml=panel?panel.outerHTML:'';
+  const win=window.open('','rpt2editor','width=1150,height=1000');
+  if(!win){alert('Autorisez les popups pour détacher l\'éditeur.');return;}
+  rpt2DetachedWin=win;
+  const boot='<'+'script>(function(){var o=window.opener;if(!o)return;Object.getOwnPropertyNames(o).forEach(function(n){try{if((n.indexOf("rpt2")===0||/Rpt2$/.test(n))&&typeof o[n]==="function"){window[n]=o[n].bind(o);}}catch(e){}});window.closeRpt2=function(){window.close();};})();<'+'/script>';
   try{
-    const doc=rpt2DetachedWin.document,root=doc.getElementById('r2-root');
-    if(root){const sy=rpt2DetachedWin.scrollY||0;root.innerHTML=rpt2ReportContentHtml();try{rpt2DetachedWin.scrollTo(0,sy);}catch(e){}}
-    else{doc.open();doc.write(rpt2BuildReportHtml(true));doc.close();}
-  }catch(e){console.warn('rpt2WriteDetached',e);}
-  rpt2Syncing=false;
+    win.document.open();
+    win.document.write('<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Rédaction — Rapport de sol</title>'+heads+'<style>html,body{margin:0;height:100%;overflow:hidden;background:var(--gray-50,#f5f5f5)}#rpt2-panel{display:flex!important;position:fixed;inset:0}</style></head><body>'+panelHtml+boot+'</body></html>');
+    win.document.close();
+  }catch(e){console.warn('detach write',e);}
+  rpt2Doc=win.document;
+  if(panel)panel.classList.remove('open');
+  setTimeout(function(){
+    try{
+      const es=rd('rpt2-etat');if(es)es.value=(report2.etat||'en_enquete');
+      const he=rd('rpt2-hideempty');if(he)he.checked=!(report2.hideEmpty===false);
+      const srcLbl=document.getElementById('rpt2-dossier-label'),lbl=rd('rpt2-dossier-label');if(lbl&&srcLbl)lbl.textContent=srcLbl.textContent;
+      rpt2RenderTabsMain();rpt2RenderTabsSub();rpt2RenderContent();rpt2RenderPreview();rpt2ApplyPreviewVisibility();
+    }catch(e){console.warn('detach render',e);}
+  },80);
+  clearInterval(rpt2DetachTimer);rpt2DetachTimer=setInterval(function(){if(!rpt2DetachedWin||rpt2DetachedWin.closed)rpt2Reattach();},800);
+  if(typeof showToast==='function')showToast('Éditeur détaché — placez-le sur votre 2e écran');
 }
+function rpt2Reattach(){clearInterval(rpt2DetachTimer);rpt2DetachTimer=null;rpt2DetachedWin=null;rpt2Doc=document;}
 function rpt2SyncDetached(){
-  if(rpt2Syncing||!rpt2DetachedWin||rpt2DetachedWin.closed)return;
-  clearTimeout(rpt2SyncTimer);rpt2SyncTimer=setTimeout(rpt2WriteDetached,500);
+  if(!rpt2DetachedWin||rpt2DetachedWin.closed)return;
+  clearTimeout(rpt2SyncTimer);rpt2SyncTimer=setTimeout(function(){try{if(rpt2DetachedWin&&!rpt2DetachedWin.closed){rpt2RenderTabsMain();rpt2RenderPreview();}}catch(e){}},400);
 }
-function rpt2ForceSyncDetached(){if(rpt2DetachedWin&&!rpt2DetachedWin.closed)rpt2WriteDetached();}
 function rpt2PrintFullReport(){
   if(!report2){if(typeof showToast==='function')showToast('Rien à générer — remplissez d\'abord le rapport');return;}
   let html;try{html=rpt2BuildReportHtml();}catch(e){console.error('rpt2BuildReportHtml',e);alert('Erreur lors de la génération du rapport : '+e.message);return;}
@@ -8993,7 +9006,7 @@ function rpt2FondationsHtml(){
 }
 function rpt2FondSetText(idx,key,val){
   rpt2FondEnsure();const v=report2.fondations.variantes[idx];if(!v)return;v[key]=val;
-  if(key==='qd'){const b=document.getElementById('rpt2-calc-box');if(b)b.innerHTML=rpt2FondCalcBoxHtml(v);}
+  if(key==='qd'){const b=rd('rpt2-calc-box');if(b)b.innerHTML=rpt2FondCalcBoxHtml(v);}
   rpt2RenderTabsMain();rpt2RenderPreview();if(typeof markDirty==='function')markDirty();
 }
 function rpt2FondSetSelect(idx,key,val){
