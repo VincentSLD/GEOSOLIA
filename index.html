@@ -8788,8 +8788,9 @@ function rpt2ReportContentHtml(){
   });
   // Annexes
   h+='<section class="r2-annex-cover"><div class="r2-annex-band"></div><h2>Annexes</h2><div class="r2-annex-band"></div></section>';
-  if(typeof planImgSrc!=='undefined'&&planImgSrc){
-    h+='<section class="r2-chap"><div class="r2-chap-h"><span class="r2-chap-n">5.2</span><span class="r2-chap-t">Plan d\'implantation des sondages</span></div><div style="text-align:center"><img src="'+planImgSrc+'" style="max-width:100%;max-height:680px;border:1px solid #ddd"></div></section>';
+  const planSrc=(typeof rpt2PlanSnap!=='undefined'&&rpt2PlanSnap)?rpt2PlanSnap:((typeof planImgSrc!=='undefined'&&planImgSrc)?planImgSrc:'');
+  if(planSrc){
+    h+='<section class="r2-chap"><div class="r2-chap-h"><span class="r2-chap-n">5.2</span><span class="r2-chap-t">Plan d\'implantation des sondages</span></div><div style="text-align:center"><img src="'+planSrc+'" style="max-width:100%;max-height:760px;border:1px solid #ddd"></div></section>';
   }
   h+=rpt2AnnexSondagesHtml(esc);
   h+=rpt2AnnexPhotosHtml(esc);
@@ -8819,11 +8820,20 @@ function rpt2AnnexRiskMapsHtml(esc){
   h+='</div></section>';return h;
 }
 // Éditeur détaché (fenêtre liée, mémoire partagée via window.opener) — 2e écran
-let rpt2Doc=document,rpt2DetachedWin=null,rpt2SyncTimer=null,rpt2DetachTimer=null;
+let rpt2Doc=document,rpt2DetachedWin=null,rpt2SyncTimer=null,rpt2DetachTimer=null,rpt2PlanSnap=null;
 function rpt2ActiveDoc(){if(rpt2Doc&&rpt2Doc!==document&&rpt2DetachedWin&&!rpt2DetachedWin.closed)return rpt2Doc;return document;}
 function rd(id){return rpt2ActiveDoc().getElementById(id);}
 function rdq(sel){return rpt2ActiveDoc().querySelector(sel);}
 function rpt2HostWin(){return (rpt2DetachedWin&&!rpt2DetachedWin.closed)?rpt2DetachedWin:window;}
+// Capture le plan annoté composité (dessins, textes, vignettes, mesures, recadrage) — comme à l'écran
+function rpt2CapturePlan(cb){
+  const hasPlan=(typeof planImgSrc!=='undefined'&&planImgSrc);
+  const hasEls=(typeof elements!=='undefined'&&elements&&elements.length);
+  if(typeof renderPlanToCanvas==='function'&&(hasPlan||hasEls)){
+    try{renderPlanToCanvas(function(c){try{rpt2PlanSnap=c.toDataURL('image/png');}catch(e){rpt2PlanSnap=hasPlan?planImgSrc:null;}if(cb)cb();});return;}catch(e){}
+  }
+  rpt2PlanSnap=hasPlan?planImgSrc:null;if(cb)cb();
+}
 function rpt2Detach(){
   if(!report2){if(typeof showToast==='function')showToast('Ouvrez d\'abord la Rédaction');return;}
   if(rpt2DetachedWin&&!rpt2DetachedWin.closed){rpt2DetachedWin.focus();return;}
@@ -8858,12 +8868,16 @@ function rpt2SyncDetached(){
   clearTimeout(rpt2SyncTimer);rpt2SyncTimer=setTimeout(function(){try{if(rpt2DetachedWin&&!rpt2DetachedWin.closed){rpt2RenderTabsMain();rpt2RenderPreview();}}catch(e){}},400);
 }
 function rpt2PrintFullReport(){
-  if(!report2){if(typeof showToast==='function')showToast('Rien à générer — remplissez d\'abord le rapport');return;}
-  let html;try{html=rpt2BuildReportHtml();}catch(e){console.error('rpt2BuildReportHtml',e);alert('Erreur lors de la génération du rapport : '+e.message);return;}
+  if(!report2){rpt2HostWin().alert('Ouvrez d\'abord la Rédaction');return;}
+  // Ouvre la fenêtre immédiatement (dans le geste utilisateur) pour éviter le blocage popup
   const w=rpt2HostWin().open('','_blank','width=920,height=1000');
   if(!w){rpt2HostWin().alert('Autorisez les popups pour générer le rapport de sol.');return;}
-  w.document.write(html);w.document.close();
-  w.onload=function(){setTimeout(function(){try{w.print();}catch(e){}},500);};
+  try{w.document.write('<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Rapport de sol</title></head><body style="font-family:Arial,sans-serif;color:#777;padding:60px;text-align:center">Génération du rapport en cours…</body></html>');w.document.close();}catch(e){}
+  // Capture le plan annoté composité (comme à l'écran), puis remplit le rapport
+  rpt2CapturePlan(function(){
+    let html;try{html=rpt2BuildReportHtml();}catch(e){console.error('rpt2BuildReportHtml',e);try{w.document.body.innerHTML='Erreur lors de la génération : '+e.message;}catch(_){}return;}
+    try{w.document.open();w.document.write(html);w.document.close();setTimeout(function(){try{w.focus();w.print();}catch(e){}},600);}catch(e){console.warn(e);}
+  });
   if(typeof showToast==='function')showToast('Rapport de sol généré');
 }
 
