@@ -826,6 +826,10 @@
   .rpt2-rail button.primary{background:var(--yellow);border-color:var(--yellow);color:var(--black)}
   .rpt2-rail button:disabled{opacity:.45;cursor:not-allowed}
   .rpt2-rail-ico{font-size:17px}
+  .rpt2-label-row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .rpt2-label-row>label{margin:0}
+  .rpt2-auto-btn{border:1px solid var(--yellow);background:var(--yellow-pale);color:#7a5c00;border-radius:6px;padding:3px 9px;font-size:10.5px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0}
+  .rpt2-auto-btn:hover{background:var(--yellow);color:var(--black)}
   @media(max-width:900px){.rpt2-preview-wrap{display:none}.rpt2-grid{grid-template-columns:1fr}}
 
   /* ═══ PANNEAU MODÈLE GÉOTECHNIQUE ═══ */
@@ -1345,6 +1349,7 @@
       <div class="rpt2-preview-wrap"><div class="rpt2-page" id="rpt2-preview"></div></div>
       <div class="rpt2-rail">
         <button class="primary" onclick="rpt2Valider()"><span class="rpt2-rail-ico">✔️</span>Valider</button>
+        <button onclick="rpt2AutoAll()" title="Remplir tous les champs vides depuis GéoCarto et les sondages"><span class="rpt2-rail-ico">⚡</span>Auto-remplir</button>
         <button onclick="rpt2PrintPreview()"><span class="rpt2-rail-ico">📄</span>Rapport de sol</button>
         <button disabled title="À venir (phase ultérieure)"><span class="rpt2-rail-ico">🔎</span>Fiche enquête</button>
         <button disabled title="À venir (phase ultérieure)"><span class="rpt2-rail-ico">📈</span>Impr. pénétros</button>
@@ -8205,7 +8210,7 @@ function rptAutoRisques(){
 
 function rptAutoSondagesProgramme(){
   if(!sondages||sondages.length===0)return '';
-  const types={penetroDyn:'Pénétromètre dynamique',penetroStat:'Pénétromètre statique',tariere:'Tarière',pelleMeca:'Pelle mécanique',piezo:'Piézomètre',infiltro:'Infiltrométrie',forageDestructif:'Forage destructif',recoFondation:'Reconnaissance de fondation',labo:'Essai de laboratoire'};
+  const types={penetro_dyn:'Pénétromètre dynamique',penetro_stat:'Pénétromètre statique',tariere:'Tarière',pelle_meca:'Pelle mécanique',piezometre:'Piézomètre',infiltro:'Infiltrométrie',forage_destr:'Forage destructif',fondation:'Reconnaissance de fondation',essai_labo:'Essai de laboratoire',pressio:'Pressiomètre',spt:'SPT'};
   const counts={};
   sondages.forEach(s=>{counts[s.type]=(counts[s.type]||0)+1;});
   let t='Le programme de reconnaissance a comporté :\n';
@@ -8332,8 +8337,31 @@ const RPT2_SCHEMA={
     {key:'conformite',label:'Préciser si prestation non conforme au devis',type:'textarea',hint:"Ex : la prospection géophysique n'a pu être réalisée (sol trop compact en surface), un sondage supplémentaire au pénétromètre a été effectué."},
     {key:'objectifs',label:"Objectifs de l'étude",type:'textarea',hint:'Texte prérempli à ajuster ; préciser tout objectif complémentaire inclus dans la mission.'},
     {key:'hors_mission',label:'Parties hors mission',type:'textarea',hint:"Ex : l'étude de la terrasse / de la piscine extérieure."},
-    {key:'programme',label:'Programme des investigations effectuées',type:'textarea',hint:'Ex : examen visuel de la ZIG, 4 pénétromètres dynamiques (NF EN ISO 22476-2), 1 pelle mécanique…'}
-  ]
+    {key:'programme',label:'Programme des investigations effectuées',type:'textarea',auto:'programme',hint:'⚡ = synthèse du programme depuis les sondages saisis.'}
+  ],
+  geo:[{key:'content',label:'Contexte géographique',type:'textarea',auto:'site',hint:'Localisation, coordonnées GPS, altitude. ⚡ = depuis le projet / GéoCarto.'}],
+  geol:[{key:'content',label:'Contexte géologique',type:'textarea',auto:'geologie',hint:'Carte BRGM (feuille, notation), description, lithologie. ⚡ = depuis GéoCarto.'}],
+  risques:[{key:'content',label:'Risques naturels',type:'textarea',auto:'risques',hint:'Sismicité, RGA, CatNat, cavités, mouvements de terrain. ⚡ = depuis GéoCarto.'}],
+  projet:[
+    {key:'typologie',label:'Typologie / niveaux / emprise',type:'textarea',auto:'projet',hint:'⚡ = depuis GéoCarto (typologie, nombre de niveaux, emprise au sol).'},
+    {key:'niveau_bas',label:'Niveau bas et cote',type:'text',ph:'Ex : dallage sur terre-plein à la cote 46,8 m NGF'},
+    {key:'terrassement',label:'Terrassement (déblais / remblais)',type:'textarea'},
+    {key:'eaux',label:'Gestion des eaux (EU / EP)',type:'textarea'}
+  ],
+  site:[
+    {key:'topo',label:'Topographie / pente',type:'textarea'},
+    {key:'terrassement',label:'Terrassement',type:'textarea'},
+    {key:'vegetation',label:'Végétation',type:'textarea'},
+    {key:'avoisinants',label:'Avoisinants',type:'textarea'},
+    {key:'vrd',label:'Réseaux / VRD',type:'textarea'},
+    {key:'eau',label:'Eau',type:'textarea'},
+    {key:'risques',label:'Risques',type:'textarea'}
+  ],
+  geophy:[{key:'content',label:'Prospection géophysique',type:'textarea',hint:'Résultats de la géophysique (résistivité, homogénéité latérale…).'}],
+  penetro:[{key:'content',label:'Résultats — pénétromètres',type:'textarea',auto:'penetros',hint:'⚡ = synthèse N min/max depuis les sondages pénétrométriques.'}],
+  tariere:[{key:'content',label:'Log lithologique — tarières / pelle',type:'textarea',auto:'tarieres',hint:'⚡ = coupes de sol depuis les sondages tarière / pelle mécanique.'}],
+  eau:[{key:'content',label:"Niveaux d'eau",type:'textarea',auto:'hydrogeo',hint:'⚡ = remontée de nappe (GéoCarto). Compléter avec les niveaux relevés en sondage.'}],
+  autres:[{key:'content',label:'Autres essais (VBS, Tromino, Pressio, SPT…)',type:'textarea',auto:'autres_essais',hint:'⚡ = synthèse pressiomètre / SPT / labo depuis les sondages.'}]
 };
 function rpt2DefaultSchema(sub){return [{key:'content',label:sub.title,type:'textarea',hint:'Saisie libre pour l’instant — structuration détaillée prévue dans une prochaine phase.'}];}
 function rpt2SchemaFor(sub){return RPT2_SCHEMA[sub.id]||rpt2DefaultSchema(sub);}
@@ -8405,7 +8433,8 @@ function rpt2FieldHtml(subId,f){
   if(f.type==='textarea')control=`<textarea id="${idAttr}" oninput="rpt2Set('${subId}','${f.key}',this.value)" placeholder="${rpt2Esc(f.ph||'')}">${rpt2Esc(val)}</textarea>`;
   else if(f.type==='select')control=`<select id="${idAttr}" onchange="rpt2Set('${subId}','${f.key}',this.value)">${f.opts.map(o=>`<option value="${rpt2Esc(o)}" ${o===val?'selected':''}>${rpt2Esc(o||'—')}</option>`).join('')}</select>`;
   else control=`<input type="${f.type}" id="${idAttr}" oninput="rpt2Set('${subId}','${f.key}',this.value)" value="${rpt2Esc(val)}" placeholder="${rpt2Esc(f.ph||'')}">`;
-  return `<div class="rpt2-field"><label>${rpt2Esc(f.label)}</label>${f.hint?`<div class="rpt2-hint">${rpt2Esc(f.hint)}</div>`:''}${control}</div>`;
+  const autoBtn=f.auto?`<button type="button" class="rpt2-auto-btn" onclick="rpt2AutoField('${subId}','${f.key}','${f.auto}')" title="Remplir ce champ depuis les données du projet">⚡ Depuis les données</button>`:'';
+  return `<div class="rpt2-field"><div class="rpt2-label-row"><label>${rpt2Esc(f.label)}</label>${autoBtn}</div>${f.hint?`<div class="rpt2-hint">${rpt2Esc(f.hint)}</div>`:''}${control}</div>`;
 }
 function rpt2RenderPreview(){
   const c=document.getElementById('rpt2-preview');if(!c)return;
@@ -8424,7 +8453,7 @@ function rpt2RenderPreview(){
       if(t.subs.length>1)h+=`<div class="rpt2-pv-sub">${rpt2Esc(s.title)}</div>`;
       if(anyVal){
         schema.forEach(f=>{const v=g(s.id,f.key);if(!v||f.type==='date')return;
-          if(f.type==='select')h+=`<div class="rpt2-pv-txt"><b>${rpt2Esc(f.label)} :</b> ${rpt2Esc(v)}</div>`;
+          if(f.type==='select'||(schema.length>1&&f.key!=='content'))h+=`<div class="rpt2-pv-txt"><b>${rpt2Esc(f.label)} :</b> ${rpt2Esc(v)}</div>`;
           else h+=`<div class="rpt2-pv-txt">${rpt2Esc(v)}</div>`;});
       }else{
         h+=`<div class="rpt2-pv-txt rpt2-pv-empty">(à compléter)</div>`;
@@ -8438,6 +8467,100 @@ function rpt2PrintPreview(){
   const w=window.open('','_blank','width=820,height=1000');if(!w)return;
   w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Aperçu rapport de sol</title><style>@page{size:A4;margin:18mm}body{font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#1a1a1a;line-height:1.55}.rpt2-pv-cover{border-bottom:3px solid #F2B705;padding-bottom:14px;margin-bottom:16px}.rpt2-pv-kicker{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#888;font-weight:700}.rpt2-pv-title{font-size:22px;font-weight:800;margin:4px 0}.rpt2-pv-meta{font-size:11px;color:#444}.rpt2-pv-meta b{color:#000}.rpt2-pv-h{font-size:14px;font-weight:800;border-left:4px solid #F2B705;padding-left:8px;margin:16px 0 5px}.rpt2-pv-sub{font-size:12px;font-weight:800;color:#333;margin:10px 0 3px}.rpt2-pv-txt{white-space:pre-wrap;text-align:justify;margin:0 0 6px}.rpt2-pv-empty{color:#bbb;font-style:italic}</style></head><body>'+html+'</body></html>');
   w.document.close();setTimeout(()=>{try{w.print();}catch(e){}},400);
+}
+
+// ── Phase B : remplissage des onglets depuis les données existantes (GéoCarto + sondages) ──
+function rpt2PenetrosText(){
+  const ps=(typeof sondages!=='undefined'?sondages:[]).filter(s=>s.type==='penetro_dyn'||s.type==='penetro_stat');
+  if(!ps.length)return '';
+  let t='';
+  ps.forEach(s=>{
+    let line='- '+(s.name||s.id);
+    if(s.data&&Array.isArray(s.data)){
+      const filled=s.data.filter(d=>d.blows!=null);
+      if(filled.length){const mn=Math.min(...filled.map(d=>d.blows)),mx=Math.max(...filled.map(d=>d.blows));line+=' : N = '+mn+' à '+mx+' coups/20 cm';}
+    }
+    if(s.sondageDepth!=null)line+=' (profondeur '+Number(s.sondageDepth).toFixed(2)+' m'+(s.refusal?', au refus':'')+')';
+    t+=line+'\n';
+  });
+  return t.trim();
+}
+function rpt2TarieresText(){
+  const ts=(typeof sondages!=='undefined'?sondages:[]).filter(s=>s.type==='tariere'||s.type==='pelle_meca');
+  if(!ts.length)return '';
+  let t='';
+  ts.forEach(s=>{
+    t+=(s.name||s.id)+(s.tnAltitude!=null?' (TN '+Number(s.tnAltitude).toFixed(2)+' m NGF)':'')+' :\n';
+    if(s.data&&Array.isArray(s.data))s.data.forEach(l=>{t+='  - '+(l.from!=null?l.from:0)+' à '+(l.to!=null?l.to:'?')+' m : '+(l.nature||'')+(l.description?' — '+l.description:'')+'\n';});
+    t+='\n';
+  });
+  return t.trim();
+}
+function rpt2AutresText(){
+  const es=(typeof sondages!=='undefined'?sondages:[]).filter(s=>['pressio','spt','essai_labo','infiltro','piezometre'].includes(s.type));
+  if(!es.length)return '';
+  const names={pressio:'Pressiomètre Ménard',spt:'Essai SPT',essai_labo:'Essais de laboratoire',infiltro:'Infiltrométrie',piezometre:'Piézomètre'};
+  let t='';
+  es.forEach(s=>{
+    t+='- '+(s.name||s.id)+' ('+(names[s.type]||s.type)+')';
+    if(s.type==='pressio'&&s.data&&s.data.readings){
+      const f=s.data.readings.filter(r=>r.pl!=null);
+      if(f.length)t+=' : Pl = '+Math.min(...f.map(r=>r.pl)).toFixed(2)+' à '+Math.max(...f.map(r=>r.pl)).toFixed(2)+' MPa';
+    }else if(s.type==='spt'&&s.data&&s.data.readings){
+      const f=s.data.readings.filter(r=>r.n2!=null||r.n3!=null);
+      if(f.length){const nv=f.map(r=>(r.n2||0)+(r.n3||0));t+=' : N_SPT = '+Math.min(...nv)+' à '+Math.max(...nv);}
+    }else if(s.sondageDepth!=null)t+=' — profondeur '+Number(s.sondageDepth).toFixed(2)+' m';
+    t+='\n';
+  });
+  return t.trim();
+}
+function rpt2ProjetText(){
+  const g=(typeof geocartoData!=='undefined'&&geocartoData)?geocartoData:{};
+  let t='';
+  if(g.typologie)t+='Typologie : '+g.typologie+'.\n';
+  if(g.nombreNiveaux)t+='Nombre de niveaux : '+g.nombreNiveaux+'.\n';
+  if(g.empriseAuSol)t+='Emprise au sol : '+g.empriseAuSol+' m².\n';
+  return t.trim();
+}
+function rpt2AutoText(key){
+  try{
+    switch(key){
+      case 'site':return rptAutoSite();
+      case 'geologie':return rptAutoGeologie();
+      case 'risques':return rptAutoRisques();
+      case 'hydrogeo':return rptAutoHydrogeo();
+      case 'programme':return rptAutoSondagesProgramme();
+      case 'penetros':return rpt2PenetrosText();
+      case 'tarieres':return rpt2TarieresText();
+      case 'autres_essais':return rpt2AutresText();
+      case 'projet':return rpt2ProjetText();
+    }
+  }catch(e){console.warn('rpt2AutoText',key,e);}
+  return '';
+}
+function rpt2AutoField(subId,key,autoKey){
+  const txt=rpt2AutoText(autoKey);
+  if(!txt){if(typeof showToast==='function')showToast('Aucune donnée disponible pour ce remplissage');else alert('Aucune donnée disponible pour ce remplissage.');return;}
+  const cur=rpt2Get(subId,key);
+  if(cur&&cur.trim()&&!confirm('Remplacer le contenu actuel de ce champ par les données du projet ?'))return;
+  if(!report2)report2=rpt2New();
+  report2.fields[rpt2K(subId,key)]=txt;
+  rpt2RenderContent();rpt2RenderTabsMain();rpt2RenderPreview();
+  if(typeof markDirty==='function')markDirty();
+}
+function rpt2AutoAll(){
+  if(!report2)report2=rpt2New();
+  let n=0;
+  RPT2_TABS.forEach(t=>t.subs.forEach(s=>{rpt2SchemaFor(s).forEach(f=>{
+    if(!f.auto)return;
+    const cur=rpt2Get(s.id,f.key);
+    if(cur&&cur.trim())return; // ne pas écraser une saisie existante
+    const txt=rpt2AutoText(f.auto);
+    if(txt){report2.fields[rpt2K(s.id,f.key)]=txt;n++;}
+  })}));
+  rpt2RenderContent();rpt2RenderTabsMain();rpt2RenderPreview();
+  if(typeof markDirty==='function')markDirty();
+  if(typeof showToast==='function')showToast(n>0?(n+' champ(s) rempli(s) depuis les données'):'Rien à remplir (champs déjà remplis ou aucune donnée)');
 }
 
 function rptChangeMission(val){
