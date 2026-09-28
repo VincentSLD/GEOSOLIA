@@ -1216,7 +1216,6 @@
     <button class="tool-btn" onclick="toggleInsertMenu()"><span class="icon" style="font-size:15px;line-height:1;display:inline-flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></span><span class="label">Insérer</span></button>
     <div class="tool-sep"></div>
     <button class="tool-btn" onclick="openMiseEnPage()"><span class="icon">📐</span><span class="label">Mise en Page</span></button>
-    <button class="tool-btn" onclick="openRapport()"><span class="icon">📋</span><span class="label">Rapport</span></button>
     <button class="tool-btn" onclick="openRpt2()"><span class="icon">🧾</span><span class="label">Rédaction</span></button>
     <button class="tool-btn" onclick="openModeleGeotech()"><span class="icon">⛏️</span><span class="label">Modèle</span></button>
     <div class="tool-sep"></div>
@@ -1326,57 +1325,6 @@
     </div>
   </div>
   <div id="main-body">
-  <div id="rapport-panel">
-    <div class="rpt-header">
-      <span>📋 Rapport Géotechnique</span>
-      <div class="rpt-header-right">
-        <button class="rpt-btn-secondary" onclick="rptAutoFillAll()" style="font-size:12px;padding:6px 14px;border-radius:6px">⚡ Remplissage auto</button>
-        <button class="rpt-btn-secondary" onclick="rptExportTxt()" style="font-size:12px;padding:6px 14px;border-radius:6px">📝 Export TXT</button>
-        <button class="rpt-btn-export" onclick="rptExportPDF()" style="font-size:12px;padding:6px 14px;border-radius:6px">📄 Export PDF</button>
-        <button class="rpt-header-close" onclick="closeRapport()">✕ Fermer</button>
-      </div>
-    </div>
-    <div class="rpt-top-bar">
-      <div class="rpt-mission-bar">
-        <span class="rpt-mission-label">Mission :</span>
-        <select id="rpt-mission-select" onchange="rptChangeMission(this.value)">
-          <option value="">— Sélectionner le type de mission —</option>
-          <option value="G1_ES">G1 REGAR — Étude de Site</option>
-          <option value="G1_PGC">G1 PGC — Principes Généraux de Construction</option>
-          <option value="EXE_PLUS">EXE+ — Exécution Plus</option>
-          <option value="G2_AVP">G2 AVP — Avant-Projet</option>
-          <option value="G2_PRO">G2 AVP + PRO — Avant-Projet et Projet</option>
-          <option value="G3">G3 — Suivi d'exécution</option>
-          <option value="G4">G4 — Supervision</option>
-          <option value="G5">G5 — Diagnostic</option>
-        </select>
-      </div>
-      <div class="rpt-progress">
-        <div class="rpt-progress-bar"><div class="rpt-progress-fill" id="rpt-progress-fill" style="width:0%"></div></div>
-        <span class="rpt-progress-text" id="rpt-progress-text">0 / 0</span>
-      </div>
-    </div>
-    <div class="rpt-body">
-      <div class="rpt-sidebar">
-        <div class="rpt-sidebar-tabs">
-          <button class="rpt-tab active" id="rpt-tab-sommaire" onclick="rptSwitchTab('sommaire')">Sommaire</button>
-          <button class="rpt-tab" id="rpt-tab-textes" onclick="rptSwitchTab('textes')">📚 Textes-types</button>
-        </div>
-        <div id="rpt-tab-content-sommaire" class="rpt-tab-content">
-          <div class="rpt-chapter-list" id="rpt-chapter-list"></div>
-        </div>
-        <div id="rpt-tab-content-textes" class="rpt-tab-content" style="display:none">
-          <div style="padding:8px 10px">
-            <input type="text" id="rpt-text-lib-search" placeholder="Rechercher..." oninput="rptRenderTextLib(this.value)" style="width:100%;padding:6px 10px;border:2px solid #eee;border-radius:6px;font-size:12px;box-sizing:border-box">
-          </div>
-          <div id="text-lib-list" style="flex:1;overflow-y:auto;padding:0 10px 10px"></div>
-        </div>
-      </div>
-      <div class="rpt-main" id="rpt-main">
-        <div class="rpt-empty-editor" id="rpt-empty-editor">Sélectionnez un type de mission puis<br>cliquez sur un chapitre pour commencer</div>
-      </div>
-    </div>
-  </div>
   <div id="rpt2-panel">
     <div class="rpt2-titlebar">
       <div class="rpt2-title">🧾 <span id="rpt2-dossier-label">Rapport de sol</span></div>
@@ -5829,9 +5777,7 @@ function renderGeocartoPanel(){
 
 function gcSyncMission(val){
   projectMission=val;
-  const rptSel=document.getElementById('rpt-mission-select');
-  if(rptSel)rptSel.value=val;
-  if(typeof rptChangeMission==='function')rptChangeMission(val);
+  // (ancien éditeur de rapport retiré — plus de synchronisation à faire ici)
   // Basculer la typologie selon la mission
   const typoSel=document.getElementById('gc-typologie');
   if(typoSel){
@@ -8505,6 +8451,7 @@ function rptChangeMission(val){
 
 function rptRenderSidebar(){
   const container=document.getElementById('rpt-chapter-list');
+  if(!container)return; // ancien éditeur retiré du DOM
   const tpl=RPT_TEMPLATES[projectMission];
   if(!tpl){
     container.innerHTML='<div style="text-align:center;padding:40px 16px;color:var(--gray-400);font-size:13px;font-weight:700">Sélectionnez un type de mission</div>';
