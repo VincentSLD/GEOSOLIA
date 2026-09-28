@@ -839,6 +839,21 @@
   .rpt2-calc-row b{color:var(--yellow)}
   .rpt2-calc-formula{color:#f2b705;font-size:10.5px;font-style:italic;padding:1px 0 4px}
   .rpt2-fond-del{border:none;background:#D94040;color:#fff;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit}
+  .rpt2-btn-group{display:flex;gap:6px}
+  .rpt2-print-toggle{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--gray-600);cursor:pointer;margin:0}
+  .rpt2-hideempty{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:#fff;cursor:pointer}
+  .rpt2-modal{position:absolute;inset:0;background:rgba(0,0,0,0.45);display:none;align-items:center;justify-content:center;z-index:20}
+  .rpt2-modal.open{display:flex}
+  .rpt2-modal-inner{background:#fff;width:560px;max-width:92%;max-height:80%;border-radius:12px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.4)}
+  .rpt2-modal-head{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--black);color:var(--yellow);font-weight:800;font-size:14px}
+  .rpt2-modal-head button{background:none;border:none;color:#fff;font-size:15px;cursor:pointer}
+  #rpt2-phrases-search{margin:12px 16px 6px;padding:8px 12px;border:2px solid var(--gray-200);border-radius:8px;font-size:13px;font-family:inherit;outline:none}
+  #rpt2-phrases-list{overflow-y:auto;padding:4px 16px 16px}
+  .rpt2-phr-item{border:1px solid var(--gray-200);border-radius:8px;padding:10px 12px;margin-bottom:8px;cursor:pointer;transition:all .15s}
+  .rpt2-phr-item:hover{border-color:var(--yellow);background:var(--yellow-pale)}
+  .rpt2-phr-title{font-size:12px;font-weight:800;color:var(--black);margin-bottom:3px}
+  .rpt2-phr-text{font-size:11px;color:var(--gray-600);line-height:1.5}
+  .rpt2-phr-empty{color:var(--gray-400);font-size:12px;text-align:center;padding:24px 10px}
   @media(max-width:900px){.rpt2-preview-wrap{display:none}.rpt2-grid{grid-template-columns:1fr}}
 
   /* ═══ PANNEAU MODÈLE GÉOTECHNIQUE ═══ */
@@ -1342,6 +1357,7 @@
     <div class="rpt2-titlebar">
       <div class="rpt2-title">🧾 <span id="rpt2-dossier-label">Rapport de sol</span></div>
       <div class="rpt2-tools">
+        <label class="rpt2-hideempty"><input type="checkbox" id="rpt2-hideempty" checked onchange="rpt2SetHideEmpty(this.checked)"> Masquer blocs vides</label>
         <select class="rpt2-etat-sel" id="rpt2-etat" onchange="rpt2SetEtat(this.value)" title="État du dossier">
           <option value="en_enquete">En enquête</option>
           <option value="en_cours">En cours</option>
@@ -1363,6 +1379,13 @@
         <button disabled title="À venir (phase ultérieure)"><span class="rpt2-rail-ico">🔎</span>Fiche enquête</button>
         <button disabled title="À venir (phase ultérieure)"><span class="rpt2-rail-ico">📈</span>Impr. pénétros</button>
         <button disabled title="À venir (phase ultérieure)"><span class="rpt2-rail-ico">💬</span>Échange</button>
+      </div>
+    </div>
+    <div id="rpt2-phrases-modal" class="rpt2-modal">
+      <div class="rpt2-modal-inner">
+        <div class="rpt2-modal-head"><span>📚 Phrases-types</span><button onclick="rpt2ClosePhrases()">✕</button></div>
+        <input type="text" id="rpt2-phrases-search" placeholder="Rechercher une phrase…" oninput="rpt2RenderPhrasesList(this.value)">
+        <div id="rpt2-phrases-list"></div>
       </div>
     </div>
   </div>
@@ -8398,6 +8421,7 @@ function openRpt2(){
   if(!rpt2Get('coord','adresse')){const a=[projectAddr,projectCp,projectVille].filter(Boolean).join(' ');if(a)report2.fields[rpt2K('coord','adresse')]=a;}
   if(!rpt2Get('mission','type')&&projectMission){const m=RPT2_MISSIONS.find(x=>String(projectMission).replace(/_/g,' ').includes(x));if(m)report2.fields[rpt2K('mission','type')]=m;}
   const es=document.getElementById('rpt2-etat');if(es)es.value=report2.etat||'en_enquete';
+  const he=document.getElementById('rpt2-hideempty');if(he)he.checked=!(report2.hideEmpty===false);
   const lbl=document.getElementById('rpt2-dossier-label');if(lbl)lbl.textContent='Rapport de sol'+(ref?' — '+ref:'')+(projectName?' · '+projectName:'');
   if(!rpt2TabById(report2.activeTab))report2.activeTab='coord';
   const at=rpt2TabById(report2.activeTab); if(!at.subs.find(s=>s.id===report2.activeSub))report2.activeSub=at.subs[0].id;
@@ -8431,7 +8455,7 @@ function rpt2RenderContent(){
   const sub=tab.subs.find(s=>s.id===report2.activeSub)||tab.subs[0];
   const schema=rpt2SchemaFor(sub);
   const isDefault=!RPT2_SCHEMA[sub.id];
-  let html=`<div class="rpt2-sub-title">${rpt2Esc(sub.title)}</div>`;
+  let html=`<div class="rpt2-sub-title">${rpt2Esc(sub.title)}</div>`+rpt2PrintToggleHtml(sub.id);
   if(sub.id==='fondations'){html+=rpt2FondationsHtml();c.innerHTML=html;return;}
   if(isDefault)html+=`<div class="rpt2-phase-note">🚧 Onglet en cours de construction : la saisie libre ci-dessous est enregistrée et apparaît dans l'aperçu. La structuration détaillée (champs, tableaux, listes de phrases-types) viendra dans les prochaines phases.</div>`;
   if(sub.id==='coord'){
@@ -8450,7 +8474,8 @@ function rpt2FieldHtml(subId,f){
   else if(f.type==='select')control=`<select id="${idAttr}" onchange="rpt2Set('${subId}','${f.key}',this.value)">${f.opts.map(o=>`<option value="${rpt2Esc(o)}" ${o===val?'selected':''}>${rpt2Esc(o||'—')}</option>`).join('')}</select>`;
   else control=`<input type="${f.type}" id="${idAttr}" oninput="rpt2Set('${subId}','${f.key}',this.value)" value="${rpt2Esc(val)}" placeholder="${rpt2Esc(f.ph||'')}">`;
   const autoBtn=f.auto?`<button type="button" class="rpt2-auto-btn" onclick="rpt2AutoField('${subId}','${f.key}','${f.auto}')" title="Remplir ce champ depuis les données du projet">⚡ Depuis les données</button>`:'';
-  return `<div class="rpt2-field"><div class="rpt2-label-row"><label>${rpt2Esc(f.label)}</label>${autoBtn}</div>${f.hint?`<div class="rpt2-hint">${rpt2Esc(f.hint)}</div>`:''}${control}</div>`;
+  const phrBtn=(f.type==='textarea'&&rpt2PhrasesFor(subId).length)?`<button type="button" class="rpt2-auto-btn" onclick="rpt2OpenPhrases('${subId}','${f.key}')" title="Insérer une phrase-type">📚 Phrases</button>`:'';
+  return `<div class="rpt2-field"><div class="rpt2-label-row"><label>${rpt2Esc(f.label)}</label><span class="rpt2-btn-group">${autoBtn}${phrBtn}</span></div>${f.hint?`<div class="rpt2-hint">${rpt2Esc(f.hint)}</div>`:''}${control}</div>`;
 }
 function rpt2RenderPreview(){
   const c=document.getElementById('rpt2-preview');if(!c)return;
@@ -8461,24 +8486,56 @@ function rpt2RenderPreview(){
     (dossier?`<div><b>Dossier :</b> ${rpt2Esc(dossier)}</div>`:'')+
     (mtype?`<div><b>Mission :</b> ${rpt2Esc(mtype)}</div>`:'')+
     (adr?`<div><b>Adresse :</b> ${rpt2Esc(adr)}</div>`:'')+`</div></div>`;
+  const hideEmpty=!(report2&&report2.hideEmpty===false);
   RPT2_TABS.filter(t=>t.id!=='coord').forEach(t=>{
-    h+=`<div class="rpt2-pv-h">${t.num?t.num+'. ':''}${rpt2Esc(t.title)}</div>`;
+    let sub='';
     t.subs.forEach(s=>{
-      const schema=rpt2SchemaFor(s);
-      const anyVal=schema.some(f=>String(g(s.id,f.key)||'').trim()!=='');
-      if(t.subs.length>1)h+=`<div class="rpt2-pv-sub">${rpt2Esc(s.title)}</div>`;
-      if(s.id==='fondations'){h+=rpt2FondPreview();return;}
-      if(anyVal){
-        schema.forEach(f=>{const v=g(s.id,f.key);if(!v||f.type==='date')return;
-          if(f.type==='select'||(schema.length>1&&f.key!=='content'))h+=`<div class="rpt2-pv-txt"><b>${rpt2Esc(f.label)} :</b> ${rpt2Esc(v)}</div>`;
-          else h+=`<div class="rpt2-pv-txt">${rpt2Esc(v)}</div>`;});
-      }else{
-        h+=`<div class="rpt2-pv-txt rpt2-pv-empty">(à compléter)</div>`;
-      }
+      if(!rpt2PrintOn(s.id))return;
+      const empty=rpt2SubEmpty(s);
+      if(empty&&hideEmpty)return;
+      let block='';
+      if(s.id==='fondations'){block=rpt2FondPreview();}
+      else if(empty){block='<div class="rpt2-pv-txt rpt2-pv-empty">(à compléter)</div>';}
+      else{const schema=rpt2SchemaFor(s);schema.forEach(f=>{const v=g(s.id,f.key);if(!v||f.type==='date')return;if(f.type==='select'||(schema.length>1&&f.key!=='content'))block+=`<div class="rpt2-pv-txt"><b>${rpt2Esc(f.label)} :</b> ${rpt2Esc(v)}</div>`;else block+=`<div class="rpt2-pv-txt">${rpt2Esc(v)}</div>`;});}
+      if(t.subs.length>1)sub+=`<div class="rpt2-pv-sub">${rpt2Esc(s.title)}</div>`;
+      sub+=block;
     });
+    if(!sub)return;
+    h+=`<div class="rpt2-pv-h">${t.num?t.num+'. ':''}${rpt2Esc(t.title)}</div>`+sub;
   });
   c.innerHTML=h;
 }
+// ── Phase D : phrases-types + cases impression + masquage blocs vides ──
+const RPT2_PHRASES_MAP={mission:['cadre_normatif'],geol:['geologie'],risques:['sismique'],fondations:['fondations_superficielles','fondations_profondes'],sismique:['sismique'],niveaubas:['dallage'],execution:['terrassements']};
+let RPT2_PHRASES={};
+let rpt2PhrTarget=null,rpt2PhrList=[];
+function rpt2PhrasesFor(subId){
+  let arr=(RPT2_PHRASES[subId]||[]).slice();
+  const cats=RPT2_PHRASES_MAP[subId]||[];
+  if(typeof TEXTES_TYPES!=='undefined')cats.forEach(c=>{if(TEXTES_TYPES[c])arr=arr.concat(TEXTES_TYPES[c]);});
+  return arr;
+}
+function rpt2OpenPhrases(subId,key){rpt2PhrTarget={subId,key};const s=document.getElementById('rpt2-phrases-search');if(s)s.value='';rpt2RenderPhrasesList('');document.getElementById('rpt2-phrases-modal').classList.add('open');}
+function rpt2ClosePhrases(){const m=document.getElementById('rpt2-phrases-modal');if(m)m.classList.remove('open');rpt2PhrTarget=null;}
+function rpt2RenderPhrasesList(filter){
+  const list=document.getElementById('rpt2-phrases-list');if(!list||!rpt2PhrTarget)return;
+  const f=(filter||'').toLowerCase();
+  rpt2PhrList=rpt2PhrasesFor(rpt2PhrTarget.subId).filter(p=>!f||(p.title+' '+p.text).toLowerCase().includes(f));
+  if(!rpt2PhrList.length){list.innerHTML='<div class="rpt2-phr-empty">Aucune phrase-type pour cette section pour l\'instant.<br>(La bibliothèque sera enrichie via votre fichier Excel.)</div>';return;}
+  list.innerHTML=rpt2PhrList.map((p,i)=>`<div class="rpt2-phr-item" onclick="rpt2InsertPhrase(${i})"><div class="rpt2-phr-title">${rpt2Esc(p.title)}</div><div class="rpt2-phr-text">${rpt2Esc(p.text)}</div></div>`).join('');
+}
+function rpt2InsertPhrase(i){
+  if(!rpt2PhrTarget)return;const p=rpt2PhrList[i];if(!p)return;
+  const subId=rpt2PhrTarget.subId,key=rpt2PhrTarget.key,cur=rpt2Get(subId,key);
+  if(!report2)report2=rpt2New();
+  report2.fields[rpt2K(subId,key)]=cur&&cur.trim()?cur.replace(/\s*$/,'')+'\n'+p.text:p.text;
+  rpt2ClosePhrases();rpt2RenderContent();rpt2RenderTabsMain();rpt2RenderPreview();if(typeof markDirty==='function')markDirty();
+}
+function rpt2PrintOn(subId){return !(report2&&report2.print&&report2.print[subId]===false);}
+function rpt2SetPrint(subId,on){if(!report2)report2=rpt2New();if(!report2.print)report2.print={};report2.print[subId]=!!on;rpt2RenderPreview();if(typeof markDirty==='function')markDirty();}
+function rpt2SetHideEmpty(on){if(!report2)report2=rpt2New();report2.hideEmpty=!!on;rpt2RenderPreview();if(typeof markDirty==='function')markDirty();}
+function rpt2SubEmpty(s){if(s.id==='fondations')return !rpt2FondHasData();return !rpt2SchemaFor(s).some(f=>String(rpt2Get(s.id,f.key)||'').trim()!=='');}
+function rpt2PrintToggleHtml(subId){return `<label class="rpt2-print-toggle"><input type="checkbox" ${rpt2PrintOn(subId)?'checked':''} onchange="rpt2SetPrint('${subId}',this.checked)"> Imprimer ce bloc dans le rapport</label>`;}
 function rpt2PrintPreview(){
   const html=document.getElementById('rpt2-preview').innerHTML;
   const w=window.open('','_blank','width=820,height=1000');if(!w)return;
