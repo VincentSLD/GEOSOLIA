@@ -1361,6 +1361,7 @@
     <div class="rpt2-titlebar">
       <div class="rpt2-title">🧾 <span id="rpt2-dossier-label">Rapport de sol</span></div>
       <div class="rpt2-tools">
+        <button class="rpt2-close" id="rpt2-toggle-preview" onclick="rpt2TogglePreview()" title="Afficher / masquer l'aperçu du rapport à droite">👁 Masquer aperçu</button>
         <label class="rpt2-hideempty"><input type="checkbox" id="rpt2-hideempty" checked onchange="rpt2SetHideEmpty(this.checked)"> Masquer blocs vides</label>
         <select class="rpt2-etat-sel" id="rpt2-etat" onchange="rpt2SetEtat(this.value)" title="État du dossier">
           <option value="en_enquete">En enquête</option>
@@ -8332,6 +8333,7 @@ function closeRapport(){
 // ÉDITEUR RAPPORT v2 — coquille onglets + aperçu live (Phase A, inspiré de SolAnge)
 // ═══════════════════════════════════════════════════════════════
 let report2=null;
+let rpt2PreviewOn=true;
 const RPT2_TABS=[
   {id:'coord',num:'',title:'Coordonnées',subs:[{id:'coord',title:'Coordonnées'}]},
   {id:'mission',num:'1',title:'Mission',subs:[{id:'mission',title:'Présentation de la mission'}]},
@@ -8427,6 +8429,7 @@ function openRpt2(){
   if(!rpt2Get('mission','type')&&projectMission){const m=RPT2_MISSIONS.find(x=>String(projectMission).replace(/_/g,' ').includes(x));if(m)report2.fields[rpt2K('mission','type')]=m;}
   const es=document.getElementById('rpt2-etat');if(es)es.value=report2.etat||'en_enquete';
   const he=document.getElementById('rpt2-hideempty');if(he)he.checked=!(report2.hideEmpty===false);
+  rpt2ApplyPreviewVisibility();
   const lbl=document.getElementById('rpt2-dossier-label');if(lbl)lbl.textContent='Rapport de sol'+(ref?' — '+ref:'')+(projectName?' · '+projectName:'');
   if(!rpt2TabById(report2.activeTab))report2.activeTab='coord';
   const at=rpt2TabById(report2.activeTab); if(!at.subs.find(s=>s.id===report2.activeSub))report2.activeSub=at.subs[0].id;
@@ -8436,6 +8439,11 @@ function openRpt2(){
 function closeRpt2(){document.getElementById('rpt2-panel').classList.remove('open');if(typeof markDirty==='function')markDirty();if(typeof silentSave==='function')silentSave();}
 function rpt2SetEtat(v){if(!report2)report2=rpt2New();report2.etat=v;if(typeof markDirty==='function')markDirty();}
 function rpt2Valider(){if(typeof showToast==='function')showToast('Rapport enregistré');closeRpt2();}
+function rpt2ApplyPreviewVisibility(){
+  const w=document.querySelector('.rpt2-preview-wrap');if(w)w.style.display=rpt2PreviewOn?'flex':'none';
+  const b=document.getElementById('rpt2-toggle-preview');if(b){b.textContent=rpt2PreviewOn?'👁 Masquer aperçu':'👁 Afficher aperçu';}
+}
+function rpt2TogglePreview(){rpt2PreviewOn=!rpt2PreviewOn;rpt2ApplyPreviewVisibility();if(rpt2PreviewOn)rpt2RenderPreview();}
 function rpt2SelectTab(id){if(!report2)return;report2.activeTab=id;report2.activeSub=rpt2TabById(id).subs[0].id;rpt2RenderTabsMain();rpt2RenderTabsSub();rpt2RenderContent();}
 function rpt2SelectSub(id){if(!report2)return;report2.activeSub=id;rpt2RenderTabsSub();rpt2RenderContent();}
 
