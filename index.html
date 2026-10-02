@@ -1055,6 +1055,16 @@
   .litho-prev{border:1px solid #ccc;border-radius:3px;display:block}
   .litho-del{background:#D94040;color:#fff;border:none;border-radius:6px;width:26px;height:26px;cursor:pointer;font-weight:800}
   .acfg-note{font-size:11px;color:var(--gray-500);margin-top:10px;font-style:italic}
+  .mc-modal{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:10001;backdrop-filter:blur(3px)}
+  .mc-modal.open{display:flex}
+  .mc-inner{background:#fff;border-radius:14px;padding:18px;width:420px;max-width:92vw;box-shadow:0 16px 60px rgba(0,0,0,.4);border-top:4px solid var(--yellow)}
+  .mc-head{display:flex;justify-content:space-between;align-items:center;font-weight:800;font-size:15px;color:var(--black);margin-bottom:8px}
+  .mc-head button{background:none;border:none;font-size:16px;cursor:pointer}
+  .mc-desc{font-size:12px;color:var(--gray-500);line-height:1.5;margin:0 0 14px}
+  .mc-layers{display:flex;flex-direction:column;gap:8px}
+  .mc-layers button{padding:12px;border:2px solid var(--gray-200);background:#fff;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;text-align:left}
+  .mc-layers button:hover{border-color:var(--yellow);background:var(--yellow-pale)}
+  .mc-status{font-size:12px;color:var(--gray-600);margin-top:10px;font-weight:600;min-height:18px}
   #admin-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:10000;cursor:pointer}
   .admin-title{font-size:16px;font-weight:900;margin:0 0 16px;text-transform:uppercase;letter-spacing:0.05em}
   .admin-user{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee}
@@ -1303,6 +1313,7 @@
     <div class="tool-sep"></div>
     <button class="tool-btn" onclick="openMiseEnPage()"><span class="icon">📐</span><span class="label">Mise en Page</span></button>
     <button class="tool-btn" onclick="openRpt2()"><span class="icon">🧾</span><span class="label">Rédaction</span></button>
+    <button class="tool-btn" onclick="openMapCalqueModal()"><span class="icon">🗺️</span><span class="label">Calque</span></button>
     <button class="tool-btn" onclick="openModeleGeotech()"><span class="icon">⛏️</span><span class="label">Modèle</span></button>
     <div class="tool-sep"></div>
     <div style="position:relative">
@@ -1849,6 +1860,18 @@
       <div id="gc-content">
         <div class="gc-empty">Aucune donnée de site.<br><button onclick="openEditSiteModal()" style="margin-top:10px;background:var(--yellow);border:none;border-radius:8px;padding:8px 16px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit">🔄 Modifier les données du site</button></div>
       </div>
+    </div>
+  </div>
+  <div id="map-calque-modal" class="mc-modal" onclick="if(event.target===this)closeMapCalqueModal()">
+    <div class="mc-inner">
+      <div class="mc-head"><span>🗺️ Ajouter un calque de carte</span><button onclick="closeMapCalqueModal()">✕</button></div>
+      <p class="mc-desc">La carte est captée en direct (tuiles IGN) autour du point d'investigation du projet, puis posée en transparence sur le plan. Ajuste ensuite <strong>opacité / rotation / taille</strong> pour la caler sur la parcelle du plan de masse.</p>
+      <div class="mc-layers">
+        <button onclick="addMapCalque('cadastre')">📐 Cadastre (parcellaire)</button>
+        <button onclick="addMapCalque('plan')">🗺️ Plan IGN</button>
+        <button onclick="addMapCalque('ortho')">🛰️ Photo aérienne</button>
+      </div>
+      <div id="mc-status" class="mc-status"></div>
     </div>
   </div>
   <div id="snapshot-modal" onclick="closeSnapshot()">
@@ -7111,7 +7134,7 @@ function serializeElements(elArr){
       if(el.type==='measure')return{type:'measure',x:el.x,y:el.y,x2:el.x2,y2:el.y2,distance:el.distance,pxDist:el.pxDist,color:el.color||'#E91E8C',lineStyle:el.lineStyle||'dashed',approx:!!el.approx,fontSize:el.fontSize||11};
       if(el.type==='measureArea')return{type:'measureArea',points:el.points.map(p=>({x:p.x,y:p.y})),cx:el.cx,cy:el.cy,area:el.area,pxArea:el.pxArea,color:el.color||'#E91E8C',approx:!!el.approx,fontSize:el.fontSize||11};
       if(el.type==='legend')return{type:'legend',x:el.x,y:el.y,imgSrc:el.imgSrc,w:el.w,h:el.h};
-      if(el.type==='image'){const o={type:'image',x:el.x,y:el.y,imgSrc:el.imgSrc,w:el.w,h:el.h,rotation:el.rotation||0};if(el.opacity!=null&&el.opacity!==1)o.opacity=el.opacity;return o;}
+      if(el.type==='image'){const o={type:'image',x:el.x,y:el.y,imgSrc:el.imgSrc,w:el.w,h:el.h,rotation:el.rotation||0};if(el.opacity!=null&&el.opacity!==1)o.opacity=el.opacity;if(el.mapCalque)o.mapCalque=el.mapCalque;return o;}
       if(el.type==='drawing'){const o={type:'drawing',x:el.x,y:el.y,w:el.w,h:el.h,points:el.points.map(p=>{const r={x:p.x,y:p.y};if(p.break)r.break=true;return r;}),color:el.color,size:el.size,opacity:el.opacity!=null?el.opacity:1};return o;}
       return el;
   });
@@ -8140,6 +8163,49 @@ function renderPlanToCanvas(cb){
     });
   };
   if(planImgSrc){const img=new Image();img.crossOrigin='anonymous';img.onload=()=>{ctx.drawImage(img,toX(0),toY(0),Math.round(planW*scale),Math.round(planH*scale));finish();};img.src=planImgSrc;}else{finish();}
+}
+// ═══ CALQUE CARTE — tuiles IGN/cadastre/ortho en direct, posées en transparence sur le plan ═══
+const MAP_CALQUE_LAYERS={
+  cadastre:{name:'Cadastre',z:19,url:'https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=CADASTRALPARCELS.PARCELLAIRE_EXPRESS&STYLE=normal&FORMAT=image/png&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}'},
+  plan:{name:'Plan IGN',z:18,url:'https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&STYLE=normal&FORMAT=image/png&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}'},
+  ortho:{name:'Photo aérienne',z:19,url:'https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=ORTHOIMAGERY.ORTHOPHOTOS&STYLE=normal&FORMAT=image/jpeg&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}'}
+};
+function mcLonTileX(lon,z){return (lon+180)/360*Math.pow(2,z);}
+function mcLatTileY(lat,z){const r=lat*Math.PI/180;return (1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2*Math.pow(2,z);}
+function mcTileXLon(x,z){return x/Math.pow(2,z)*360-180;}
+function mcTileYLat(y,z){const n=Math.PI-2*Math.PI*y/Math.pow(2,z);return 180/Math.PI*Math.atan(0.5*(Math.exp(n)-Math.exp(-n)));}
+function openMapCalqueModal(){const m=document.getElementById('map-calque-modal');if(m){m.classList.add('open');const s=document.getElementById('mc-status');if(s)s.textContent='';}}
+function closeMapCalqueModal(){const m=document.getElementById('map-calque-modal');if(m)m.classList.remove('open');}
+async function addMapCalque(layerKey){
+  const L=MAP_CALQUE_LAYERS[layerKey];if(!L)return;
+  const lat=(typeof projectLat!=='undefined')?projectLat:null, lng=(typeof projectLng!=='undefined')?projectLng:null;
+  if(lat==null||lng==null){alert('Aucun point GPS (point d\'investigation) défini pour ce projet. Renseignez la position du site d\'abord.');return;}
+  const st=document.getElementById('mc-status');if(st)st.textContent='Chargement des tuiles '+L.name+'…';
+  const z=L.z, half=2, span=half*2+1, size=256;
+  const x0=Math.floor(mcLonTileX(lng,z))-half, y0=Math.floor(mcLatTileY(lat,z))-half;
+  const cw=span*size, ch=span*size;
+  const canvas=document.createElement('canvas');canvas.width=cw;canvas.height=ch;const ctx=canvas.getContext('2d');
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,cw,ch);
+  let pending=span*span, errors=0;
+  await new Promise(resolve=>{
+    for(let ix=0;ix<span;ix++)for(let iy=0;iy<span;iy++){
+      const tx=x0+ix, ty=y0+iy;
+      const img=new Image();img.crossOrigin='anonymous';
+      img.onload=()=>{try{ctx.drawImage(img,ix*size,iy*size);}catch(e){}if(--pending===0)resolve();};
+      img.onerror=()=>{errors++;if(--pending===0)resolve();};
+      img.src=L.url.replace('{z}',z).replace('{x}',tx).replace('{y}',ty);
+    }
+  });
+  if(errors>=span*span){if(st)st.textContent='';alert('Impossible de charger les tuiles ('+L.name+'). Vérifiez la connexion internet.');return;}
+  let dataUrl;try{dataUrl=canvas.toDataURL('image/png');}catch(e){if(st)st.textContent='';alert('Capture bloquée (CORS) pour la couche '+L.name+'. Il faudra passer par un proxy — préviens-moi.');return;}
+  const west=mcTileXLon(x0,z), north=mcTileYLat(y0,z), east=mcTileXLon(x0+span,z), south=mcTileYLat(y0+span,z);
+  const pw=(typeof planW!=='undefined'&&planW)?planW:cw, ph=(typeof planH!=='undefined'&&planH)?planH:ch;
+  const w=Math.round(Math.min(pw,ph)*0.6)||600, h=Math.round(w*ch/cw);
+  elements.push({id:Date.now()+Math.random(),type:'image',x:pw/2,y:ph/2,imgSrc:dataUrl,w:w,h:h,opacity:0.55,rotation:0,mapCalque:{layer:layerKey,z:z,bbox:[west,south,east,north],centerLat:lat,centerLng:lng}});
+  if(typeof markDirty==='function')markDirty();
+  if(typeof renderElements==='function')renderElements();
+  closeMapCalqueModal();
+  if(typeof showToast==='function')showToast('Calque '+L.name+' ajouté — ajuste opacité / rotation / taille pour l\'aligner'+(errors?' ('+errors+' tuiles manquantes)':''));
 }
 function captureSnapshot(){
   renderPlanToCanvas(c=>{
