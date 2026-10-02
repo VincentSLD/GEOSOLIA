@@ -1066,6 +1066,18 @@
   .geoview-ctrl button{background:none;border:1px solid rgba(255,255,255,0.3);color:#fff;padding:5px 12px;border-radius:6px;font-weight:700;cursor:pointer;font-family:inherit}
   .geoview-ctrl button:hover{background:rgba(255,255,255,0.12)}
   #geoview-map{flex:1;width:100%}
+  .geoview-sep{width:1px;align-self:stretch;background:rgba(255,255,255,0.2);margin:0 2px}
+  .geoview-adjust{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+  .geoview-adjust button{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.25);color:#fff;min-width:26px;padding:4px 7px;border-radius:5px;font-weight:700;cursor:pointer;font-family:inherit;line-height:1}
+  .geoview-adjust button:hover{background:rgba(255,255,255,0.2)}
+  .geoview-adjust button.active{background:var(--yellow);color:#000;border-color:var(--yellow)}
+  .geoview-adjust .geo-pad{display:grid;grid-template-columns:repeat(3,22px);grid-template-rows:repeat(2,22px);gap:2px}
+  .geoview-adjust .geo-pad button{min-width:0;padding:0;font-size:12px}
+  .geoview-adjust .geo-pad button:nth-child(1){grid-column:2;grid-row:1}
+  .geoview-adjust .geo-pad button:nth-child(2){grid-column:1;grid-row:2}
+  .geoview-adjust .geo-pad button:nth-child(3){grid-column:3;grid-row:2}
+  .geoview-adjust .geo-pad button:nth-child(4){grid-column:2;grid-row:2}
+  .geoview-adjust select{background:#222;color:#fff;border:1px solid rgba(255,255,255,0.25);border-radius:4px;padding:2px 4px;font-family:inherit}
   .mc-modal.open{display:flex}
   .mc-inner{background:#fff;border-radius:14px;padding:18px;width:420px;max-width:92vw;box-shadow:0 16px 60px rgba(0,0,0,.4);border-top:4px solid var(--yellow)}
   .mc-head{display:flex;justify-content:space-between;align-items:center;font-weight:800;font-size:15px;color:var(--black);margin-bottom:8px}
@@ -1895,6 +1907,23 @@
         <label><input type="checkbox" onchange="geoToggleLayer('plan',this.checked)"> Plan IGN</label>
         <label><input type="checkbox" checked onchange="geoToggleLayer('cadastre',this.checked)"> Cadastre</label>
         <label>Opacité plan <input type="range" min="0" max="1" step="0.05" value="0.7" oninput="geoSetPlanOpacity(this.value)"></label>
+        <span class="geoview-sep"></span>
+        <span class="geoview-adjust">
+          <button id="geo-drag-btn" onclick="geoToggleDrag(this)" title="Glisser le plan à la souris pour le repositionner">✋ Déplacer</button>
+          <span class="geo-pad">
+            <button onclick="geoNudge(0,geoStep())" title="Vers le nord">↑</button>
+            <button onclick="geoNudge(-geoStep(),0)" title="Vers l'ouest">←</button>
+            <button onclick="geoNudge(geoStep(),0)" title="Vers l'est">→</button>
+            <button onclick="geoNudge(0,-geoStep())" title="Vers le sud">↓</button>
+          </span>
+          <label>pas <select id="geo-step"><option value="0.2">0,2 m</option><option value="1" selected>1 m</option><option value="5">5 m</option></select></label>
+          <button onclick="geoRotate(-0.5)" title="Rotation anti-horaire 0,5°">⟲</button>
+          <button onclick="geoRotate(0.5)" title="Rotation horaire 0,5°">⟳</button>
+          <button onclick="geoScaleBy(0.99)" title="Réduire l'échelle 1%">⊖</button>
+          <button onclick="geoScaleBy(1.01)" title="Agrandir l'échelle 1%">⊕</button>
+          <button onclick="geoResetAdjust()" title="Réinitialiser l'ajustement manuel">Reset</button>
+        </span>
+        <span class="geoview-sep"></span>
         <button onclick="closeGeoView()">✕ Fermer</button>
       </div>
     </div>
@@ -7245,7 +7274,7 @@ function buildProjectJSON(){
   if(Object.keys(reportChapters).length>0)project.reportChapters=reportChapters;
   if(rpt2HasContent(report2))project.report2=report2;
   if(modeleFormations.length>0)project.modeleFormations=modeleFormations;
-  if(gpsCalib.transform)project.gpsCalib={pt1:gpsCalib.pt1,pt2:gpsCalib.pt2,transform:gpsCalib.transform};
+  if(gpsCalib.transform)project.gpsCalib={pt1:gpsCalib.pt1,pt2:gpsCalib.pt2,transform:gpsCalib.transform,geoAdjust:gpsCalib.geoAdjust||null};
   if(window.getScan3DExportData){
     const s3d=window.getScan3DExportData();
     if(s3d) project.scan3d=s3d;
@@ -8236,13 +8265,43 @@ if(typeof L!=='undefined'&&!L.RotatedImage){
   L.rotatedImage=function(url,tl,tr,bl,opts){return new L.RotatedImage(url,tl,tr,bl,opts);};
 }
 let geoMap=null, geoPlanOverlay=null, geoLayers={};
+let geoAdjust={dxM:0,dyM:0,rotDeg:0,scale:1};
+let geoDragMode=false, geoDragging=false, geoPrevLL=null;
 const GEO_ORTHO_URL='https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=ORTHOIMAGERY.ORTHOPHOTOS&STYLE=normal&FORMAT=image/jpeg&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}';
 const GEO_PLANIGN_URL='https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&STYLE=normal&FORMAT=image/png&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}';
 const GEO_CADASTRE_URL='https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=CADASTRALPARCELS.PARCELLAIRE_EXPRESS&STYLE=normal&FORMAT=image/png&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}';
-function geoPlanBounds(){const tl=planToGps(0,0),tr=planToGps(planW,0),bl=planToGps(0,planH),br=planToGps(planW,planH);if(!tl)return null;return{tl,tr,bl,br,bounds:[[tl.lat,tl.lng],[tr.lat,tr.lng],[bl.lat,bl.lng],[br.lat,br.lng]]};}
+function geoPlanBounds(){
+  const tl0=planToGps(0,0),tr0=planToGps(planW,0),bl0=planToGps(0,planH),br0=planToGps(planW,planH);
+  if(!tl0)return null;
+  const a=geoAdjust||{dxM:0,dyM:0,rotDeg:0,scale:1};
+  const cLat=(tl0.lat+tr0.lat+bl0.lat+br0.lat)/4, cLng=(tl0.lng+tr0.lng+bl0.lng+br0.lng)/4;
+  const cosLat=Math.cos(cLat*Math.PI/180)||1;
+  const rad=(a.rotDeg||0)*Math.PI/180, cs=Math.cos(rad), sn=Math.sin(rad), sc=a.scale||1;
+  function adj(p){let e=(p.lng-cLng)*111320*cosLat, n=(p.lat-cLat)*111320; e*=sc;n*=sc; const e2=cs*e - sn*n, n2=sn*e + cs*n; const E=e2+(a.dxM||0), N=n2+(a.dyM||0); return {lat:cLat+N/111320, lng:cLng+E/(111320*cosLat)};}
+  const tl=adj(tl0),tr=adj(tr0),bl=adj(bl0),br=adj(br0);
+  return {tl,tr,bl,br,bounds:[[tl.lat,tl.lng],[tr.lat,tr.lng],[bl.lat,bl.lng],[br.lat,br.lng]]};
+}
+function geoRefreshOverlay(){if(!geoPlanOverlay)return;const B=geoPlanBounds();if(!B)return;geoPlanOverlay.reposition([B.tl.lat,B.tl.lng],[B.tr.lat,B.tr.lng],[B.bl.lat,B.bl.lng]);}
+function geoStep(){const s=document.getElementById('geo-step');return s?parseFloat(s.value):1;}
+function geoNudge(de,dn){geoAdjust.dxM+=de;geoAdjust.dyM+=dn;geoRefreshOverlay();geoMarkDirty();}
+function geoRotate(dd){geoAdjust.rotDeg+=dd;geoRefreshOverlay();geoMarkDirty();}
+function geoScaleBy(f){geoAdjust.scale=Math.max(0.1,(geoAdjust.scale||1)*f);geoRefreshOverlay();geoMarkDirty();}
+function geoResetAdjust(){geoAdjust.dxM=0;geoAdjust.dyM=0;geoAdjust.rotDeg=0;geoAdjust.scale=1;geoRefreshOverlay();geoMarkDirty();}
+function geoMarkDirty(){if(typeof markDirty==='function')try{markDirty();}catch(e){}}
+function geoToggleDrag(btn){
+  geoDragMode=!geoDragMode;
+  const img=geoPlanOverlay&&geoPlanOverlay._img;
+  if(geoDragMode){if(geoMap)geoMap.dragging.disable();if(img){img.style.pointerEvents='auto';img.style.cursor='move';}if(btn)btn.classList.add('active');}
+  else{if(geoMap)geoMap.dragging.enable();if(img){img.style.pointerEvents='none';img.style.cursor='';}if(btn)btn.classList.remove('active');geoDragging=false;geoPrevLL=null;}
+}
+function geoDragStart(e){if(!geoDragMode||!geoMap)return;e.preventDefault();e.stopPropagation();geoDragging=true;geoPrevLL=geoMap.mouseEventToLatLng(e);document.addEventListener('mousemove',geoDragMove);document.addEventListener('mouseup',geoDragEnd);}
+function geoDragMove(e){if(!geoDragging||!geoMap)return;const ll=geoMap.mouseEventToLatLng(e);if(geoPrevLL){const cosLat=Math.cos(ll.lat*Math.PI/180)||1;geoAdjust.dxM+=(ll.lng-geoPrevLL.lng)*111320*cosLat;geoAdjust.dyM+=(ll.lat-geoPrevLL.lat)*111320;geoRefreshOverlay();}geoPrevLL=ll;}
+function geoDragEnd(){geoDragging=false;geoPrevLL=null;document.removeEventListener('mousemove',geoDragMove);document.removeEventListener('mouseup',geoDragEnd);geoMarkDirty();}
 function openGeoView(){
   if(!(typeof gpsCalib!=='undefined'&&gpsCalib&&gpsCalib.transform)){alert('Calibre d\'abord le plan : panneau « 📡 Calibration GPS », place 2 points (🎯 Plan + 🗺️ Carte).');return;}
   if(typeof planImgSrc==='undefined'||!planImgSrc){alert('Charge d\'abord un plan.');return;}
+  if(gpsCalib){if(!gpsCalib.geoAdjust)gpsCalib.geoAdjust={dxM:0,dyM:0,rotDeg:0,scale:1};geoAdjust=gpsCalib.geoAdjust;}
+  geoDragMode=false;const db=document.getElementById('geo-drag-btn');if(db)db.classList.remove('active');
   const p=document.getElementById('geoview-panel');if(!p)return;p.classList.add('open');
   setTimeout(initGeoView,90);
 }
@@ -8255,7 +8314,8 @@ function initGeoView(){
   geoLayers.ortho=L.tileLayer(GEO_ORTHO_URL,{maxZoom:23,maxNativeZoom:21,attribution:'© IGN'}).addTo(geoMap);
   geoLayers.plan=L.tileLayer(GEO_PLANIGN_URL,{maxZoom:23,maxNativeZoom:19});
   geoLayers.cadastre=L.tileLayer(GEO_CADASTRE_URL,{maxZoom:23,maxNativeZoom:20,opacity:0.85}).addTo(geoMap);
-  if(L.rotatedImage){geoPlanOverlay=L.rotatedImage(planImgSrc,[B.tl.lat,B.tl.lng],[B.tr.lat,B.tr.lng],[B.bl.lat,B.bl.lng],{opacity:0.7});geoPlanOverlay.addTo(geoMap);}
+  if(L.rotatedImage){geoPlanOverlay=L.rotatedImage(planImgSrc,[B.tl.lat,B.tl.lng],[B.tr.lat,B.tr.lng],[B.bl.lat,B.bl.lng],{opacity:0.7});geoPlanOverlay.addTo(geoMap);if(geoPlanOverlay._img)geoPlanOverlay._img.addEventListener('mousedown',geoDragStart);}
+  if(geoMap)geoMap.dragging.enable();
   geoFit(B);
 }
 function geoFit(B){if(!geoMap||!B)return;geoMap.fitBounds(B.bounds,{padding:[8,8],maxZoom:23});geoMap.setZoom(Math.min(geoMap.getZoom()+2,23));}
