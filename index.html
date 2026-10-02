@@ -1056,6 +1056,16 @@
   .litho-del{background:#D94040;color:#fff;border:none;border-radius:6px;width:26px;height:26px;cursor:pointer;font-weight:800}
   .acfg-note{font-size:11px;color:var(--gray-500);margin-top:10px;font-style:italic}
   .mc-modal{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:10001;backdrop-filter:blur(3px)}
+  #geoview-panel{display:none;position:fixed;inset:0;z-index:10002;flex-direction:column;background:#333}
+  #geoview-panel.open{display:flex}
+  .geoview-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 14px;background:var(--black);color:#fff;flex-shrink:0;flex-wrap:wrap}
+  .geoview-head>span{color:var(--yellow);font-weight:800;font-size:14px}
+  .geoview-ctrl{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:12px}
+  .geoview-ctrl label{display:flex;align-items:center;gap:5px;cursor:pointer}
+  .geoview-ctrl input[type=range]{width:90px;vertical-align:middle}
+  .geoview-ctrl button{background:none;border:1px solid rgba(255,255,255,0.3);color:#fff;padding:5px 12px;border-radius:6px;font-weight:700;cursor:pointer;font-family:inherit}
+  .geoview-ctrl button:hover{background:rgba(255,255,255,0.12)}
+  #geoview-map{flex:1;width:100%}
   .mc-modal.open{display:flex}
   .mc-inner{background:#fff;border-radius:14px;padding:18px;width:420px;max-width:92vw;box-shadow:0 16px 60px rgba(0,0,0,.4);border-top:4px solid var(--yellow)}
   .mc-head{display:flex;justify-content:space-between;align-items:center;font-weight:800;font-size:15px;color:var(--black);margin-bottom:8px}
@@ -1314,6 +1324,7 @@
     <button class="tool-btn" onclick="openMiseEnPage()"><span class="icon">📐</span><span class="label">Mise en Page</span></button>
     <button class="tool-btn" onclick="openRpt2()"><span class="icon">🧾</span><span class="label">Rédaction</span></button>
     <button class="tool-btn" onclick="openMapCalqueModal()"><span class="icon">🗺️</span><span class="label">Calque</span></button>
+    <button class="tool-btn" onclick="openGeoView()"><span class="icon">🌍</span><span class="label">Vue géo</span></button>
     <button class="tool-btn" onclick="openModeleGeotech()"><span class="icon">⛏️</span><span class="label">Modèle</span></button>
     <div class="tool-sep"></div>
     <div style="position:relative">
@@ -1875,6 +1886,19 @@
       </div>
       <div id="mc-status" class="mc-status"></div>
     </div>
+  </div>
+  <div id="geoview-panel">
+    <div class="geoview-head">
+      <span>🌍 Vue géoréférencée</span>
+      <div class="geoview-ctrl">
+        <label><input type="checkbox" checked onchange="geoToggleLayer('ortho',this.checked)"> Ortho</label>
+        <label><input type="checkbox" onchange="geoToggleLayer('plan',this.checked)"> Plan IGN</label>
+        <label><input type="checkbox" checked onchange="geoToggleLayer('cadastre',this.checked)"> Cadastre</label>
+        <label>Opacité plan <input type="range" min="0" max="1" step="0.05" value="0.7" oninput="geoSetPlanOpacity(this.value)"></label>
+        <button onclick="closeGeoView()">✕ Fermer</button>
+      </div>
+    </div>
+    <div id="geoview-map"></div>
   </div>
   <div id="calib-map-modal" class="mc-modal" onclick="if(event.target===this)closeCalibMapModal()">
     <div class="mc-inner" style="width:660px;max-width:95vw">
@@ -8193,6 +8217,49 @@ function gpsCalibMapPick(ptNum){
   setTimeout(function(){calibMapInit();try{if(calibMap&&typeof projectLat!=='undefined'&&projectLat!=null)calibMap.setView([projectLat,projectLng],19);}catch(e){}},70);
 }
 function closeCalibMapModal(){const m=document.getElementById('calib-map-modal');if(m)m.classList.remove('open');}
+// ═══ VUE GÉORÉFÉRENCÉE — le plan posé en overlay tourné sur de vraies cartes Leaflet (tuiles live) ═══
+function planToGps(px,py){
+  const t=(typeof gpsCalib!=='undefined'&&gpsCalib)?gpsCalib.transform:null;if(!t)return null;
+  const dx=px-t.plan1x, dy=py-t.plan1y;
+  const mx=t.scale*(t.cos*dx - t.sin*dy), my=t.scale*(t.sin*dx + t.cos*dy);
+  return {lat:t.gps1Lat - my/111320, lng:t.gps1Lng + mx/(111320*t.cosLat)};
+}
+if(typeof L!=='undefined'&&!L.RotatedImage){
+  L.RotatedImage=L.Layer.extend({
+    initialize:function(url,tl,tr,bl,opts){this._url=url;this._tl=L.latLng(tl);this._tr=L.latLng(tr);this._bl=L.latLng(bl);L.setOptions(this,opts||{});},
+    onAdd:function(map){this._map=map;const img=this._img=L.DomUtil.create('img','leaflet-image-layer');img.style.position='absolute';img.style.transformOrigin='0 0';img.style.pointerEvents='none';if(this.options.opacity!=null)img.style.opacity=this.options.opacity;const self=this;img.onload=function(){self._reset();};img.src=this._url;map.getPanes().overlayPane.appendChild(img);map.on('zoomend moveend viewreset',this._reset,this);this._reset();},
+    onRemove:function(map){if(this._img&&this._img.parentNode)this._img.parentNode.removeChild(this._img);map.off('zoomend moveend viewreset',this._reset,this);},
+    reposition:function(tl,tr,bl){this._tl=L.latLng(tl);this._tr=L.latLng(tr);this._bl=L.latLng(bl);this._reset();},
+    setOpacity:function(o){this.options.opacity=o;if(this._img)this._img.style.opacity=o;},
+    _reset:function(){if(!this._map||!this._img)return;const img=this._img;const tl=this._map.latLngToLayerPoint(this._tl),tr=this._map.latLngToLayerPoint(this._tr),bl=this._map.latLngToLayerPoint(this._bl);const w=img.naturalWidth||img.width||1,h=img.naturalHeight||img.height||1;img.style.width=w+'px';img.style.height=h+'px';img.style.transform='matrix('+((tr.x-tl.x)/w)+','+((tr.y-tl.y)/w)+','+((bl.x-tl.x)/h)+','+((bl.y-tl.y)/h)+','+tl.x+','+tl.y+')';}
+  });
+  L.rotatedImage=function(url,tl,tr,bl,opts){return new L.RotatedImage(url,tl,tr,bl,opts);};
+}
+let geoMap=null, geoPlanOverlay=null, geoLayers={};
+const GEO_ORTHO_URL='https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=ORTHOIMAGERY.ORTHOPHOTOS&STYLE=normal&FORMAT=image/jpeg&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}';
+const GEO_PLANIGN_URL='https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&STYLE=normal&FORMAT=image/png&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}';
+const GEO_CADASTRE_URL='https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=CADASTRALPARCELS.PARCELLAIRE_EXPRESS&STYLE=normal&FORMAT=image/png&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}';
+function geoPlanBounds(){const tl=planToGps(0,0),tr=planToGps(planW,0),bl=planToGps(0,planH),br=planToGps(planW,planH);if(!tl)return null;return{tl,tr,bl,br,bounds:[[tl.lat,tl.lng],[tr.lat,tr.lng],[bl.lat,bl.lng],[br.lat,br.lng]]};}
+function openGeoView(){
+  if(!(typeof gpsCalib!=='undefined'&&gpsCalib&&gpsCalib.transform)){alert('Calibre d\'abord le plan : panneau « 📡 Calibration GPS », place 2 points (🎯 Plan + 🗺️ Carte).');return;}
+  if(typeof planImgSrc==='undefined'||!planImgSrc){alert('Charge d\'abord un plan.');return;}
+  const p=document.getElementById('geoview-panel');if(!p)return;p.classList.add('open');
+  setTimeout(initGeoView,90);
+}
+function closeGeoView(){const p=document.getElementById('geoview-panel');if(p)p.classList.remove('open');}
+function initGeoView(){
+  if(typeof L==='undefined')return;
+  const B=geoPlanBounds();if(!B)return;
+  if(geoMap){geoMap.invalidateSize();if(geoPlanOverlay)geoPlanOverlay.reposition([B.tl.lat,B.tl.lng],[B.tr.lat,B.tr.lng],[B.bl.lat,B.bl.lng]);geoMap.fitBounds(B.bounds);return;}
+  geoMap=L.map('geoview-map',{center:[B.tl.lat,B.tl.lng],zoom:19});
+  geoLayers.ortho=L.tileLayer(GEO_ORTHO_URL,{maxZoom:21,attribution:'© IGN'}).addTo(geoMap);
+  geoLayers.plan=L.tileLayer(GEO_PLANIGN_URL,{maxZoom:21});
+  geoLayers.cadastre=L.tileLayer(GEO_CADASTRE_URL,{maxZoom:21,opacity:0.85}).addTo(geoMap);
+  if(L.rotatedImage){geoPlanOverlay=L.rotatedImage(planImgSrc,[B.tl.lat,B.tl.lng],[B.tr.lat,B.tr.lng],[B.bl.lat,B.bl.lng],{opacity:0.7});geoPlanOverlay.addTo(geoMap);}
+  geoMap.fitBounds(B.bounds);
+}
+function geoToggleLayer(key,on){const l=geoLayers[key];if(!l||!geoMap)return;if(on)l.addTo(geoMap);else geoMap.removeLayer(l);}
+function geoSetPlanOpacity(v){if(geoPlanOverlay)geoPlanOverlay.setOpacity(parseFloat(v));}
 function calibMapInit(){
   if(typeof L==='undefined')return;
   if(calibMap){calibMap.invalidateSize();return;}
