@@ -1646,12 +1646,14 @@
           <span class="pt-label">P1</span>
           <span class="pt-info" id="gps-calib-pt1-info">Non défini</span>
           <button class="gps-calib-btn gps-calib-btn-gps" id="gps-calib-pt1-gps" onclick="gpsCalibCapture(1)">📡 GPS</button>
+          <button class="gps-calib-btn" onclick="gpsCalibMapPick(1)" style="background:#1565C0;color:#fff">🗺️ Carte</button>
           <button class="gps-calib-btn gps-calib-btn-plan" id="gps-calib-pt1-plan" onclick="gpsCalibPlanClick(1)">🎯 Plan</button>
         </div>
         <div class="gps-calib-point" id="gps-calib-pt2">
           <span class="pt-label">P2</span>
           <span class="pt-info" id="gps-calib-pt2-info">Non défini</span>
           <button class="gps-calib-btn gps-calib-btn-gps" id="gps-calib-pt2-gps" onclick="gpsCalibCapture(2)">📡 GPS</button>
+          <button class="gps-calib-btn" onclick="gpsCalibMapPick(2)" style="background:#1565C0;color:#fff">🗺️ Carte</button>
           <button class="gps-calib-btn gps-calib-btn-plan" id="gps-calib-pt2-plan" onclick="gpsCalibPlanClick(2)">🎯 Plan</button>
         </div>
         <div style="display:flex;gap:6px;margin-top:6px">
@@ -1872,6 +1874,13 @@
         <button onclick="addMapCalque('ortho')">🛰️ Photo aérienne</button>
       </div>
       <div id="mc-status" class="mc-status"></div>
+    </div>
+  </div>
+  <div id="calib-map-modal" class="mc-modal" onclick="if(event.target===this)closeCalibMapModal()">
+    <div class="mc-inner" style="width:660px;max-width:95vw">
+      <div class="mc-head"><span>🗺️ Localiser le point de calibration</span><button onclick="closeCalibMapModal()">✕</button></div>
+      <p class="mc-desc">Repère le <strong>même point</strong> que sur le plan (coin de parcelle, borne, angle de mur…) et clique dessus. Ses coordonnées serviront à la calibration (échelle + orientation).</p>
+      <div id="calib-map" style="width:100%;height:440px;border-radius:8px;border:1px solid var(--gray-200);overflow:hidden"></div>
     </div>
   </div>
   <div id="snapshot-modal" onclick="closeSnapshot()">
@@ -8176,6 +8185,32 @@ function mcTileXLon(x,z){return x/Math.pow(2,z)*360-180;}
 function mcTileYLat(y,z){const n=Math.PI-2*Math.PI*y/Math.pow(2,z);return 180/Math.PI*Math.atan(0.5*(Math.exp(n)-Math.exp(-n)));}
 function openMapCalqueModal(){const m=document.getElementById('map-calque-modal');if(m){m.classList.add('open');const s=document.getElementById('mc-status');if(s)s.textContent='';}}
 function closeMapCalqueModal(){const m=document.getElementById('map-calque-modal');if(m)m.classList.remove('open');}
+// Calibration 2 points — fixer les coordonnées d'un point en cliquant sur une carte (cadastre + ortho IGN)
+let calibMap=null, calibMapTarget=null;
+function gpsCalibMapPick(ptNum){
+  calibMapTarget=ptNum;
+  const m=document.getElementById('calib-map-modal');if(!m)return;m.classList.add('open');
+  setTimeout(function(){calibMapInit();try{if(calibMap&&typeof projectLat!=='undefined'&&projectLat!=null)calibMap.setView([projectLat,projectLng],19);}catch(e){}},70);
+}
+function closeCalibMapModal(){const m=document.getElementById('calib-map-modal');if(m)m.classList.remove('open');}
+function calibMapInit(){
+  if(typeof L==='undefined')return;
+  if(calibMap){calibMap.invalidateSize();return;}
+  const lat=(typeof projectLat!=='undefined'&&projectLat!=null)?projectLat:46.6;
+  const lng=(typeof projectLng!=='undefined'&&projectLng!=null)?projectLng:2.5;
+  calibMap=L.map('calib-map',{center:[lat,lng],zoom:(typeof projectLat!=='undefined'&&projectLat!=null)?19:6});
+  L.tileLayer('https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=ORTHOIMAGERY.ORTHOPHOTOS&STYLE=normal&FORMAT=image/jpeg&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}',{maxZoom:21,attribution:'© IGN'}).addTo(calibMap);
+  L.tileLayer('https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=CADASTRALPARCELS.PARCELLAIRE_EXPRESS&STYLE=normal&FORMAT=image/png&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}',{maxZoom:21,opacity:0.85}).addTo(calibMap);
+  if(typeof projectLat!=='undefined'&&projectLat!=null)try{L.marker([projectLat,projectLng]).addTo(calibMap);}catch(e){}
+  calibMap.on('click',function(e){
+    if(!calibMapTarget)return;
+    const pt=calibMapTarget===1?gpsCalib.pt1:gpsCalib.pt2;
+    pt.gps={lat:e.latlng.lat,lng:e.latlng.lng};
+    try{gpsCalibTryCompute();gpsCalibUpdateUI();if(typeof markDirty==='function')markDirty();}catch(err){}
+    const n=calibMapTarget;closeCalibMapModal();
+    if(typeof showToast==='function')showToast('P'+n+' localisé ('+e.latlng.lat.toFixed(6)+', '+e.latlng.lng.toFixed(6)+')');
+  });
+}
 async function mcFetchParcelle(lat,lng){
   try{
     const g=(typeof geocartoData!=='undefined'&&geocartoData)?geocartoData:null;
