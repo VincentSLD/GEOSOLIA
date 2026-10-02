@@ -1865,7 +1865,7 @@
   <div id="map-calque-modal" class="mc-modal" onclick="if(event.target===this)closeMapCalqueModal()">
     <div class="mc-inner">
       <div class="mc-head"><span>🗺️ Ajouter un calque de carte</span><button onclick="closeMapCalqueModal()">✕</button></div>
-      <p class="mc-desc">La carte est captée en direct (tuiles IGN) autour du point d'investigation du projet, puis posée en transparence sur le plan. Ajuste ensuite <strong>opacité / rotation / taille</strong> pour la caler sur la parcelle du plan de masse.</p>
+      <p class="mc-desc">La carte est captée en direct (tuiles IGN), <strong>cadrée sur la parcelle du projet</strong> (contour en rouge) et posée en transparence sur le plan. Ajuste ensuite <strong>opacité / rotation / taille</strong> pour la caler sur la parcelle du plan de masse.</p>
       <div class="mc-layers">
         <button onclick="addMapCalque('cadastre')">📐 Cadastre (parcellaire)</button>
         <button onclick="addMapCalque('plan')">🗺️ Plan IGN</button>
@@ -8176,36 +8176,88 @@ function mcTileXLon(x,z){return x/Math.pow(2,z)*360-180;}
 function mcTileYLat(y,z){const n=Math.PI-2*Math.PI*y/Math.pow(2,z);return 180/Math.PI*Math.atan(0.5*(Math.exp(n)-Math.exp(-n)));}
 function openMapCalqueModal(){const m=document.getElementById('map-calque-modal');if(m){m.classList.add('open');const s=document.getElementById('mc-status');if(s)s.textContent='';}}
 function closeMapCalqueModal(){const m=document.getElementById('map-calque-modal');if(m)m.classList.remove('open');}
+async function mcFetchParcelle(lat,lng){
+  try{
+    const g=(typeof geocartoData!=='undefined'&&geocartoData)?geocartoData:null;
+    let url;
+    if(g&&g.parcelle&&g.parcelle.codeInsee&&g.parcelle.section&&g.parcelle.numero){
+      const num=String(g.parcelle.numero).padStart(4,'0');
+      url='https://apicarto.ign.fr/api/cadastre/parcelle?code_insee='+g.parcelle.codeInsee+'&section='+encodeURIComponent(g.parcelle.section)+'&numero='+num;
+    }else{
+      url='https://apicarto.ign.fr/api/cadastre/parcelle?geom=%7B%22type%22%3A%22Point%22%2C%22coordinates%22%3A%5B'+lng+'%2C'+lat+'%5D%7D';
+    }
+    const r=await fetch(url);const d=await r.json();
+    if(d&&d.features&&d.features.length)return d.features[0];
+  }catch(e){console.warn('mcFetchParcelle',e);}
+  return null;
+}
+function mcGeomBbox(geom){
+  let w=180,s=90,e=-180,n=-90;
+  const scan=arr=>{arr.forEach(c=>{if(Array.isArray(c[0]))scan(c);else{const lo=c[0],la=c[1];if(lo<w)w=lo;if(lo>e)e=lo;if(la<s)s=la;if(la>n)n=la;}});};
+  scan(geom.coordinates);
+  return {w,s,e,n};
+}
+function mcPickZoom(bb,targetPx,maxZ){
+  for(let z=maxZ;z>=12;z--){
+    const pxW=(mcLonTileX(bb.e,z)-mcLonTileX(bb.w,z))*256;
+    const pxH=(mcLatTileY(bb.s,z)-mcLatTileY(bb.n,z))*256;
+    if(Math.max(pxW,pxH)<=targetPx)return z;
+  }
+  return 12;
+}
+async function mcStitchBbox(L,ebb,z,contour){
+  const tx0=Math.floor(mcLonTileX(ebb.w,z)),tx1=Math.floor(mcLonTileX(ebb.e,z));
+  const ty0=Math.floor(mcLatTileY(ebb.n,z)),ty1=Math.floor(mcLatTileY(ebb.s,z));
+  const cropX=(mcLonTileX(ebb.w,z)-tx0)*256, cropY=(mcLatTileY(ebb.n,z)-ty0)*256;
+  const cw=Math.max(1,Math.round((mcLonTileX(ebb.e,z)-mcLonTileX(ebb.w,z))*256));
+  const ch=Math.max(1,Math.round((mcLatTileY(ebb.s,z)-mcLatTileY(ebb.n,z))*256));
+  const canvas=document.createElement('canvas');canvas.width=cw;canvas.height=ch;const ctx=canvas.getContext('2d');
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,cw,ch);
+  const tiles=[];for(let tx=tx0;tx<=tx1;tx++)for(let ty=ty0;ty<=ty1;ty++)tiles.push([tx,ty]);
+  if(!tiles.length)return null;
+  let pending=tiles.length,errors=0;
+  await new Promise(res=>{tiles.forEach(([tx,ty])=>{const im=new Image();im.crossOrigin='anonymous';
+    im.onload=()=>{try{ctx.drawImage(im,(tx-tx0)*256-cropX,(ty-ty0)*256-cropY);}catch(e){}if(--pending===0)res();};
+    im.onerror=()=>{errors++;if(--pending===0)res();};
+    im.src=L.url.replace('{z}',z).replace('{x}',tx).replace('{y}',ty);});});
+  if(errors>=tiles.length)return null;
+  if(contour){try{
+    ctx.strokeStyle='#D32F2F';ctx.lineWidth=Math.max(2,cw/320);ctx.lineJoin='round';
+    const drawRing=ring=>{ctx.beginPath();ring.forEach((c,i)=>{const px=(mcLonTileX(c[0],z)-tx0)*256-cropX,py=(mcLatTileY(c[1],z)-ty0)*256-cropY;if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);});ctx.closePath();ctx.stroke();};
+    const polys=contour.type==='MultiPolygon'?contour.coordinates:[contour.coordinates];
+    polys.forEach(poly=>poly.forEach(ring=>drawRing(ring)));
+  }catch(e){}}
+  let dataUrl;try{dataUrl=canvas.toDataURL('image/png');}catch(e){return 'CORS';}
+  return {dataUrl,w:cw,h:ch};
+}
 async function addMapCalque(layerKey){
   const L=MAP_CALQUE_LAYERS[layerKey];if(!L)return;
   const lat=(typeof projectLat!=='undefined')?projectLat:null, lng=(typeof projectLng!=='undefined')?projectLng:null;
   if(lat==null||lng==null){alert('Aucun point GPS (point d\'investigation) défini pour ce projet. Renseignez la position du site d\'abord.');return;}
-  const st=document.getElementById('mc-status');if(st)st.textContent='Chargement des tuiles '+L.name+'…';
-  const z=L.z, half=2, span=half*2+1, size=256;
-  const x0=Math.floor(mcLonTileX(lng,z))-half, y0=Math.floor(mcLatTileY(lat,z))-half;
-  const cw=span*size, ch=span*size;
-  const canvas=document.createElement('canvas');canvas.width=cw;canvas.height=ch;const ctx=canvas.getContext('2d');
-  ctx.fillStyle='#fff';ctx.fillRect(0,0,cw,ch);
-  let pending=span*span, errors=0;
-  await new Promise(resolve=>{
-    for(let ix=0;ix<span;ix++)for(let iy=0;iy<span;iy++){
-      const tx=x0+ix, ty=y0+iy;
-      const img=new Image();img.crossOrigin='anonymous';
-      img.onload=()=>{try{ctx.drawImage(img,ix*size,iy*size);}catch(e){}if(--pending===0)resolve();};
-      img.onerror=()=>{errors++;if(--pending===0)resolve();};
-      img.src=L.url.replace('{z}',z).replace('{x}',tx).replace('{y}',ty);
-    }
-  });
-  if(errors>=span*span){if(st)st.textContent='';alert('Impossible de charger les tuiles ('+L.name+'). Vérifiez la connexion internet.');return;}
-  let dataUrl;try{dataUrl=canvas.toDataURL('image/png');}catch(e){if(st)st.textContent='';alert('Capture bloquée (CORS) pour la couche '+L.name+'. Il faudra passer par un proxy — préviens-moi.');return;}
-  const west=mcTileXLon(x0,z), north=mcTileYLat(y0,z), east=mcTileXLon(x0+span,z), south=mcTileYLat(y0+span,z);
-  const pw=(typeof planW!=='undefined'&&planW)?planW:cw, ph=(typeof planH!=='undefined'&&planH)?planH:ch;
-  const w=Math.round(Math.min(pw,ph)*0.6)||600, h=Math.round(w*ch/cw);
-  elements.push({id:Date.now()+Math.random(),type:'image',x:pw/2,y:ph/2,imgSrc:dataUrl,w:w,h:h,opacity:0.55,rotation:0,mapCalque:{layer:layerKey,z:z,bbox:[west,south,east,north],centerLat:lat,centerLng:lng}});
+  const st=document.getElementById('mc-status');if(st)st.textContent='Recherche de la parcelle…';
+  const parc=await mcFetchParcelle(lat,lng);
+  let ebb,z,contour=null,parcLabel='';
+  if(parc&&parc.geometry){
+    const bb=mcGeomBbox(parc.geometry);
+    const mw=Math.max((bb.e-bb.w)*0.35,0.00015), mh=Math.max((bb.n-bb.s)*0.35,0.00015);
+    ebb={w:bb.w-mw,e:bb.e+mw,s:bb.s-mh,n:bb.n+mh};
+    z=Math.min(L.z,mcPickZoom(ebb,1200,20));
+    contour=parc.geometry;const pr=parc.properties||{};parcLabel=((pr.section||'')+' '+(pr.numero||'')).trim();
+  }else{
+    z=L.z;const cxf=mcLonTileX(lng,z),cyf=mcLatTileY(lat,z);
+    ebb={w:mcTileXLon(Math.floor(cxf)-1,z),e:mcTileXLon(Math.floor(cxf)+2,z),n:mcTileYLat(Math.floor(cyf)-1,z),s:mcTileYLat(Math.floor(cyf)+2,z)};
+  }
+  if(st)st.textContent='Chargement des tuiles '+L.name+'…';
+  const img=await mcStitchBbox(L,ebb,z,contour);
+  if(img==='CORS'){if(st)st.textContent='';alert('Capture bloquée (CORS) pour la couche '+L.name+'. Il faudra passer par un proxy — préviens-moi.');return;}
+  if(!img){if(st)st.textContent='';alert('Impossible de charger les tuiles ('+L.name+'). Vérifiez la connexion internet.');return;}
+  const pw=(typeof planW!=='undefined'&&planW)?planW:img.w, ph=(typeof planH!=='undefined'&&planH)?planH:img.h;
+  const dispW=Math.round(Math.min(pw,ph)*0.5)||500, dispH=Math.round(dispW*img.h/img.w);
+  elements.push({id:Date.now()+Math.random(),type:'image',x:pw/2,y:ph/2,imgSrc:img.dataUrl,w:dispW,h:dispH,opacity:0.6,rotation:0,mapCalque:{layer:layerKey,z:z,bbox:[ebb.w,ebb.s,ebb.e,ebb.n],centerLat:lat,centerLng:lng,parcelle:parcLabel}});
   if(typeof markDirty==='function')markDirty();
   if(typeof renderElements==='function')renderElements();
   closeMapCalqueModal();
-  if(typeof showToast==='function')showToast('Calque '+L.name+' ajouté — ajuste opacité / rotation / taille pour l\'aligner'+(errors?' ('+errors+' tuiles manquantes)':''));
+  if(typeof showToast==='function')showToast('Calque '+L.name+(parcLabel?' (parcelle '+parcLabel+')':'')+' ajouté — ajuste opacité / rotation / taille pour l\'aligner');
 }
 function captureSnapshot(){
   renderPlanToCanvas(c=>{
