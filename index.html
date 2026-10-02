@@ -1028,6 +1028,33 @@
   .admin-btn:hover{border-color:var(--yellow);color:var(--yellow)}
   .admin-badge{position:absolute;top:-5px;right:-5px;background:var(--red);color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:900;display:flex;align-items:center;justify-content:center;line-height:1}
   #admin-panel{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;color:#1A1A1A;border-radius:16px;padding:24px;width:90%;max-width:480px;max-height:80vh;overflow-y:auto;z-index:10001;box-shadow:0 16px 64px rgba(0,0,0,0.5)}
+  #admin-config-panel{display:none;position:fixed;inset:0;background:var(--gray-50);z-index:10002;flex-direction:column}
+  #admin-config-panel.open{display:flex}
+  .acfg-head{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:var(--black);color:var(--yellow);font-weight:800;font-size:15px;flex-shrink:0}
+  .acfg-close{background:none;border:1px solid rgba(255,255,255,0.25);color:#fff;padding:6px 14px;border-radius:6px;font-weight:700;cursor:pointer;font-family:inherit}
+  .acfg-body{display:flex;flex:1;overflow:hidden}
+  .acfg-nav{width:210px;background:#2a2a2a;flex-shrink:0;padding:10px 8px;display:flex;flex-direction:column;gap:4px}
+  .acfg-nav-btn{text-align:left;padding:10px 12px;border:none;background:transparent;color:#ccc;font-size:13px;font-weight:700;border-radius:8px;cursor:pointer;font-family:inherit}
+  .acfg-nav-btn:hover{background:rgba(255,255,255,0.08);color:#fff}
+  .acfg-nav-btn.active{background:var(--yellow);color:var(--black)}
+  .acfg-content{flex:1;overflow-y:auto;padding:20px 24px}
+  .acfg-sec-title{font-size:16px;font-weight:800;color:var(--black);margin-bottom:12px}
+  .acfg-hint{font-size:12px;font-weight:600;color:var(--gray-500)}
+  .acfg-actions{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+  .acfg-actions button{padding:8px 14px;border:2px solid var(--gray-200);background:#fff;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit}
+  .acfg-actions .acfg-save{background:var(--yellow);border-color:var(--yellow);color:var(--black)}
+  .acfg-actions .acfg-reset{background:#fff;border-color:#D94040;color:#D94040}
+  .acfg-status{font-size:12px;font-weight:700;color:#2E7D32}
+  .acfg-table-wrap{overflow:auto;border:1px solid var(--gray-200);border-radius:8px;background:#fff}
+  .acfg-table{border-collapse:collapse;width:100%;font-size:12px}
+  .acfg-table th{background:#f5f5f5;padding:8px;text-align:left;font-weight:700;border-bottom:1px solid var(--gray-200);position:sticky;top:0;z-index:1}
+  .acfg-table td{padding:6px 8px;border-bottom:1px solid #f0f0f0;vertical-align:top}
+  .acfg-table input,.acfg-table select,.acfg-table textarea{border:1px solid var(--gray-200);border-radius:6px;padding:5px 7px;font-size:12px;font-family:inherit;box-sizing:border-box}
+  .acfg-table input[readonly]{background:#f7f7f7;color:#888}
+  .acfg-table textarea{width:280px;resize:vertical}
+  .litho-prev{border:1px solid #ccc;border-radius:3px;display:block}
+  .litho-del{background:#D94040;color:#fff;border:none;border-radius:6px;width:26px;height:26px;cursor:pointer;font-weight:800}
+  .acfg-note{font-size:11px;color:var(--gray-500);margin-top:10px;font-style:italic}
   #admin-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:10000;cursor:pointer}
   .admin-title{font-size:16px;font-weight:900;margin:0 0 16px;text-transform:uppercase;letter-spacing:0.05em}
   .admin-user{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee}
@@ -1159,11 +1186,38 @@
       <input type="file" id="fileInput" accept=".pdf,image/*" style="display:none" onchange="loadPlan(event)">
       <div id="auth-user-bar"><span class="auth-avatar" id="auth-avatar"></span><button class="admin-btn" onclick="openUserFolderConfig()" title="Paramétrages" style="background:#1565C0">⚙️ Paramétrages</button><button class="admin-btn" id="admin-btn" onclick="openAdminPanel()" style="display:none">Admin<span class="admin-badge" id="admin-badge" style="display:none">0</span></button><button class="auth-logout" onclick="authLogout()">Deconnexion</button></div>
     <div id="admin-overlay" onclick="closeAdminPanel()"></div>
+    <div id="admin-config-panel">
+      <div class="acfg-head"><span>⚙️ Administration — Paramétrages</span><button class="acfg-close" onclick="closeAdminConfig()">✕ Fermer</button></div>
+      <div class="acfg-body">
+        <div class="acfg-nav">
+          <button class="acfg-nav-btn active" data-sec="litho" onclick="adminCfgSection('litho')">🪨 Lithologie</button>
+        </div>
+        <div class="acfg-content">
+          <div id="acfg-sec-litho">
+            <div class="acfg-sec-title">Natures de sol &amp; hachures <span class="acfg-hint">(tarières / pelle mécanique)</span></div>
+            <div class="acfg-actions">
+              <button onclick="lithoAddRow()">+ Ajouter une nature</button>
+              <button class="acfg-save" onclick="lithoSave()">💾 Enregistrer</button>
+              <button class="acfg-reset" onclick="lithoReset()">↩️ Réinitialiser</button>
+              <span id="acfg-litho-status" class="acfg-status"></span>
+            </div>
+            <div class="acfg-table-wrap">
+              <table class="acfg-table">
+                <thead><tr><th>Aperçu</th><th>Clé</th><th>Label</th><th>Couleur</th><th>Motif</th><th>Descriptions (1 par ligne)</th><th></th></tr></thead>
+                <tbody id="litho-editor-body"></tbody>
+              </table>
+            </div>
+            <p class="acfg-note">Enregistré sur CE navigateur pour l'instant. Le partage à tous les utilisateurs (via Supabase) peut être ajouté ensuite.</p>
+          </div>
+        </div>
+      </div>
+    </div>
     <div id="admin-panel">
       <div class="admin-title">Gestion des utilisateurs</div>
       <div id="admin-list"></div>
       <div style="margin-top:14px;padding-top:14px;border-top:2px solid var(--gray-200)">
         <button onclick="closeAdminPanel();openAdminProjects()" style="width:100%;padding:12px;background:#D32F2F;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Gestion des projets (tous les utilisateurs)</button>
+        <button onclick="closeAdminPanel();openAdminConfig()" style="width:100%;padding:12px;margin-top:8px;background:#1A1A1A;color:var(--yellow);border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">⚙️ Paramétrages avancés (Lithologie…)</button>
       </div>
       <div style="margin-top:18px;padding-top:14px;border-top:2px solid var(--gray-200)">
         <div class="admin-title" style="font-size:14px;margin-bottom:10px">Création de dossier projet</div>
@@ -11266,7 +11320,7 @@ document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&document.getEleme
 function togglePhotoSection(){const ps=document.getElementById('photo-section');if(ps.classList.contains('open')&&photoPinned)return;ps.classList.toggle('open');}
 
 // ═══ SONDAGES GÉOTECHNIQUES ═══
-const SOIL_TYPES={
+let SOIL_TYPES={
   terre_vegetale:{label:'Terre végétale',color:'#8B6914',pattern:'dots',desc:'Terre végétale brune, racines'},
   remblai:{label:'Remblais',color:'#6C3483',pattern:'crosses',desc:'Remblais hétérogènes'},
   argile:{label:'Argile',color:'#C0392B',pattern:'horizontal',desc:'Argile compacte'},
@@ -11316,7 +11370,7 @@ const SOIL_TYPES={
   arene:{label:'Arène granitique',color:'#B9770E',pattern:'stipple_coarse',desc:'Arène granitique'}
 };
 
-const SOIL_DESCRIPTIONS={
+let SOIL_DESCRIPTIONS={
   alteration:['Altération sablo-argileuse','Altération sablo-argileuse beige orangé micacée à cailloutis','Altération argilo-sableuse ± remaniée','Altérites compactes'],
   arene:['Arène granitique','Arène granitique beige micacée','Arène sableuse'],
   grave:['Grave propre','Grave sableuse','Grave argileuse à cailloutis'],
@@ -13198,10 +13252,96 @@ function removeStratiRow(){
   renderSondageContent(s);
 }
 
-function drawSoilPattern(ctx,nature,x,y,w,h,color){
+// ═══════════════════════════════════════════════════════════════
+// ADMINISTRATION — paramétrage de la lithologie (natures / hachures éditables)
+// ═══════════════════════════════════════════════════════════════
+const LITHO_PATTERNS=['horizontal','horiz_brick','horiz_dots','horiz_angular','vertical','vert_horiz','vert_dots','stipple','stipple_coarse','stipple_horiz','stipple_vert','stipple_circles','circles','big_circles','circles_dots','brick','rock','rock_cross','rock_wave','organic','organic_horiz','chalk','sandstone','schist','diamond','waves','waves_dots','dots','crosses','angular'];
+let SOIL_TYPES_DEFAULT=null,SOIL_DESCRIPTIONS_DEFAULT=null;
+function lithoEnsureDefaults(){if(!SOIL_TYPES_DEFAULT){try{SOIL_TYPES_DEFAULT=JSON.parse(JSON.stringify(SOIL_TYPES));SOIL_DESCRIPTIONS_DEFAULT=JSON.parse(JSON.stringify(SOIL_DESCRIPTIONS));}catch(e){}}}
+function loadLithoConfig(){
+  lithoEnsureDefaults();
+  try{const raw=localStorage.getItem('geosolia_litho_v1');if(!raw)return;const cfg=JSON.parse(raw);
+    if(cfg&&cfg.types&&Object.keys(cfg.types).length){SOIL_TYPES=cfg.types;SOIL_DESCRIPTIONS=cfg.descs||{};}
+  }catch(e){console.warn('loadLithoConfig',e);}
+}
+function openAdminConfig(){const p=document.getElementById('admin-config-panel');if(!p)return;p.classList.add('open');adminCfgSection('litho');}
+function closeAdminConfig(){const p=document.getElementById('admin-config-panel');if(p)p.classList.remove('open');}
+function adminCfgSection(sec){
+  document.querySelectorAll('#admin-config-panel .acfg-nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.sec===sec));
+  if(sec==='litho')renderLithoEditor();
+}
+function lithoPatternOptions(sel){return LITHO_PATTERNS.map(p=>`<option value="${p}"${p===sel?' selected':''}>${p}</option>`).join('');}
+function lithoEsc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+function lithoRowHtml(key,t,descs){
+  const d=(descs||[]).join('\n')||(t&&t.desc?t.desc:'');
+  return `<tr data-key="${lithoEsc(key)}">
+    <td><canvas class="litho-prev" width="46" height="30"></canvas></td>
+    <td><input class="litho-key" value="${lithoEsc(key)}" ${key?'readonly':''} placeholder="cle_nature" style="width:120px"></td>
+    <td><input class="litho-label" value="${lithoEsc(t?t.label:'')}" placeholder="Label" style="width:160px"></td>
+    <td><input type="color" class="litho-color" value="${lithoEsc(t&&t.color?t.color:'#888888')}" oninput="lithoPreviewRow(this)"></td>
+    <td><select class="litho-pattern" onchange="lithoPreviewRow(this)">${lithoPatternOptions(t?t.pattern:'horizontal')}</select></td>
+    <td><textarea class="litho-descs" rows="2" placeholder="Une description par ligne">${lithoEsc(d)}</textarea></td>
+    <td><button class="litho-del" onclick="lithoDeleteRow(this)" title="Supprimer">✕</button></td>
+  </tr>`;
+}
+function renderLithoEditor(){
+  const body=document.getElementById('litho-editor-body');if(!body)return;
+  let html='';Object.keys(SOIL_TYPES).forEach(k=>{html+=lithoRowHtml(k,SOIL_TYPES[k],SOIL_DESCRIPTIONS[k]);});
+  body.innerHTML=html;
+  body.querySelectorAll('tr').forEach(tr=>lithoPreviewRow(tr.querySelector('.litho-color')));
+}
+function lithoPreviewRow(el){
+  const tr=el&&el.closest?el.closest('tr'):null;if(!tr)return;
+  const cvs=tr.querySelector('.litho-prev');if(!cvs)return;
+  const color=tr.querySelector('.litho-color').value||'#888';
+  const pat=tr.querySelector('.litho-pattern').value;
+  const ctx=cvs.getContext('2d');const w=cvs.width,h=cvs.height;
+  ctx.clearRect(0,0,w,h);ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);
+  ctx.save();ctx.globalAlpha=0.22;ctx.fillStyle=color;ctx.fillRect(0,0,w,h);ctx.restore();
+  try{drawSoilPattern(ctx,'',0,0,w,h,color,pat);}catch(e){}
+  ctx.strokeStyle='#ccc';ctx.lineWidth=1;ctx.strokeRect(0.5,0.5,w-1,h-1);
+}
+function lithoAddRow(){
+  const body=document.getElementById('litho-editor-body');if(!body)return;
+  body.insertAdjacentHTML('beforeend',lithoRowHtml('',null,[]));
+  const tr=body.lastElementChild;lithoPreviewRow(tr.querySelector('.litho-color'));
+  const k=tr.querySelector('.litho-key');if(k)k.focus();
+}
+function lithoDeleteRow(btn){const tr=btn.closest('tr');if(tr&&confirm('Supprimer cette nature ?'))tr.remove();}
+function lithoSave(){
+  const body=document.getElementById('litho-editor-body');if(!body)return;
+  const types={},descs={};
+  for(const tr of body.querySelectorAll('tr')){
+    let key=(tr.querySelector('.litho-key').value||'').trim().toLowerCase().replace(/[^a-z0-9_]/g,'_');
+    if(!key)continue;
+    const label=(tr.querySelector('.litho-label').value||'').trim()||key;
+    const color=tr.querySelector('.litho-color').value||'#888888';
+    const pattern=tr.querySelector('.litho-pattern').value;
+    const lines=(tr.querySelector('.litho-descs').value||'').split('\n').map(s=>s.trim()).filter(Boolean);
+    types[key]={label,color,pattern,desc:lines[0]||label};
+    if(lines.length)descs[key]=lines;
+  }
+  if(!Object.keys(types).length){alert('Il faut au moins une nature.');return;}
+  SOIL_TYPES=types;SOIL_DESCRIPTIONS=descs;
+  try{localStorage.setItem('geosolia_litho_v1',JSON.stringify({types,descs,savedAt:Date.now()}));}catch(e){}
+  try{if(typeof getCurrentSondage==='function'){const s=getCurrentSondage();if(s&&typeof renderSondageContent==='function')renderSondageContent(s);}}catch(e){}
+  const st=document.getElementById('acfg-litho-status');if(st){st.textContent='✓ Enregistré ('+Object.keys(types).length+' natures)';setTimeout(()=>{st.textContent='';},4000);}
+  if(typeof showToast==='function')showToast('Lithologie enregistrée');
+}
+function lithoReset(){
+  if(!confirm('Réinitialiser la lithologie aux valeurs par défaut ? Vos modifications seront perdues.'))return;
+  lithoEnsureDefaults();
+  try{SOIL_TYPES=JSON.parse(JSON.stringify(SOIL_TYPES_DEFAULT));SOIL_DESCRIPTIONS=JSON.parse(JSON.stringify(SOIL_DESCRIPTIONS_DEFAULT));}catch(e){}
+  try{localStorage.removeItem('geosolia_litho_v1');}catch(e){}
+  renderLithoEditor();
+  if(typeof showToast==='function')showToast('Lithologie réinitialisée');
+}
+loadLithoConfig();
+
+function drawSoilPattern(ctx,nature,x,y,w,h,color,patOverride){
   const dark=color;
   ctx.strokeStyle=dark;ctx.fillStyle=dark;ctx.lineWidth=0.8;
-  const pat=SOIL_TYPES[nature]?.pattern||'horizontal';
+  const pat=patOverride||SOIL_TYPES[nature]?.pattern||'horizontal';
   const sp=10; // espacement de base
   if(pat==='horizontal'||pat==='horiz_brick'){
     // Traits horizontaux (argile, marne)
