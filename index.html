@@ -8250,14 +8250,15 @@ function closeGeoView(){const p=document.getElementById('geoview-panel');if(p)p.
 function initGeoView(){
   if(typeof L==='undefined')return;
   const B=geoPlanBounds();if(!B)return;
-  if(geoMap){geoMap.invalidateSize();if(geoPlanOverlay)geoPlanOverlay.reposition([B.tl.lat,B.tl.lng],[B.tr.lat,B.tr.lng],[B.bl.lat,B.bl.lng]);geoMap.fitBounds(B.bounds);return;}
-  geoMap=L.map('geoview-map',{center:[B.tl.lat,B.tl.lng],zoom:19});
-  geoLayers.ortho=L.tileLayer(GEO_ORTHO_URL,{maxZoom:21,attribution:'© IGN'}).addTo(geoMap);
-  geoLayers.plan=L.tileLayer(GEO_PLANIGN_URL,{maxZoom:21});
-  geoLayers.cadastre=L.tileLayer(GEO_CADASTRE_URL,{maxZoom:21,opacity:0.85}).addTo(geoMap);
+  if(geoMap){geoMap.invalidateSize();if(geoPlanOverlay)geoPlanOverlay.reposition([B.tl.lat,B.tl.lng],[B.tr.lat,B.tr.lng],[B.bl.lat,B.bl.lng]);geoFit(B);return;}
+  geoMap=L.map('geoview-map',{center:[B.tl.lat,B.tl.lng],zoom:19,maxZoom:23});
+  geoLayers.ortho=L.tileLayer(GEO_ORTHO_URL,{maxZoom:23,maxNativeZoom:21,attribution:'© IGN'}).addTo(geoMap);
+  geoLayers.plan=L.tileLayer(GEO_PLANIGN_URL,{maxZoom:23,maxNativeZoom:19});
+  geoLayers.cadastre=L.tileLayer(GEO_CADASTRE_URL,{maxZoom:23,maxNativeZoom:20,opacity:0.85}).addTo(geoMap);
   if(L.rotatedImage){geoPlanOverlay=L.rotatedImage(planImgSrc,[B.tl.lat,B.tl.lng],[B.tr.lat,B.tr.lng],[B.bl.lat,B.bl.lng],{opacity:0.7});geoPlanOverlay.addTo(geoMap);}
-  geoMap.fitBounds(B.bounds);
+  geoFit(B);
 }
+function geoFit(B){if(!geoMap||!B)return;geoMap.fitBounds(B.bounds,{padding:[8,8],maxZoom:23});geoMap.setZoom(Math.min(geoMap.getZoom()+2,23));}
 function geoToggleLayer(key,on){const l=geoLayers[key];if(!l||!geoMap)return;if(on)l.addTo(geoMap);else geoMap.removeLayer(l);}
 function geoSetPlanOpacity(v){if(geoPlanOverlay)geoPlanOverlay.setOpacity(parseFloat(v));}
 function calibMapInit(){
