@@ -1277,8 +1277,7 @@
               <span id="tt-admin-status" class="acfg-status"></span>
             </div>
             <div id="tt-admin-list" class="tt-admin-list"></div>
-            <p class="acfg-note">Partagés via Supabase (table <code>geosolia_config</code>, clé <code>textes_types</code>). Tant que la table n'existe pas, les valeurs d'usine (fichier Excel) sont utilisées et « Enregistrer » affichera le SQL à exécuter.</p>
-            <details class="acfg-note"><summary style="cursor:pointer;font-weight:700">⚙️ SQL à exécuter une fois dans Supabase (SQL Editor)</summary><pre id="tt-sql" style="white-space:pre-wrap;background:#1A1A1A;color:#E8E8E8;padding:12px;border-radius:8px;font-size:11px;overflow:auto"></pre></details>
+            <p class="acfg-note">Partagés via Supabase (table <code>geosolia_config</code>, clé <code>textes_types</code>). Tant que la table n'existe pas, les valeurs d'usine (fichier Excel) sont utilisées.</p>
           </div>
           <div id="acfg-sec-collab" style="display:none">
             <div class="acfg-sec-title">Collaborateurs &amp; accès <span class="acfg-hint">(qui accède à GéoSolia / à l'Administration)</span></div>
@@ -1291,13 +1290,6 @@
             </div>
             <div id="collab-list" class="tt-admin-list"></div>
             <p class="acfg-note"><b>Transition douce</b> : pour l'instant toute connexion reste autorisée. Coche « Accès GéoSolia » pour les personnes à garder quand on activera la restriction, et « Admin » pour celles qui gèrent les paramétrages. <b>vsalaud@be-gph.fr</b> reste toujours admin (anti-verrouillage). Stocké dans Supabase (table <code>geosolia_roles</code>).</p>
-            <details class="acfg-note"><summary style="cursor:pointer;font-weight:700">⚙️ SQL à exécuter une fois dans Supabase (rôles + admins dynamiques)</summary><pre id="roles-sql" style="white-space:pre-wrap;background:#1A1A1A;color:#E8E8E8;padding:12px;border-radius:8px;font-size:11px;overflow:auto"></pre></details>
-            <details class="acfg-note"><summary style="cursor:pointer;font-weight:700">⚙️ Variables d'environnement Vercel (import Microsoft 365)</summary><pre style="white-space:pre-wrap;background:#1A1A1A;color:#E8E8E8;padding:12px;border-radius:8px;font-size:11px;overflow:auto">GRAPH_TENANT_ID   = (ID de l'annuaire Entra / tenant)
-GRAPH_CLIENT_ID   = (ID d'application de l'app Entra)
-GRAPH_CLIENT_SECRET = (secret client de l'app Entra)
-
-Permission APPLICATION requise sur l'app Entra : User.Read.All
-(+ « Accorder un consentement administrateur »).</pre></details>
           </div>
         </div>
       </div>
