@@ -1240,6 +1240,7 @@
     <div class="actions">
       <label for="project-ref" style="color:rgba(255,255,255,0.6);font-size:11px;font-weight:700;white-space:nowrap;margin-right:4px">Ref. Dossier :</label><input type="text" id="project-ref" placeholder="N° réf. projet" spellcheck="false" readonly onclick="openEditSiteModal()" style="cursor:pointer" title="Cliquer pour modifier">
       <input type="file" id="fileInput" accept=".pdf,image/*" style="display:none" onchange="loadPlan(event)">
+      <input type="file" id="plan-el-input" accept=".pdf,image/*" style="display:none" onchange="insertPlanAsElement(event)">
       <div id="auth-user-bar"><span class="auth-avatar" id="auth-avatar"></span><button class="admin-btn" onclick="openUserFolderConfig()" title="Paramétrages" style="background:#1565C0">⚙️ Paramétrages</button><button class="admin-btn" id="admin-btn" onclick="openAdminPanel()" style="display:none">Admin<span class="admin-badge" id="admin-badge" style="display:none">0</span></button><button class="auth-logout" onclick="authLogout()">Deconnexion</button></div>
     <div id="admin-overlay" onclick="closeAdminPanel()"></div>
     <div id="admin-config-panel">
@@ -1381,6 +1382,7 @@
     <button class="tool-btn" onclick="duplicateSelected()"><span class="icon">📋</span><span class="label">Dupliquer</span></button>
     <button class="tool-btn" onclick="toggleInsertMenu()"><span class="icon" style="font-size:15px;line-height:1;display:inline-flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></span><span class="label">Insérer</span></button>
     <div class="tool-sep"></div>
+    <button class="tool-btn" onclick="insertPlanElementPicker()"><span class="icon">🖼️</span><span class="label">Insérer plan</span></button>
     <button class="tool-btn" onclick="openMiseEnPage()"><span class="icon">📐</span><span class="label">Mise en Page</span></button>
     <button class="tool-btn" onclick="openRpt2()"><span class="icon">🧾</span><span class="label">Rédaction</span></button>
     <button class="tool-btn" onclick="openMapCalqueModal()"><span class="icon">🗺️</span><span class="label">Calque</span></button>
@@ -3740,6 +3742,37 @@ function toggleBlankOrientation(){
   $planImg.src=planImgSrc;$planImg.style.display='block';
   resizeDrawCanvas();renderElements();redrawCanvas();redrawCleanCanvas();resetView();
   saveCurrentPage();markDirty();updatePageBar();
+}
+// Insérer un plan (PDF/image) comme ÉLÉMENT déplaçable/redimensionnable par-dessus le fond (ex : fond A4)
+function insertPlanElementPicker(){const inp=document.getElementById('plan-el-input');if(inp)inp.click();}
+async function insertPlanAsElement(e){
+  const file=e.target.files&&e.target.files[0];if(!file)return;
+  e.target.value='';
+  let dataUrl,natW,natH;
+  try{
+    if(file.type==='application/pdf'){
+      const buf=await file.arrayBuffer();
+      const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+      const page=await pdf.getPage(1);
+      const vp=page.getViewport({scale:2});
+      const c=document.createElement('canvas');c.width=vp.width;c.height=vp.height;
+      await page.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;
+      dataUrl=c.toDataURL('image/png');natW=vp.width;natH=vp.height;
+    }else{
+      dataUrl=await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(file);});
+      const img=new Image();await new Promise((res,rej)=>{img.onload=res;img.onerror=rej;img.src=dataUrl;});
+      natW=img.naturalWidth;natH=img.naturalHeight;
+    }
+  }catch(err){alert('Impossible de charger ce plan : '+((err&&err.message)||err));return;}
+  if(!planImgSrc){loadBlankPlan('portrait');} // pas de fond → poser un A4 portrait d'abord
+  // dimensionner pour rentrer dans ~90% de la page, ratio conservé
+  const r=Math.min((planW*0.9)/natW,(planH*0.9)/natH);
+  const w=Math.max(20,Math.round(natW*r)), h=Math.max(20,Math.round(natH*r));
+  const el={id:Date.now()+Math.random(),type:'image',x:planW/2,y:planH/2,imgSrc:dataUrl,w,h,rotation:0};
+  elements.push(el);
+  if(typeof selectTool==='function')selectTool('select');
+  selectOnly(el.id);
+  markDirty();renderElements();saveCurrentPage();
 }
 async function loadPdfPage(pdf,num){
   const page=await pdf.getPage(num);const vp=page.getViewport({scale:2});
