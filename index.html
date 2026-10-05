@@ -1780,6 +1780,7 @@
       <span id="page-info">1 / 1</span>
       <button id="page-next" onclick="goToPage(currentPageIdx+1)" title="Page suivante">›</button>
       <button id="page-add" onclick="addNewPage()" title="Ajouter une page">+</button>
+      <button id="page-orient" onclick="toggleBlankOrientation()" title="Basculer l'orientation A4 (portrait / paysage)" style="display:none">⇄ A4</button>
     </div>
   </div>
   </div><!-- /main-body -->
@@ -2715,7 +2716,8 @@ async function restoreFromIDB(id){
       planImgSrc:pg.planImgSrc,planW:pg.planW||1200,planH:pg.planH||800,
       elements:(pg.elements||[]).map(el=>{el.id=el.id||Date.now()+Math.random();return el;}),
       drawPaths:pg.drawPaths||[],cleanPaths:pg.cleanPaths||[],
-      measureScale:pg.measureScale!=null?pg.measureScale:null
+      measureScale:pg.measureScale!=null?pg.measureScale:null,
+      blankA4:pg.blankA4||false
     }));
     currentPageIdx=project.currentPageIdx||0;
   }else{
@@ -2728,7 +2730,7 @@ async function restoreFromIDB(id){
   const pg=pages[currentPageIdx];
   planImgSrc=pg.planImgSrc;planW=pg.planW;planH=pg.planH;
   elements=pg.elements;drawPaths=pg.drawPaths;cleanPaths=pg.cleanPaths;
-  measureScale=pg.measureScale;
+  measureScale=pg.measureScale;blankA4=pg.blankA4||false;
   const $img=document.getElementById('plan-img');
   $img.style.display='block';$img.src=planImgSrc;
   $img.onload=function(){
@@ -3191,13 +3193,14 @@ let drawPaths=[],cleanPaths=[],currentPathPts=[],isDrawing=false,photos=[],camer
 let savedFileHandle=null,autoSaveInterval=null,_projectDirty=false;
 // --- Multi-pages ---
 let pages=[],currentPageIdx=0;
+let blankA4=false; // page courante = page blanche A4 (autorise la bascule d'orientation)
 
 function saveCurrentPage(){
   if(pages.length===0)return;
   pages[currentPageIdx]={
     planImgSrc:planImgSrc,planW:planW,planH:planH,
     elements:elements,drawPaths:drawPaths,cleanPaths:cleanPaths,
-    measureScale:measureScale
+    measureScale:measureScale,blankA4:blankA4
   };
 }
 
@@ -3207,6 +3210,7 @@ function loadPage(idx){
   planImgSrc=p.planImgSrc;planW=p.planW;planH=p.planH;
   elements=p.elements||[];drawPaths=p.drawPaths||[];cleanPaths=p.cleanPaths||[];
   measureScale=p.measureScale!=null?p.measureScale:null;
+  blankA4=p.blankA4||false;
   currentPageIdx=idx;
   const $img=document.getElementById('plan-img');
   if(planImgSrc){
@@ -3235,9 +3239,9 @@ function addNewPage(){
   saveCurrentPage();
   // Nouvelle page vide
   const newIdx=pages.length;
-  pages.push({planImgSrc:null,planW:1200,planH:800,elements:[],drawPaths:[],cleanPaths:[],measureScale:null});
+  pages.push({planImgSrc:null,planW:1200,planH:800,elements:[],drawPaths:[],cleanPaths:[],measureScale:null,blankA4:false});
   currentPageIdx=newIdx;
-  planImgSrc=null;planW=1200;planH=800;
+  planImgSrc=null;planW=1200;planH=800;blankA4=false;
   elements=[];drawPaths=[];cleanPaths=[];measureScale=null;
   clearSelection();
   const $img=document.getElementById('plan-img');
@@ -3254,7 +3258,7 @@ function addNewPage(){
 
 function initFirstPage(){
   if(pages.length===0){
-    pages=[{planImgSrc:planImgSrc,planW:planW,planH:planH,elements:elements,drawPaths:drawPaths,cleanPaths:cleanPaths,measureScale:measureScale}];
+    pages=[{planImgSrc:planImgSrc,planW:planW,planH:planH,elements:elements,drawPaths:drawPaths,cleanPaths:cleanPaths,measureScale:measureScale,blankA4:blankA4}];
     currentPageIdx=0;
   }
   updatePageBar();
@@ -3271,6 +3275,8 @@ function updatePageBar(){
   info.textContent=(currentPageIdx+1)+' / '+pages.length;
   prevBtn.disabled=currentPageIdx<=0;
   nextBtn.disabled=currentPageIdx>=pages.length-1;
+  const orientBtn=document.getElementById('page-orient');
+  if(orientBtn)orientBtn.style.display=blankA4?'':'none';
 }
 let sondages=[],editingSondageId=null,editingSondageType=null,sondageSnapshot=null;
 let czPoints=[],czPreview=null;
@@ -3690,6 +3696,7 @@ async function loadPlan(e){
 
 async function loadPlanFromFile(file){
   if(!file)return;
+  blankA4=false;
   cleanPaths=[];redrawCleanCanvas();snapEdgeMap=null;
   if(file.type==='application/pdf'){
     const buf=await file.arrayBuffer();
@@ -3716,10 +3723,23 @@ function loadBlankPlan(orientation){
   if(orientation==='landscape'){const t=w;w=h;h=t;}
   const c=document.createElement('canvas');c.width=w;c.height=h;
   const ctx=c.getContext('2d');ctx.fillStyle='#ffffff';ctx.fillRect(0,0,w,h);
-  planImgSrc=c.toDataURL('image/png');planW=w;planH=h;
+  planImgSrc=c.toDataURL('image/png');planW=w;planH=h;blankA4=true;
   $planImg.src=planImgSrc;$planImg.style.display='block';$empty.style.display='none';
   resetView();
   syncPageAfterLoad();
+}
+// Bascule portrait ↔ paysage d'une page A4 blanche déjà posée (conserve les annotations)
+function toggleBlankOrientation(){
+  if(!blankA4)return;
+  const landscape=planW<planH; // actuellement portrait → passer en paysage
+  const a=Math.max(planW,planH), b=Math.min(planW,planH);
+  const w=landscape?a:b, h=landscape?b:a;
+  const c=document.createElement('canvas');c.width=w;c.height=h;
+  const ctx=c.getContext('2d');ctx.fillStyle='#ffffff';ctx.fillRect(0,0,w,h);
+  planImgSrc=c.toDataURL('image/png');planW=w;planH=h;snapEdgeMap=null;
+  $planImg.src=planImgSrc;$planImg.style.display='block';
+  resizeDrawCanvas();renderElements();redrawCanvas();redrawCleanCanvas();resetView();
+  saveCurrentPage();markDirty();updatePageBar();
 }
 async function loadPdfPage(pdf,num){
   const page=await pdf.getPage(num);const vp=page.getViewport({scale:2});
@@ -7302,7 +7322,8 @@ function buildProjectJSON(){
       planImgSrc:pg.planImgSrc,planW:pg.planW||1200,planH:pg.planH||800,
       elements:serializeElements(pg.elements),
       drawPaths:pg.drawPaths||[],cleanPaths:pg.cleanPaths||[],
-      measureScale:pg.measureScale!=null?pg.measureScale:null
+      measureScale:pg.measureScale!=null?pg.measureScale:null,
+      blankA4:pg.blankA4||false
     })),
     currentPageIdx:currentPageIdx,
     elements:serializeElements(elements),
@@ -7990,7 +8011,8 @@ function importProject(e){
         planImgSrc:pg.planImgSrc,planW:pg.planW||1200,planH:pg.planH||800,
         elements:(pg.elements||[]).map(el=>{el.id=el.id||Date.now()+Math.random();return el;}),
         drawPaths:pg.drawPaths||[],cleanPaths:pg.cleanPaths||[],
-        measureScale:pg.measureScale!=null?pg.measureScale:null
+        measureScale:pg.measureScale!=null?pg.measureScale:null,
+        blankA4:pg.blankA4||false
       }));
       currentPageIdx=project.currentPageIdx||0;
     }else{
@@ -8007,7 +8029,7 @@ function importProject(e){
     planW=pg.planW;
     planH=pg.planH;
     elements=pg.elements;drawPaths=pg.drawPaths;cleanPaths=pg.cleanPaths;
-    measureScale=pg.measureScale;
+    measureScale=pg.measureScale;blankA4=pg.blankA4||false;
     const $img=document.getElementById('plan-img');
     $img.style.display='block';
     $img.src=planImgSrc;
