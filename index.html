@@ -1772,7 +1772,7 @@
     <div id="mrpropre-cursor"></div>
     <div id="empty-state">
       <div id="welcome-screen"><div class="big-icon">📐</div><div class="welcome-title">Géo<span class="highlight">Solia'</span></div><p>Application pour Enquêtes, Relevés et Rapports</p><div class="welcome-btns"><button class="btn-load-center" onclick="openNewStudyModal()">📝 Nouveau Projet</button><button class="btn-load-center btn-open-project" onclick="openProjectWithHandle()">📂 Ouvrir un projet</button></div><div style="display:flex;gap:12px;margin-top:10px"><button onclick="openIDBRecovery()" style="background:none;border:none;color:var(--gray-500);font-size:11px;font-weight:700;cursor:pointer;text-decoration:underline">Sauvegardes locales</button><button onclick="openCloudProjects()" style="background:none;border:none;color:var(--accent-blue,#1976d2);font-size:11px;font-weight:700;cursor:pointer;text-decoration:underline">☁️ Projets cloud</button></div></div>
-      <div id="load-plan-screen" style="display:none"><div class="big-icon">📐</div><p>Chargez un plan PDF ou une image<br>pour commencer à annoter</p><button class="btn-load-center" onclick="openPlanPicker()">📄 Charger un plan</button><div class="hint">PDF, JPG, PNG</div></div>
+      <div id="load-plan-screen" style="display:none"><div class="big-icon">📐</div><p>Chargez un plan PDF / image, ou démarrez sur une page blanche A4</p><button class="btn-load-center" onclick="openPlanPicker()">📄 Charger un plan</button><div class="hint">PDF, JPG, PNG</div><div style="display:flex;gap:10px;margin-top:14px;justify-content:center;flex-wrap:wrap"><button class="btn-load-center" style="background:#fff;color:#1A1A1A;border:2px solid #1A1A1A;box-shadow:none" onclick="loadBlankPlan('portrait')">▯ Page A4 portrait</button><button class="btn-load-center" style="background:#fff;color:#1A1A1A;border:2px solid #1A1A1A;box-shadow:none" onclick="loadBlankPlan('landscape')">▭ Page A4 paysage</button></div></div>
     </div>
     <button id="btn-recadrer" onclick="resetView()" title="Recadrer">🎯</button>
     <div id="page-bar" style="display:none">
@@ -3707,6 +3707,19 @@ function syncPageAfterLoad(){
   markDirty();
   if(pages.length===0){initFirstPage();}
   else{saveCurrentPage();updatePageBar();}
+}
+// Page blanche A4 (portrait/paysage) — image blanche aux proportions A4, utilisable comme un plan
+function loadBlankPlan(orientation){
+  cleanPaths=[];redrawCleanCanvas();snapEdgeMap=null;
+  const dpi=150; // A4 210×297 mm → ~1240×1754 px (qualité correcte pour annoter/exporter)
+  let w=Math.round(210/25.4*dpi), h=Math.round(297/25.4*dpi);
+  if(orientation==='landscape'){const t=w;w=h;h=t;}
+  const c=document.createElement('canvas');c.width=w;c.height=h;
+  const ctx=c.getContext('2d');ctx.fillStyle='#ffffff';ctx.fillRect(0,0,w,h);
+  planImgSrc=c.toDataURL('image/png');planW=w;planH=h;
+  $planImg.src=planImgSrc;$planImg.style.display='block';$empty.style.display='none';
+  resetView();
+  syncPageAfterLoad();
 }
 async function loadPdfPage(pdf,num){
   const page=await pdf.getPage(num);const vp=page.getViewport({scale:2});
