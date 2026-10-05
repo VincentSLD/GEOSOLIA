@@ -1048,6 +1048,12 @@
   .tt-mini:hover{background:var(--gray-200)}
   .tt-mini.tt-danger{color:#C0392B;border-color:#E8c4bf}
   .tt-mini.tt-danger:hover{background:#FADBD8}
+  .collab-table{width:100%;border-collapse:collapse;font-size:12px;background:#fff}
+  .collab-table th{position:sticky;top:0;background:var(--gray-100);text-align:left;padding:8px 10px;border-bottom:2px solid var(--gray-200);font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#555}
+  .collab-table td{padding:6px 10px;border-bottom:1px solid var(--gray-200)}
+  .collab-table tr:hover td{background:#FFFBEA}
+  .collab-table .collab-mail{color:#666;font-family:monospace;font-size:11px}
+  .collab-table input[type=checkbox]{width:17px;height:17px;cursor:pointer;accent-color:#E67E22}
   .acfg-head{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:var(--black);color:var(--yellow);font-weight:800;font-size:15px;flex-shrink:0}
   .acfg-close{background:none;border:1px solid rgba(255,255,255,0.25);color:#fff;padding:6px 14px;border-radius:6px;font-weight:700;cursor:pointer;font-family:inherit}
   .acfg-body{display:flex;flex:1;overflow:hidden}
@@ -1242,6 +1248,7 @@
         <div class="acfg-nav">
           <button class="acfg-nav-btn active" data-sec="litho" onclick="adminCfgSection('litho')">🪨 Lithologie</button>
           <button class="acfg-nav-btn" data-sec="textes" onclick="adminCfgSection('textes')">📚 Textes types</button>
+          <button class="acfg-nav-btn" data-sec="collab" onclick="adminCfgSection('collab')">👥 Collaborateurs</button>
         </div>
         <div class="acfg-content">
           <div id="acfg-sec-litho">
@@ -1272,6 +1279,25 @@
             <div id="tt-admin-list" class="tt-admin-list"></div>
             <p class="acfg-note">Partagés via Supabase (table <code>geosolia_config</code>, clé <code>textes_types</code>). Tant que la table n'existe pas, les valeurs d'usine (fichier Excel) sont utilisées et « Enregistrer » affichera le SQL à exécuter.</p>
             <details class="acfg-note"><summary style="cursor:pointer;font-weight:700">⚙️ SQL à exécuter une fois dans Supabase (SQL Editor)</summary><pre id="tt-sql" style="white-space:pre-wrap;background:#1A1A1A;color:#E8E8E8;padding:12px;border-radius:8px;font-size:11px;overflow:auto"></pre></details>
+          </div>
+          <div id="acfg-sec-collab" style="display:none">
+            <div class="acfg-sec-title">Collaborateurs &amp; accès <span class="acfg-hint">(qui accède à GéoSolia / à l'Administration)</span></div>
+            <div class="acfg-actions">
+              <button onclick="collabImportGraph()">📥 Importer depuis Microsoft 365</button>
+              <input id="collab-search" type="text" placeholder="Rechercher un collaborateur…" oninput="renderCollabAdmin()" style="flex:1;min-width:180px;padding:7px 10px;border:1px solid var(--gray-300);border-radius:6px;font-family:inherit">
+              <button onclick="collabAdd()">+ Ajouter un e-mail</button>
+              <button class="acfg-save" onclick="collabSave()">💾 Enregistrer les accès</button>
+              <span id="collab-status" class="acfg-status"></span>
+            </div>
+            <div id="collab-list" class="tt-admin-list"></div>
+            <p class="acfg-note"><b>Transition douce</b> : pour l'instant toute connexion reste autorisée. Coche « Accès GéoSolia » pour les personnes à garder quand on activera la restriction, et « Admin » pour celles qui gèrent les paramétrages. <b>vsalaud@be-gph.fr</b> reste toujours admin (anti-verrouillage). Stocké dans Supabase (table <code>geosolia_roles</code>).</p>
+            <details class="acfg-note"><summary style="cursor:pointer;font-weight:700">⚙️ SQL à exécuter une fois dans Supabase (rôles + admins dynamiques)</summary><pre id="roles-sql" style="white-space:pre-wrap;background:#1A1A1A;color:#E8E8E8;padding:12px;border-radius:8px;font-size:11px;overflow:auto"></pre></details>
+            <details class="acfg-note"><summary style="cursor:pointer;font-weight:700">⚙️ Variables d'environnement Vercel (import Microsoft 365)</summary><pre style="white-space:pre-wrap;background:#1A1A1A;color:#E8E8E8;padding:12px;border-radius:8px;font-size:11px;overflow:auto">GRAPH_TENANT_ID   = (ID de l'annuaire Entra / tenant)
+GRAPH_CLIENT_ID   = (ID d'application de l'app Entra)
+GRAPH_CLIENT_SECRET = (secret client de l'app Entra)
+
+Permission APPLICATION requise sur l'app Entra : User.Read.All
+(+ « Accorder un consentement administrateur »).</pre></details>
           </div>
         </div>
       </div>
@@ -2277,7 +2303,27 @@ async function authLogout() {
 }
 
 // ═══ ADMIN PANEL ═══
-const ADMIN_EMAILS = ['vsalaud@be-gph.fr'];
+const ADMIN_EMAILS = ['vsalaud@be-gph.fr']; // bootstrap super-admin (anti-verrouillage)
+// Rôles collaborateurs chargés depuis Supabase (table geosolia_roles)
+let GEO_ROLES = {};
+async function geoLoadRoles() {
+  if (typeof sbAuth === 'undefined') return;
+  try {
+    const { data, error } = await sbAuth.from('geosolia_roles').select('email,name,can_access,is_admin');
+    if (error) { console.warn('geosolia_roles:', error.message); return; }
+    GEO_ROLES = {};
+    (data || []).forEach(r => { if (r.email) GEO_ROLES[String(r.email).toLowerCase()] = r; });
+    if (currentAuthUser) checkAdmin(currentAuthUser);
+    if (document.getElementById('collab-list')) { COLLAB_ROWS = null; renderCollabAdmin(); }
+  } catch (e) { console.warn('geosolia_roles', e); }
+}
+function isGeoAdmin(email) {
+  if (!email) return false;
+  email = String(email).toLowerCase();
+  if (ADMIN_EMAILS.includes(email)) return true;
+  const r = GEO_ROLES[email];
+  return !!(r && r.is_admin);
+}
 
 async function getAuthToken() {
   const { data } = await sbAuth.auth.getSession();
@@ -2288,7 +2334,7 @@ async function getAuthToken() {
 }
 
 async function checkAdmin(user) {
-  if (!ADMIN_EMAILS.includes(user.email)) return;
+  if (!isGeoAdmin(user.email)) return;
   document.getElementById('admin-btn').style.display = '';
   // Compter les pending
   try {
@@ -2478,7 +2524,7 @@ async function signInWithMicrosoft() {
 sbAuth.auth.onAuthStateChange(async (event, session) => {
   if (event === 'SIGNED_OUT') showLogin();
   if (event === 'SIGNED_IN' && session?.user && !currentAuthUser) { showApp(session.user); }
-  if (session?.user) { try { ttFetchCloud(); } catch(e){} }
+  if (session?.user) { try { ttFetchCloud(); lithoFetchCloud(); geoLoadRoles(); } catch(e){} }
 });
 
 pdfjsLib.GlobalWorkerOptions.workerSrc='lib/pdf.worker.min.js';
@@ -10270,7 +10316,9 @@ function getGTRForSondage(s){
 // ═══ BIBLIOTHÈQUE TEXTES-TYPES ═══
 // ═══ TEXTES TYPES — sources Excel (docs/Textes_Sources.xlsx), éditables en admin, partagés via Supabase ═══
 let TT_DATA=null;
-const TT_SQL=`-- Table de configuration partagée (textes types, etc.)
+const TT_SQL=`-- === GéoSolia : configuration partagée, accès & rôles (à exécuter une fois) ===
+
+-- Config partagée (textes types, lithologie, …)
 create table if not exists public.geosolia_config (
   key text primary key,
   value jsonb not null,
@@ -10279,17 +10327,43 @@ create table if not exists public.geosolia_config (
 );
 alter table public.geosolia_config enable row level security;
 
--- Lecture pour tout utilisateur connecté
-drop policy if exists "geosolia_config read" on public.geosolia_config;
-create policy "geosolia_config read" on public.geosolia_config
-  for select to authenticated using (true);
+-- Rôles collaborateurs (accès app + admin), clé = e-mail
+create table if not exists public.geosolia_roles (
+  email text primary key,
+  name text,
+  can_access boolean not null default false,
+  is_admin boolean not null default false,
+  updated_at timestamptz default now(),
+  updated_by text
+);
+alter table public.geosolia_roles enable row level security;
 
--- Écriture réservée aux administrateurs
+-- Qui est admin ? (bootstrap + table) — security definer pour éviter la récursion RLS
+create or replace function public.is_geosolia_admin()
+returns boolean language sql stable security definer set search_path = public as $$
+  select coalesce((auth.jwt() ->> 'email') = 'vsalaud@be-gph.fr', false)
+      or exists (select 1 from public.geosolia_roles r
+                 where lower(r.email) = lower(auth.jwt() ->> 'email') and r.is_admin = true);
+$$;
+
+-- Lecture : tout utilisateur connecté
+drop policy if exists "geosolia_config read" on public.geosolia_config;
+create policy "geosolia_config read" on public.geosolia_config for select to authenticated using (true);
+drop policy if exists "geosolia_roles read" on public.geosolia_roles;
+create policy "geosolia_roles read" on public.geosolia_roles for select to authenticated using (true);
+
+-- Écriture : administrateurs uniquement
 drop policy if exists "geosolia_config admin write" on public.geosolia_config;
-create policy "geosolia_config admin write" on public.geosolia_config
-  for all to authenticated
-  using ((auth.jwt() ->> 'email') in ('vsalaud@be-gph.fr'))
-  with check ((auth.jwt() ->> 'email') in ('vsalaud@be-gph.fr'));`;
+create policy "geosolia_config admin write" on public.geosolia_config for all to authenticated
+  using (public.is_geosolia_admin()) with check (public.is_geosolia_admin());
+drop policy if exists "geosolia_roles admin write" on public.geosolia_roles;
+create policy "geosolia_roles admin write" on public.geosolia_roles for all to authenticated
+  using (public.is_geosolia_admin()) with check (public.is_geosolia_admin());
+
+-- Bootstrap administrateur (anti-verrouillage)
+insert into public.geosolia_roles (email, name, can_access, is_admin, updated_by)
+values ('vsalaud@be-gph.fr', 'Vincent Salaud', true, true, 'bootstrap')
+on conflict (email) do update set can_access = true, is_admin = true;`;
 function ttParseDefault(){try{const el=document.getElementById('tt-default');return el?JSON.parse(el.textContent):[];}catch(e){console.warn('TT default parse',e);return[];}}
 function ttGetData(){if(TT_DATA===null)TT_DATA=ttParseDefault();return TT_DATA;}
 async function ttFetchCloud(){
@@ -10352,6 +10426,49 @@ function ttItemsForSub(subId){
   const out=[];
   groups.forEach(g=>{(g.items||[]).forEach(it=>{const cas=(it.case&&!/^\d+$/.test(String(it.case).trim()))?(' — '+it.case):'';out.push({title:((g.champ||g.section||'Texte')+cas),text:it.text});});});
   return out;
+}
+// ═══ COLLABORATEURS & ACCÈS — Supabase geosolia_roles + import Microsoft Graph ═══
+let COLLAB_ROWS=null;
+function collabBuildRows(graphUsers){
+  const map={};
+  Object.values(GEO_ROLES).forEach(r=>{const k=String(r.email||'').toLowerCase();if(!k)return;map[k]={email:r.email,name:r.name||'',department:'',can_access:!!r.can_access,is_admin:!!r.is_admin,_inDb:true};});
+  (graphUsers||[]).forEach(u=>{const k=String(u.email||'').toLowerCase();if(!k)return;if(map[k]){map[k].department=u.department||map[k].department||'';if(!map[k].name)map[k].name=u.name||'';}else{map[k]={email:u.email,name:u.name||'',department:u.department||'',can_access:false,is_admin:false,_inDb:false};}});
+  COLLAB_ROWS=Object.values(map).sort((a,b)=>String(a.name||a.email).localeCompare(String(b.name||b.email)));
+}
+function renderCollabAdmin(){
+  const host=document.getElementById('collab-list');if(!host)return;
+  const sql=document.getElementById('roles-sql');if(sql&&!sql.textContent)sql.textContent=TT_SQL;
+  if(COLLAB_ROWS===null)collabBuildRows([]);
+  const f=((document.getElementById('collab-search')||{}).value||'').trim().toLowerCase();
+  const rows=COLLAB_ROWS.map((r,i)=>({r,i})).filter(x=>!f||((x.r.name+' '+x.r.email+' '+x.r.department).toLowerCase().includes(f)));
+  let html='<table class="collab-table"><thead><tr><th>Nom</th><th>E-mail</th><th>Service</th><th>Accès GéoSolia</th><th>Admin</th><th></th></tr></thead><tbody>';
+  if(!rows.length)html+='<tr><td colspan="6" style="color:#999;padding:14px">Aucun collaborateur. Clique « 📥 Importer depuis Microsoft 365 » ou « + Ajouter un e-mail ».</td></tr>';
+  rows.forEach(x=>{const r=x.r,i=x.i;html+=`<tr><td>${ttEsc(r.name||'')}</td><td class="collab-mail">${ttEsc(r.email)}</td><td>${ttEsc(r.department||'')}</td><td style="text-align:center"><input type="checkbox" ${r.can_access?'checked':''} onchange="collabSet(${i},'can_access',this.checked)"></td><td style="text-align:center"><input type="checkbox" ${r.is_admin?'checked':''} onchange="collabSet(${i},'is_admin',this.checked)"></td><td>${r._inDb?`<button class="tt-mini tt-danger" onclick="collabRemove(${i})" title="Retirer des accès">✕</button>`:''}</td></tr>`;});
+  html+='</tbody></table>';
+  host.innerHTML=html;
+}
+function collabSet(i,k,v){const r=COLLAB_ROWS&&COLLAB_ROWS[i];if(!r)return;r[k]=v;if(k==='is_admin'&&v)r.can_access=true;renderCollabAdmin();}
+function collabRemove(i){const r=COLLAB_ROWS&&COLLAB_ROWS[i];if(!r)return;r.can_access=false;r.is_admin=false;if(!r._inDb)COLLAB_ROWS.splice(i,1);renderCollabAdmin();}
+function collabAdd(){const email=prompt('E-mail du collaborateur :');if(!email)return;const k=email.trim().toLowerCase();if(!k)return;if(COLLAB_ROWS===null)collabBuildRows([]);if(COLLAB_ROWS.some(r=>String(r.email).toLowerCase()===k)){alert('Déjà dans la liste.');return;}COLLAB_ROWS.push({email:email.trim(),name:prompt('Nom (optionnel) :','')||'',department:'',can_access:true,is_admin:false,_inDb:false});renderCollabAdmin();}
+async function collabImportGraph(){
+  const status=document.getElementById('collab-status');if(status)status.textContent='Import en cours…';
+  try{const token=await getAuthToken();if(!token){if(status)status.textContent='❌ Session expirée';return;}
+    const r=await fetch('/api/graph-users',{headers:{Authorization:'Bearer '+token}});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok){if(status)status.textContent='❌ '+(j.error||('HTTP '+r.status));alert('Import Microsoft 365 : '+(j.error||('HTTP '+r.status))+'\n\nVérifie les variables GRAPH_* sur Vercel et la permission User.Read.All (consentement admin).');return;}
+    collabBuildRows(j.users||[]);renderCollabAdmin();if(status)status.textContent='✅ '+(j.count||(j.users||[]).length)+' collaborateurs chargés';
+  }catch(e){if(status)status.textContent='❌ '+e.message;}
+}
+async function collabSave(){
+  const status=document.getElementById('collab-status');if(!COLLAB_ROWS){if(status)status.textContent='Rien à enregistrer';return;}
+  try{const{data:{session}}=await sbAuth.auth.getSession();const by=(session&&session.user&&session.user.email)||null;
+    const up=COLLAB_ROWS.filter(r=>r.can_access||r.is_admin).map(r=>({email:String(r.email).toLowerCase(),name:r.name||null,can_access:!!r.can_access,is_admin:!!r.is_admin,updated_at:new Date().toISOString(),updated_by:by}));
+    const del=COLLAB_ROWS.filter(r=>r._inDb&&!r.can_access&&!r.is_admin).map(r=>String(r.email).toLowerCase());
+    if(up.length){const{error}=await sbAuth.from('geosolia_roles').upsert(up,{onConflict:'email'});if(error)throw error;}
+    for(const em of del){const{error}=await sbAuth.from('geosolia_roles').delete().eq('email',em);if(error)throw error;}
+    if(status)status.textContent='✅ Enregistré — '+up.length+' avec accès'+(del.length?(', '+del.length+' retiré(s)'):'');
+    await geoLoadRoles();collabBuildRows([]);renderCollabAdmin();
+  }catch(e){if(status)status.textContent='❌ '+e.message;alert('Échec enregistrement : '+e.message+'\n\nLa table geosolia_roles existe-t-elle ? Déplie le SQL et lance-le dans Supabase.');}
 }
 const TEXTES_TYPES={
   cadre_normatif:[
@@ -13665,15 +13782,38 @@ function loadLithoConfig(){
     if(cfg&&cfg.types&&Object.keys(cfg.types).length){SOIL_TYPES=cfg.types;SOIL_DESCRIPTIONS=cfg.descs||{};}
   }catch(e){console.warn('loadLithoConfig',e);}
 }
+function applyLithoCfg(cfg){
+  if(!(cfg&&cfg.types&&Object.keys(cfg.types).length))return;
+  SOIL_TYPES=cfg.types;SOIL_DESCRIPTIONS=cfg.descs||{};
+  if(document.getElementById('litho-editor-body'))renderLithoEditor();
+  try{if(typeof getCurrentSondage==='function'){const s=getCurrentSondage();if(s&&typeof renderSondageContent==='function')renderSondageContent(s);}}catch(e){}
+}
+async function lithoFetchCloud(){
+  if(typeof sbAuth==='undefined')return;
+  try{const{data,error}=await sbAuth.from('geosolia_config').select('value').eq('key','litho').maybeSingle();
+    if(error){console.warn('litho cloud:',error.message);return;}
+    if(data&&data.value)applyLithoCfg(data.value);
+  }catch(e){console.warn('litho fetch',e);}
+}
+async function lithoSaveCloud(cfg){
+  if(typeof sbAuth==='undefined')return;
+  const st=document.getElementById('acfg-litho-status');
+  try{const{data:{session}}=await sbAuth.auth.getSession();const by=(session&&session.user&&session.user.email)||null;
+    const{error}=await sbAuth.from('geosolia_config').upsert({key:'litho',value:cfg,updated_at:new Date().toISOString(),updated_by:by},{onConflict:'key'});
+    if(st){if(error)st.textContent='⚠️ Enregistré en local — Supabase: '+error.message;else st.textContent='✓ Enregistré (local + Supabase, partagé)';}
+  }catch(e){if(st)st.textContent='⚠️ Enregistré en local — '+e.message;}
+}
 function openAdminConfig(){const p=document.getElementById('admin-config-panel');if(!p)return;p.classList.add('open');adminCfgSection('litho');}
 function closeAdminConfig(){const p=document.getElementById('admin-config-panel');if(p)p.classList.remove('open');}
 function adminCfgSection(sec){
   document.querySelectorAll('#admin-config-panel .acfg-nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.sec===sec));
-  const secL=document.getElementById('acfg-sec-litho'),secT=document.getElementById('acfg-sec-textes');
+  const secL=document.getElementById('acfg-sec-litho'),secT=document.getElementById('acfg-sec-textes'),secC=document.getElementById('acfg-sec-collab');
   if(secL)secL.style.display=(sec==='litho')?'':'none';
   if(secT)secT.style.display=(sec==='textes')?'':'none';
+  if(secC)secC.style.display=(sec==='collab')?'':'none';
   if(sec==='litho')renderLithoEditor();
   if(sec==='textes')ttRenderAdmin();
+  if(sec==='collab')renderCollabAdmin();
 }
 function lithoPatternOptions(sel){return LITHO_PATTERNS.map(p=>`<option value="${p}"${p===sel?' selected':''}>${p}</option>`).join('');}
 function lithoEsc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
@@ -13729,8 +13869,9 @@ function lithoSave(){
   if(!Object.keys(types).length){alert('Il faut au moins une nature.');return;}
   SOIL_TYPES=types;SOIL_DESCRIPTIONS=descs;
   try{localStorage.setItem('geosolia_litho_v1',JSON.stringify({types,descs,savedAt:Date.now()}));}catch(e){}
+  lithoSaveCloud({types,descs});
   try{if(typeof getCurrentSondage==='function'){const s=getCurrentSondage();if(s&&typeof renderSondageContent==='function')renderSondageContent(s);}}catch(e){}
-  const st=document.getElementById('acfg-litho-status');if(st){st.textContent='✓ Enregistré ('+Object.keys(types).length+' natures)';setTimeout(()=>{st.textContent='';},4000);}
+  const st=document.getElementById('acfg-litho-status');if(st&&!st.textContent){st.textContent='✓ Enregistré ('+Object.keys(types).length+' natures)';}
   if(typeof showToast==='function')showToast('Lithologie enregistrée');
 }
 function lithoReset(){
