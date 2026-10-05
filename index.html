@@ -3745,33 +3745,58 @@ function toggleBlankOrientation(){
 }
 // Insérer un plan (PDF/image) comme ÉLÉMENT déplaçable/redimensionnable par-dessus le fond (ex : fond A4)
 function insertPlanElementPicker(){const inp=document.getElementById('plan-el-input');if(inp)inp.click();}
-async function insertPlanAsElement(e){
-  const file=e.target.files&&e.target.files[0];if(!file)return;
-  e.target.value='';
-  let dataUrl,natW,natH;
-  try{
-    if(file.type==='application/pdf'){
-      const buf=await file.arrayBuffer();
-      const pdf=await pdfjsLib.getDocument({data:buf}).promise;
-      const page=await pdf.getPage(1);
-      const vp=page.getViewport({scale:2});
-      const c=document.createElement('canvas');c.width=vp.width;c.height=vp.height;
-      await page.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;
-      dataUrl=c.toDataURL('image/png');natW=vp.width;natH=vp.height;
-    }else{
-      dataUrl=await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(file);});
-      const img=new Image();await new Promise((res,rej)=>{img.onload=res;img.onerror=rej;img.src=dataUrl;});
-      natW=img.naturalWidth;natH=img.naturalHeight;
-    }
-  }catch(err){alert('Impossible de charger ce plan : '+((err&&err.message)||err));return;}
+let pdfPickOverride=null; // si défini, showPdfPageModal appelle ce callback(pdf,pageNum) au lieu de charger un fond
+async function renderPdfPageToDataUrl(pdf,num){
+  const page=await pdf.getPage(num);const vp=page.getViewport({scale:2});
+  const c=document.createElement('canvas');c.width=vp.width;c.height=vp.height;
+  await page.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;
+  return {dataUrl:c.toDataURL('image/png'),w:vp.width,h:vp.height};
+}
+function placePlanElement(dataUrl,natW,natH){
   if(!planImgSrc){loadBlankPlan('portrait');} // pas de fond → poser un A4 portrait d'abord
-  // dimensionner pour rentrer dans ~90% de la page, ratio conservé
-  const r=Math.min((planW*0.9)/natW,(planH*0.9)/natH);
+  const r=Math.min((planW*0.9)/natW,(planH*0.9)/natH); // ~90% de la page, ratio conservé
   const w=Math.max(20,Math.round(natW*r)), h=Math.max(20,Math.round(natH*r));
   const el={id:Date.now()+Math.random(),type:'image',x:planW/2,y:planH/2,imgSrc:dataUrl,w,h,rotation:0};
   elements.push(el);
   if(typeof selectTool==='function')selectTool('select');
   selectOnly(el.id);
+  markDirty();renderElements();saveCurrentPage();
+}
+async function insertPlanAsElement(e){
+  const file=e.target.files&&e.target.files[0];if(!file)return;
+  e.target.value='';
+  try{
+    if(file.type==='application/pdf'){
+      const buf=await file.arrayBuffer();
+      const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+      if(pdf.numPages>1){ // choix de la page
+        pendingPdf=pdf;
+        pdfPickOverride=async(pdfRef,num)=>{const r=await renderPdfPageToDataUrl(pdfRef,num);placePlanElement(r.dataUrl,r.w,r.h);};
+        showPdfPageModal(pdf);
+        return;
+      }
+      const r=await renderPdfPageToDataUrl(pdf,1);
+      placePlanElement(r.dataUrl,r.w,r.h);
+    }else{
+      const dataUrl=await new Promise(res=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.readAsDataURL(file);});
+      const img=new Image();await new Promise((res,rej)=>{img.onload=res;img.onerror=rej;img.src=dataUrl;});
+      placePlanElement(dataUrl,img.naturalWidth,img.naturalHeight);
+    }
+  }catch(err){alert('Impossible de charger ce plan : '+((err&&err.message)||err));}
+}
+// Ajuster un élément plan au format de la page (A4), avec marge réglable (mm)
+function fitImageToPage(eid){
+  const el=elements.find(e=>e.id===eid);if(!el||el.type!=='image')return;
+  const prev=(window._fitMarginMm!=null)?window._fitMarginMm:10;
+  const inp=prompt('Marge autour du plan (en mm, 0 = plein cadre) :',prev);
+  if(inp===null)return;
+  const marginMm=Math.max(0,parseFloat(String(inp).replace(',','.'))||0);window._fitMarginMm=marginMm;
+  const pxPerMm=(blankA4?Math.min(planW,planH):planW)/210; // côté 210 mm de l'A4 (approx si fond non A4)
+  const mpx=marginMm*pxPerMm;
+  const availW=Math.max(20,planW-2*mpx), availH=Math.max(20,planH-2*mpx);
+  const ratio=(el.w||1)/(el.h||1);
+  let w=availW, h=w/ratio; if(h>availH){h=availH;w=h*ratio;}
+  el.w=Math.round(w);el.h=Math.round(h);el.x=planW/2;el.y=planH/2;el.rotation=0;
   markDirty();renderElements();saveCurrentPage();
 }
 async function loadPdfPage(pdf,num){
@@ -3801,6 +3826,7 @@ async function showPdfPageModal(pdf){
     thumb.onclick=async()=>{
       document.querySelectorAll('.pdf-page-thumb').forEach(t=>t.classList.remove('selected'));
       thumb.classList.add('selected');
+      if(pdfPickOverride){const cb=pdfPickOverride;pdfPickOverride=null;closePdfPageModal();await cb(pendingPdf,pageNum);return;}
       await loadPdfPage(pendingPdf,pageNum);
       syncPageAfterLoad();
       closePdfPageModal();
@@ -4181,7 +4207,7 @@ function renderElements(){
       </svg><button class="del-btn" data-action="del" data-eid="${el.id}">×</button><button class="ia-draw-btn" data-action="iaDrawing" data-eid="${el.id}">IA</button>`;
     }else if(el.type==='image'){
       const iw=el.w||150,ih=el.h||100;const irot=el.rotation||0;const iop=el.opacity!=null?el.opacity:1;const iopPct=Math.round(iop*100);
-      div.innerHTML=`<div class="image-wrap" style="transform:rotate(${irot}deg);opacity:${iop}"><img src="${el.imgSrc}" style="width:${iw}px;height:${ih}px;pointer-events:none;display:block;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,0.3)"></div><button class="del-btn" data-action="del" data-eid="${el.id}">×</button><button class="edit-btn" data-action="editImage" data-eid="${el.id}">✏️</button><button class="rotate-btn" data-action="rotate" data-eid="${el.id}">↻</button><div class="resize-handle" data-resize="1"></div><div class="img-opacity-bar" data-eid="${el.id}"><input type="range" min="0" max="100" value="${iopPct}" class="img-opacity-slider"><span>${iopPct}%</span></div>`;
+      div.innerHTML=`<div class="image-wrap" style="transform:rotate(${irot}deg);opacity:${iop}"><img src="${el.imgSrc}" style="width:${iw}px;height:${ih}px;pointer-events:none;display:block;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,0.3)"></div><button class="del-btn" data-action="del" data-eid="${el.id}">×</button><button class="edit-btn" data-action="editImage" data-eid="${el.id}">✏️</button><button class="rotate-btn" data-action="rotate" data-eid="${el.id}">↻</button><div class="resize-handle" data-resize="1"></div><div class="img-opacity-bar" data-eid="${el.id}"><input type="range" min="0" max="100" value="${iopPct}" class="img-opacity-slider"><span>${iopPct}%</span><button data-action="fitPage" data-eid="${el.id}" title="Ajuster le plan au format de la page (A4), marge réglable" style="margin-left:6px;padding:2px 7px;font-size:10px;font-weight:700;border:none;border-radius:4px;background:#1A1A1A;color:#F2B705;cursor:pointer;white-space:nowrap">⤢ Ajuster A4</button></div>`;
       const opSlider=div.querySelector('.img-opacity-slider');
       if(opSlider){
         opSlider.addEventListener('input',function(ev){ev.stopPropagation();
@@ -4205,6 +4231,7 @@ function renderElements(){
         else if(action==='duplicate') duplicateElement(eid);
         else if(action==='toggleLock') toggleGroupLock(eid);
         else if(action==='editImage') editImageOnPlan(eid);
+        else if(action==='fitPage') fitImageToPage(eid);
         else if(action==='iaDrawing') openIADrawPopup(eid);
         else if(action==='openSondage'){const sEl=elements.find(e=>e.id===eid);if(sEl&&sEl.sondageId)editSondage(sEl.sondageId);}
         else if(action==='toggleSondageBg'){const sEl=elements.find(e=>e.id===eid);if(sEl){sEl.sondageBg=sEl.nivRefId?(sEl.sondageBg===false?true:false):!sEl.sondageBg;renderElements();}}
