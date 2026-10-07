@@ -9036,7 +9036,7 @@ function rpt2RenderContent(){
   if(isDefault)html+=`<div class="rpt2-phase-note">🚧 Onglet en cours de construction : la saisie libre ci-dessous est enregistrée et apparaît dans l'aperçu. La structuration détaillée (champs, tableaux, listes de phrases-types) viendra dans les prochaines phases.</div>`;
   if(sub.id==='coord'){
     const shorts=schema.filter(f=>f.type!=='textarea'),longs=schema.filter(f=>f.type==='textarea');
-    html+=`<div class="rpt2-grid">${shorts.map(f=>rpt2FieldHtml(sub.id,f)).join('')}</div>`+longs.map(f=>rpt2FieldHtml(sub.id,f)).join('');
+    html+=`<div class="rpt2-grid">${shorts.map(f=>rpt2FieldHtml(sub.id,f)).join('')}</div>`+longs.map(f=>rpt2FieldHtml(sub.id,f)).join('')+rpt2RevisionsEditorHtml()+rpt2CoverPhotoHtml();
   }else{
     html+=schema.map(f=>rpt2FieldHtml(sub.id,f)).join('');
   }
@@ -9233,10 +9233,66 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10.5pt;line-height:1.55;co
 .r2-toolbar{position:fixed;top:0;left:0;right:0;background:#1a1a1a;color:#fff;display:flex;gap:10px;align-items:center;padding:6px 12px;z-index:99999;font-size:11px}
 .r2-toolbar button{background:#F2B705;border:none;border-radius:6px;padding:6px 12px;font-weight:800;cursor:pointer;font-family:inherit}
 body.r2-hastoolbar{padding-top:42px}
+.r2-cover-photo{margin-top:22px;width:100%;max-width:720px;text-align:center}
+.r2-cover-photo img{max-width:100%;max-height:72mm;object-fit:cover;border:1px solid #eee}
+.r2-backcover{page-break-before:always;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:90vh;text-align:center}
+.r2-bc-contact{font-weight:800;font-size:12pt;margin:10px 0 28px}
+.r2-bc-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px 48px;max-width:620px;text-align:left;font-size:9pt}
+.r2-agence div{line-height:1.4}
+.r2-agence-n{font-weight:800;color:#1a1a1a;border-bottom:2px solid #F2B705;display:inline-block;margin-bottom:4px}
+.r2-agence-t{font-weight:700;margin-top:2px}
 @media print{.r2-toolbar{display:none!important}body.r2-hastoolbar{padding-top:0}}
 `;
 function rpt2ReportChapters(){return rpt2Tabs().filter(t=>['mission','enquete','invest','conclu'].includes(t.id));}
 function rpt2MissionTitle(){return RPT2_MISSION_TITLES[rpt2Get('mission','type')]||['ÉTUDE GÉOTECHNIQUE','Selon la norme NF P94-500'];}
+// ── Lot B : dos de couverture (agences), cartouche multi-indices, photo de couverture ──
+const RPT2_AGENCES=[
+  {nom:'Agence Vendée',adr:'108 Route de la Roche-Sur-Yon',cp:'85300 CHALLANS',tel:'02 51 26 25 80'},
+  {nom:'Agence Sud-Ouest',adr:'17, Avenue Dufau',cp:'64000 PAU',tel:'05 59 81 12 37'},
+  {nom:'Agence Loire-Atlantique',adr:'10 Av. du Maréchal De Lattre de Tassigny',cp:'44400 REZE',tel:'02 51 26 25 80'},
+  {nom:'Agence Poitou-Charentes',adr:'Bd Arago - Parc des Colonnes',cp:'79180 CHAURAY',tel:'05 32 74 12 60'},
+  {nom:'Agence Gironde',adr:'Immeuble P - Les Bureaux du Lac II, Rue Robert Caumont',cp:'33049 BORDEAUX Cedex',tel:'05 59 81 12 37'}
+];
+function rpt2BackCoverHtml(esc){
+  let h='<section class="r2-backcover"><div class="r2-logo"><span class="r2-logo-txt">gph</span><span class="r2-logo-dot"></span></div>';
+  h+='<div class="r2-bc-contact">be-gph.fr&nbsp;&nbsp;·&nbsp;&nbsp;contact@be-gph.fr</div>';
+  h+='<div class="r2-bc-grid">';
+  RPT2_AGENCES.forEach(a=>{h+='<div class="r2-agence"><div class="r2-agence-n">'+esc(a.nom)+'</div><div>'+esc(a.adr)+'</div><div>'+esc(a.cp)+'</div><div class="r2-agence-t">'+esc(a.tel)+'</div></div>';});
+  h+='</div></section>';
+  return h;
+}
+function rpt2Revisions(){
+  const r=(report2&&report2.revisions)||[];
+  const has=r.some(x=>x&&(x.indice||x.date||x.etabli||x.valide||x.modif));
+  if(has)return r.filter(x=>x&&(x.indice||x.date||x.etabli||x.valide||x.modif));
+  return [{indice:'Version 1',date:rpt2Get('coord','date_inter'),etabli:rpt2Get('coord','redacteur'),valide:rpt2Get('coord','relecteur'),modif:''}];
+}
+function rpt2CoverRevRows(esc){return rpt2Revisions().map(r=>'<tr><td>'+esc(r.indice||'')+'</td><td>'+esc(r.date||'')+'</td><td>'+esc(r.etabli||'')+'</td><td>'+esc(r.valide||'')+'</td><td>'+esc(r.modif||'')+'</td></tr>').join('');}
+function rpt2RevEnsure(){if(!report2)report2=rpt2New();if(!report2.revisions)report2.revisions=[];}
+function rpt2RevAdd(){rpt2RevEnsure();report2.revisions.push({indice:'Version '+(report2.revisions.length+1),date:'',etabli:rpt2Get('coord','redacteur'),valide:rpt2Get('coord','relecteur'),modif:''});rpt2RenderContent();rpt2RenderPreview();if(typeof markDirty==='function')markDirty();}
+function rpt2RevSet(i,k,v){rpt2RevEnsure();if(report2.revisions[i]){report2.revisions[i][k]=v;rpt2RenderPreview();if(typeof markDirty==='function')markDirty();}}
+function rpt2RevDel(i){rpt2RevEnsure();report2.revisions.splice(i,1);rpt2RenderContent();rpt2RenderPreview();if(typeof markDirty==='function')markDirty();}
+function rpt2RevisionsEditorHtml(){
+  const rows=(report2&&report2.revisions)||[];
+  const cell='border:1px solid #ddd;padding:2px';const inp='width:100%;border:none;padding:4px;font-family:inherit;font-size:11px;background:transparent';
+  let h='<div class="rpt2-field"><div class="rpt2-label-row"><label>Cartouche de révision (page de garde)</label><span class="rpt2-btn-group"><button type="button" class="rpt2-auto-btn" onclick="rpt2RevAdd()">+ Indice</button></span></div><div class="rpt2-hint">Laisse vide pour un simple « Version 1 » rempli automatiquement depuis Rédacteur / Relecteur / Date.</div>';
+  h+='<table style="width:100%;border-collapse:collapse;font-size:11px;margin-top:6px"><tr><th style="'+cell+';background:#f0f0f0;text-align:left;font-size:10px">Indice</th><th style="'+cell+';background:#f0f0f0;text-align:left;font-size:10px">Date</th><th style="'+cell+';background:#f0f0f0;text-align:left;font-size:10px">Établi par</th><th style="'+cell+';background:#f0f0f0;text-align:left;font-size:10px">Validé par</th><th style="'+cell+';background:#f0f0f0;text-align:left;font-size:10px">Modification</th><th style="'+cell+';background:#f0f0f0"></th></tr>';
+  rows.forEach((r,i)=>{h+='<tr>'+
+    '<td style="'+cell+'"><input style="'+inp+'" value="'+rpt2Esc(r.indice||'')+'" onchange="rpt2RevSet('+i+',\'indice\',this.value)"></td>'+
+    '<td style="'+cell+'"><input style="'+inp+'" value="'+rpt2Esc(r.date||'')+'" onchange="rpt2RevSet('+i+',\'date\',this.value)" placeholder="jj/mm/aaaa"></td>'+
+    '<td style="'+cell+'"><input style="'+inp+'" value="'+rpt2Esc(r.etabli||'')+'" onchange="rpt2RevSet('+i+',\'etabli\',this.value)"></td>'+
+    '<td style="'+cell+'"><input style="'+inp+'" value="'+rpt2Esc(r.valide||'')+'" onchange="rpt2RevSet('+i+',\'valide\',this.value)"></td>'+
+    '<td style="'+cell+'"><input style="'+inp+'" value="'+rpt2Esc(r.modif||'')+'" onchange="rpt2RevSet('+i+',\'modif\',this.value)"></td>'+
+    '<td style="'+cell+';text-align:center"><button type="button" class="tt-mini tt-danger" onclick="rpt2RevDel('+i+')">✕</button></td></tr>';});
+  h+='</table></div>';
+  return h;
+}
+function rpt2CoverPhotoHtml(){
+  const cph=(report2&&report2.coverPhoto)||'';
+  return '<div class="rpt2-field"><div class="rpt2-label-row"><label>Photo de couverture (page de garde)</label><span class="rpt2-btn-group"><button type="button" class="rpt2-auto-btn" onclick="rpt2PickCoverPhoto()">📷 Choisir</button>'+(cph?'<button type="button" class="rpt2-auto-btn" onclick="rpt2ClearCoverPhoto()">Retirer</button>':'')+'</span></div>'+(cph?'<img src="'+cph+'" style="max-width:220px;max-height:140px;border:1px solid #ddd;border-radius:6px">':'<div class="rpt2-hint">Optionnel (ex. vue aérienne / photo du site). Apparaît sur la page de garde.</div>')+'</div>';
+}
+function rpt2PickCoverPhoto(){const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.onchange=e=>{const f=e.target.files&&e.target.files[0];if(!f)return;const fr=new FileReader();fr.onload=()=>{if(!report2)report2=rpt2New();report2.coverPhoto=fr.result;rpt2RenderContent();rpt2RenderPreview();if(typeof markDirty==='function')markDirty();};fr.readAsDataURL(f);};inp.click();}
+function rpt2ClearCoverPhoto(){if(report2){report2.coverPhoto='';rpt2RenderContent();rpt2RenderPreview();if(typeof markDirty==='function')markDirty();}}
 function rpt2SubBodyHtml(s,esc){
   if(s.id==='fondations'){
     const F=report2&&report2.fondations;
@@ -9372,14 +9428,15 @@ function rpt2ReportContentHtml(){
   const redacteur=rpt2Get('coord','redacteur'),relecteur=rpt2Get('coord','relecteur'),dateInter=rpt2Get('coord','date_inter');
   let h='';
   h+='<div class="r2-runhead"><span>'+esc(dossier)+(rpt2Get('mission','type')?' — '+esc(rpt2Get('mission','type')):'')+'</span><span>'+esc(proj)+'</span></div>';
-  h+='<div class="r2-runfoot"><span>be-gph.fr</span><span>Confidentiel</span></div>';
+  h+='<div class="r2-runfoot"><span>Étude de Sol GPH - Réf : '+esc(dossier)+' / Projet '+esc(proj)+'</span><span>'+esc(adr)+'</span><span>be-gph.fr</span></div>';
   // Cover
   h+='<section class="r2-cover"><div class="r2-logo"><span class="r2-logo-txt">gph</span><span class="r2-logo-dot"></span></div>';
   h+='<div class="r2-cover-grid"><div class="r2-cover-yellow"><div class="r2-cover-title">'+esc(titre)+'</div><div class="r2-cover-phase">'+esc(phase)+'</div></div>';
   h+='<div class="r2-cover-white"><div class="r2-cover-doss">Dossier '+esc(dossier)+'</div><div class="r2-cover-proj">'+esc(proj)+'</div>'+(adr?'<div class="r2-cover-desc">'+esc(adr)+'</div>':'')+'</div></div>';
-  h+='<div class="r2-cover-addr">108 route de la Roche-Sur-Yon - 85300 - T : 02 51 26 25 80 - contact@be-gph.fr - be-gph.fr</div>';
-  h+='<table class="r2-sign"><tr><th>Indice</th><th>Date</th><th>Établi par</th><th>Validé par</th><th>Modification / Commentaire</th></tr>';
-  h+='<tr><td>Version 1</td><td>'+esc(dateInter||'')+'</td><td>'+esc(redacteur||'')+'</td><td>'+esc(relecteur||'')+'</td><td></td></tr></table></section>';
+  const cph=(report2&&report2.coverPhoto)||'';
+  if(cph)h+='<div class="r2-cover-photo"><img src="'+cph+'"></div>';
+  h+='<div class="r2-cover-addr">108 route de la Roche-Sur-Yon - 85300 CHALLANS - T : 02 51 26 25 80 - contact@be-gph.fr - be-gph.fr</div>';
+  h+='<table class="r2-sign"><tr><th>Indice</th><th>Date</th><th>Établi par</th><th>Validé par</th><th>Modification / Commentaire</th></tr>'+rpt2CoverRevRows(esc)+'</table></section>';
   // Sommaire
   h+='<section class="r2-toc"><h2>Sommaire</h2>';
   rpt2ReportChapters().forEach(t=>{
@@ -9412,6 +9469,7 @@ function rpt2ReportContentHtml(){
   h+=rpt2AnnexRiskMapsHtml(esc);
   h+=rpt2SyntheseHtml(esc);
   h+=rpt2NivTableHtml(esc);
+  h+=rpt2BackCoverHtml(esc);
   return h;
 }
 function rpt2BuildReportHtml(){
