@@ -9304,11 +9304,13 @@ function rpt2SubBodyHtml(s,esc){
     return b;
   }
   const schema=rpt2SchemaFor(s);
-  if(!schema.some(f=>String(rpt2Get(s.id,f.key)||'').trim()!==''))return '';
   let b='';
   schema.forEach(f=>{const v=rpt2Get(s.id,f.key);if(!v||f.type==='date')return;
     if(f.type==='select'||(schema.length>1&&f.key!=='content'))b+='<p class="r2-p"><b>'+esc(f.label)+' :</b> '+esc(v)+'</p>';
     else b+='<p class="r2-p">'+esc(v)+'</p>';});
+  if(s.id==='geo')b+=rpt2FigHtml('localisation','Localisation du site (plan IGN)');
+  if(s.id==='geol')b+=rpt2FigHtml('geologie','Carte géologique (BRGM 1/50 000)');
+  if(s.id==='risques'){try{b+=rpt2RisksTableHtml(esc);}catch(e){}}
   return b;
 }
 function rpt2AnnexSondagesHtml(esc,num){
@@ -9416,6 +9418,43 @@ function rpt2SyntheseHtml(esc){
   h+='</table><div class="r2-important">IMPORTANT : cette synthèse sol est indissociable du présent rapport et de ses annexes. Elle ne peut être utilisée séparément.</div></section>';
   return h;
 }
+// ── Lot D : annexe 5.1 norme, tableaux risques auto, figures ──
+function rpt2Annex51Html(esc){
+  const T=[
+    ['Étape 1 : Étude géotechnique préalable (G1)','Étude préliminaire, esquisse, APS','G1 ES (Étude de Site) puis G1 PGC (Principes Généraux de Construction)','Première identification des risques géotechniques et des principes généraux de construction','Première identification des risques','Fonction des données existantes et de la complexité géotechnique'],
+    ['Étape 2 : Étude géotechnique de conception (G2)','APD/AVP, PRO, DCE/ACT','G2 AVP (Avant-Projet), G2 PRO (Projet), G2 DCE/ACT','Conception et justification des ouvrages géotechniques (dimensionnement)','Mesures préventives et réduction des conséquences des risques identifiés','Fonction du projet : sondages, essais in situ et en laboratoire'],
+    ['Étape 3 : Études géotechniques de réalisation (G3/G4)','EXE, VISA, DET, AOR','G3 (Étude et suivi géotechniques d\'exécution), G4 (Supervision géotechnique d\'exécution)','Étude, suivi et supervision géotechniques d\'exécution','Gestion des risques résiduels en cours de travaux','Fonction des méthodes d\'exécution et du suivi'],
+    ['Diagnostic géotechnique (G5)','À toute étape d\'un projet ou sur un ouvrage existant','G5 (Diagnostic)','Étude d\'un ou plusieurs éléments géotechniques spécifiques','Influence de cet (ces) élément(s) sur les risques géotechniques identifiés','Fonction de l\'élément étudié']
+  ];
+  let h='<section class="r2-chap"><div class="r2-chap-h"><span class="r2-chap-n">5.1</span><span class="r2-chap-t">Missions géotechniques (Norme NF P 94-500)</span></div>';
+  h+='<p class="r2-p">La classification des missions géotechniques est définie par la norme NF P 94-500 (révision de novembre 2013). Elle distingue les missions d\'étude géotechnique G1 à G4, qui s\'inscrivent dans l\'enchaînement des phases d\'un projet, et le diagnostic géotechnique G5, réalisable à toute étape. Chaque mission couvre un périmètre et des objectifs spécifiques ; le respect de leur enchaînement conditionne la bonne maîtrise des risques géotechniques.</p>';
+  h+='<table class="r2-tbl2" style="font-size:8pt;margin-top:8px"><tr><th>Enchaînement des missions G1 à G4</th><th>Phases de la maîtrise d\'œuvre</th><th>Mission d\'ingénierie géotechnique et phase</th><th>Objectifs à atteindre</th><th>Niveau de management des risques</th><th>Prestations d\'investigations à réaliser</th></tr>';
+  T.forEach(r=>{h+='<tr>'+r.map(c=>'<td style="text-align:left;vertical-align:top">'+esc(c)+'</td>').join('')+'</tr>';});
+  h+='</table><p class="r2-p" style="font-size:8.5pt;color:#555;margin-top:6px">Tableau 1 — Schéma d\'enchaînement des missions types d\'ingénierie géotechnique (d\'après NF P 94-500).</p></section>';
+  return h;
+}
+function rpt2FigHtml(key,label){
+  const rm=(typeof geocartoData!=='undefined'&&geocartoData&&geocartoData.riskMaps)?geocartoData.riskMaps:null;
+  if(!rm||!rm[key])return '';
+  return '<div style="text-align:center;margin:8px 0"><img src="'+rm[key]+'" style="max-width:90%;max-height:80mm;border:1px solid #ccc"><div style="font-size:8.5pt;font-style:italic;color:#555;margin-top:3px">'+rpt2Esc(label)+'</div></div>';
+}
+function rpt2RisksTableHtml(esc){
+  const g=(typeof geocartoData!=='undefined')?geocartoData:null;if(!g)return '';
+  let h='';
+  const sismLabels={1:'très faible',2:'faible',3:'modérée',4:'moyenne',5:'forte'};
+  const syn=[];
+  if(g.sismique)syn.push(['Sismicité (Eurocode 8)','Zone '+g.sismique+' — '+(sismLabels[g.sismique]||'')]);
+  if(g.argiles)syn.push(['Retrait-gonflement des argiles','Aléa '+g.argiles]);
+  if(g.nappes)syn.push(['Remontée de nappes',''+g.nappes]);
+  if(syn.length){h+='<table class="r2-tbl" style="margin-top:8px">';syn.forEach(r=>{h+='<tr><th>'+esc(r[0])+'</th><td>'+esc(r[1])+'</td></tr>';});h+='</table>';}
+  if(g.catnat&&g.catnat.length){
+    h+='<p class="r2-p" style="font-weight:700;margin-top:10px">Arrêtés de reconnaissance de catastrophe naturelle</p>';
+    h+='<table class="r2-tbl2" style="font-size:8.5pt"><tr><th>Type de catastrophe</th><th>Début de l\'évènement</th><th>Arrêté / JO</th></tr>';
+    g.catnat.slice(0,25).forEach(c=>{h+='<tr><td style="text-align:left">'+esc(c.libelle_risque_jo||c.libelle_risque_long||'')+'</td><td>'+esc(c.date_debut_evt||'')+'</td><td>'+esc(c.date_arrete||c.date_publication_jo||'')+'</td></tr>';});
+    h+='</table>';
+  }
+  return h;
+}
 function rpt2NivTableHtml(esc){
   const arr=(typeof sondages!=='undefined'?sondages:[]).filter(s=>s.tnAltitude!=null||s.sondageDepth!=null);
   if(!arr.length)return '';
@@ -9466,6 +9505,7 @@ function rpt2ReportContentHtml(){
   });
   // Annexes
   h+='<section class="r2-annex-cover"><div class="r2-annex-band"></div><h2>Annexes</h2><div class="r2-annex-band"></div></section>';
+  h+=rpt2Annex51Html(esc);
   const planSrc=(typeof rpt2PlanSnap!=='undefined'&&rpt2PlanSnap)?rpt2PlanSnap:((typeof planImgSrc!=='undefined'&&planImgSrc)?planImgSrc:'');
   if(planSrc){
     h+='<section class="r2-chap"><div class="r2-chap-h"><span class="r2-chap-n">5.2</span><span class="r2-chap-t">Plan d\'implantation des sondages</span></div><div style="text-align:center"><img src="'+planSrc+'" style="max-width:100%;max-height:760px;border:1px solid #ddd"></div></section>';
