@@ -8859,6 +8859,62 @@ const RPT2_TABS=[
   {id:'qualite',num:'',title:'Qualité / Temps',subs:[{id:'qualite',title:'Qualité / Temps'}]}
 ];
 const RPT2_MISSIONS=['G1 ES','G1 PGC','G2 AVP','G2 PRO','G2 AVP+PRO','G3','G4','G5'];
+// ── Lot A : gabarit (chapitres/sous-sections/titres) piloté par la mission ──
+function rpt2MissionFamily(){
+  const m=(rpt2Get('mission','type')||'').toUpperCase();
+  if(m.includes('G5'))return 'G5';
+  if(m.includes('G2')&&m.includes('PRO'))return 'G2PRO';
+  if(m.includes('G2'))return 'G2AVP';
+  if(m.includes('PGC'))return 'G1PGC';
+  if(m.includes('G1'))return 'G1ES';
+  return 'G2AVP';
+}
+const RPT2_FAM={
+  G1ES:{
+    invest:[['site','3.1 Examen du site'],['penetro','3.2.1 Pénétromètres'],['tariere','3.2.2 Tarières / Pelle mécanique'],['eau','3.3 Niveaux d\'eau'],['autres','3.4 Autres essais']],
+    conclu:[['avis','4.1 Avis géotechnique'],['fondations','4.2 Conception et principe de fondations'],['niveaubas','4.3 Traitement du niveau bas'],['sismique','4.4 Sismicité et risque liquéfaction'],['execution','4.5 Exécution / avoisinants / eaux'],['cadre','4.6 Cadre de la mission étude de sol']]
+  },
+  G1PGC:{
+    invest:[['site','3.1 Examen du site'],['penetro','3.2.1 Pénétromètres'],['tariere','3.2.2 Tarières / Pelle mécanique'],['eau','3.3 Niveaux d\'eau'],['autres','3.4 Autres essais']],
+    conclu:[['avis','4.1 Avis géotechnique'],['fondations','4.2 Conception et principe de fondations'],['niveaubas','4.3 Traitement du niveau bas'],['sismique','4.4 Sismicité et risque liquéfaction'],['execution','4.5 Exécution / avoisinants / eaux'],['cadre','4.6 Cadre de la mission étude de sol']]
+  },
+  G2AVP:{
+    invest:[['site','3.1 Examen du site'],['geophy','3.2 Prospection géophysique'],['penetro','3.3.1 Pénétromètres'],['tariere','3.3.2 Tarières / Pelle mécanique'],['eau','3.4 Niveaux d\'eau'],['autres','3.5 Autres essais']],
+    conclu:[['avis','4.1 Avis géotechnique'],['fondations','4.2 Fondations préconisées'],['sismique','4.3 Sismicité et risque liquéfaction'],['niveaubas','4.4 Traitement du niveau bas'],['execution','4.5 Exécution / avoisinants / eaux'],['cadre','4.6 Cadre de la mission étude de sol']]
+  },
+  G2PRO:{
+    invest:[['site','3.1 Examen du site'],['geophy','3.2 Prospection géophysique'],['penetro','3.3.1 Pénétromètres'],['tariere','3.3.2 Tarières / Pelle mécanique'],['eau','3.4 Niveaux d\'eau'],['autres','3.5 Autres essais']],
+    conclu:[['avis','4.1 Avis géotechnique'],['fondations','4.2 Fondations préconisées'],['dimension','4.3 Dimensionnement des fondations'],['sismique','4.4 Sismicité et risque liquéfaction'],['niveaubas','4.5 Traitement du niveau bas'],['execution','4.6 Exécution / avoisinants / eaux'],['cadre','4.7 Cadre de la mission étude de sol']]
+  },
+  G5:{
+    invest:[['site','3.1 Prospection visuelle sur site'],['reco','3.2 Reconnaissances des fondations existantes'],['penetro','3.3 Pénétromètres dynamiques'],['tariere','3.4 Sondages à la pelle mécanique'],['eau','3.5 Niveaux d\'eau'],['sismique','3.6 Sismicité']],
+    conclu:[['avis','4.1 Synthèse des investigations'],['avis_general','4.2 Avis général'],['reparation','4.3 Solution de réparation'],['cadre','4.4 Cadre de la mission étude de sol']]
+  }
+};
+function rpt2Tabs(){
+  const F=RPT2_FAM[rpt2MissionFamily()]||RPT2_FAM.G2AVP;
+  const mk=a=>a.map(([id,title])=>({id,title}));
+  return [
+    {id:'coord',num:'',title:'Coordonnées',subs:[{id:'coord',title:'Coordonnées'}]},
+    {id:'mission',num:'1',title:'Mission',subs:[{id:'mission',title:'Présentation de la mission'}]},
+    {id:'enquete',num:'2',title:'Enquête documentaire',subs:[
+      {id:'geo',title:'2.1.1 Contexte géographique, topographique et hydrologique'},
+      {id:'geol',title:'2.1.2 Contexte géologique'},
+      {id:'risques',title:'2.1.3 Inventaire des risques naturels'},
+      {id:'projet',title:'2.2 Descriptif général du projet étudié'}]},
+    {id:'invest',num:'3',title:'Investigations géotechniques',subs:mk(F.invest)},
+    {id:'conclu',num:'4',title:'Conclusions',subs:mk(F.conclu)},
+    {id:'annexes',num:'5',title:'Annexes',subs:[{id:'annexes',title:'Annexes'}]},
+    {id:'qualite',num:'',title:'Qualité / Temps',subs:[{id:'qualite',title:'Qualité / Temps'}]}
+  ];
+}
+function rpt2FixActive(){
+  if(!report2)return;
+  const tabs=rpt2Tabs();
+  let t=tabs.find(x=>x.id===report2.activeTab);
+  if(!t){report2.activeTab='coord';t=tabs[0];}
+  if(!t.subs.find(s=>s.id===report2.activeSub))report2.activeSub=t.subs[0].id;
+}
 const RPT2_SCHEMA={
   coord:[
     {key:'dossier',label:'N° dossier',type:'text',ph:'Ex : 2607011'},
@@ -8900,7 +8956,12 @@ const RPT2_SCHEMA={
   penetro:[{key:'content',label:'Résultats — pénétromètres',type:'textarea',auto:'penetros',hint:'⚡ = synthèse N min/max depuis les sondages pénétrométriques.'}],
   tariere:[{key:'content',label:'Log lithologique — tarières / pelle',type:'textarea',auto:'tarieres',hint:'⚡ = coupes de sol depuis les sondages tarière / pelle mécanique.'}],
   eau:[{key:'content',label:"Niveaux d'eau",type:'textarea',auto:'hydrogeo',hint:'⚡ = remontée de nappe (GéoCarto). Compléter avec les niveaux relevés en sondage.'}],
-  autres:[{key:'content',label:'Autres essais (VBS, Tromino, Pressio, SPT…)',type:'textarea',auto:'autres_essais',hint:'⚡ = synthèse pressiomètre / SPT / labo depuis les sondages.'}]
+  autres:[{key:'content',label:'Autres essais (VBS, Tromino, Pressio, SPT…)',type:'textarea',auto:'autres_essais',hint:'⚡ = synthèse pressiomètre / SPT / labo depuis les sondages.'}],
+  dimension:[{key:'content',label:'Dimensionnement des fondations',type:'textarea',hint:'G2 PRO : descentes de charges, qa (ELS) / q (ELU) DTU 13.12, qnet (EC7), tassements absolus et différentiels.'}],
+  cadre:[{key:'content',label:'Cadre de la mission étude de sol',type:'textarea',hint:'Rappel NF P 94-500, limites de responsabilité, enchaînement des missions. Phrases-types disponibles.'}],
+  reco:[{key:'content',label:'Reconnaissances des fondations existantes',type:'textarea',hint:'G5 : par reconnaissance Rn — semelle (nature, épaisseur, encastrement, cote, débord), sol d\'assise. Photos + schémas cotés en annexe.'}],
+  reparation:[{key:'content',label:'Solution de réparation / reconstruction',type:'textarea',hint:'G5 : si l\'existant ne peut être conservé — fondations préconisées, traitement du niveau bas, exécution.'}],
+  avis_general:[{key:'content',label:'Avis général',type:'textarea',hint:'G5 : conclusion du diagnostic (conserver l\'existant ou réparer/reconstruire).'}]
 };
 function rpt2DefaultSchema(sub){return [{key:'content',label:sub.title,type:'textarea',hint:'Saisie libre pour l’instant — structuration détaillée prévue dans une prochaine phase.'}];}
 function rpt2SchemaFor(sub){return RPT2_SCHEMA[sub.id]||rpt2DefaultSchema(sub);}
@@ -8914,8 +8975,8 @@ function rpt2HasContent(r){
 }
 function rpt2K(sub,key){return sub+'::'+key;}
 function rpt2Get(sub,key){return (report2&&report2.fields&&report2.fields[rpt2K(sub,key)])||'';}
-function rpt2Set(sub,key,val){if(!report2)report2=rpt2New();report2.fields[rpt2K(sub,key)]=val;rpt2RenderTabsMain();rpt2RenderPreview();if(typeof markDirty==='function')markDirty();}
-function rpt2TabById(id){return RPT2_TABS.find(t=>t.id===id);}
+function rpt2Set(sub,key,val){if(!report2)report2=rpt2New();report2.fields[rpt2K(sub,key)]=val;if(sub==='mission'&&key==='type'){rpt2FixActive();rpt2RenderTabsSub();rpt2RenderContent();}rpt2RenderTabsMain();rpt2RenderPreview();if(typeof markDirty==='function')markDirty();}
+function rpt2TabById(id){return rpt2Tabs().find(t=>t.id===id);}
 function rpt2TabDone(tab){return tab.subs.some(s=>{if(s.id==='fondations')return rpt2FondHasData();return rpt2SchemaFor(s).some(f=>String(rpt2Get(s.id,f.key)||'').trim()!=='');});}
 function rpt2Esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
 
@@ -8950,7 +9011,7 @@ function rpt2SelectSub(id){if(!report2)return;report2.activeSub=id;rpt2RenderTab
 
 function rpt2RenderTabsMain(){
   const c=rd('rpt2-tabs-main');if(!c||!report2)return;
-  c.innerHTML=RPT2_TABS.map(t=>{
+  c.innerHTML=rpt2Tabs().map(t=>{
     const done=rpt2TabDone(t);
     const st=`<span class="rpt2-tab-st ${done?'ok':'no'}">${done?'✔':'✘'}</span>`;
     const num=t.num?`<span class="rpt2-tab-num">${t.num}</span>`:'';
@@ -9003,7 +9064,7 @@ function rpt2RenderPreview(){
     (mtype?`<div><b>Mission :</b> ${rpt2Esc(mtype)}</div>`:'')+
     (adr?`<div><b>Adresse :</b> ${rpt2Esc(adr)}</div>`:'')+`</div></div>`;
   const hideEmpty=!(report2&&report2.hideEmpty===false);
-  RPT2_TABS.filter(t=>t.id!=='coord').forEach(t=>{
+  rpt2Tabs().filter(t=>t.id!=='coord').forEach(t=>{
     let sub='';
     t.subs.forEach(s=>{
       if(!rpt2PrintOn(s.id))return;
@@ -9022,7 +9083,7 @@ function rpt2RenderPreview(){
   c.innerHTML=h;
 }
 // ── Phase D : phrases-types + cases impression + masquage blocs vides ──
-const RPT2_PHRASES_MAP={mission:['cadre_normatif'],geol:['geologie'],risques:['sismique'],fondations:['fondations_superficielles','fondations_profondes'],sismique:['sismique'],niveaubas:['dallage'],execution:['terrassements']};
+const RPT2_PHRASES_MAP={mission:['cadre_normatif'],geol:['geologie'],risques:['sismique'],fondations:['fondations_superficielles','fondations_profondes'],dimension:['fondations_superficielles','fondations_profondes'],sismique:['sismique'],niveaubas:['dallage'],execution:['terrassements'],cadre:['cadre_normatif'],reparation:['fondations_superficielles']};
 let RPT2_PHRASES={};
 let rpt2PhrTarget=null,rpt2PhrList=[];
 function rpt2PhrasesFor(subId){
@@ -9099,7 +9160,7 @@ function rpt2PrintSondages(){
 function rpt2ShowExchanges(){
   const esc=rpt2Esc;let body=`<div class="rpt2-pv-cover"><div class="rpt2-pv-kicker">Échanges rédacteur / relecteur</div><div class="rpt2-pv-title">${esc(rpt2Get('coord','moa')||projectName||'Projet')}</div></div>`;
   let any=false;
-  RPT2_TABS.forEach(t=>{const c=rpt2GetComment(t.id);if(c&&c.trim()){any=true;body+=`<div class="rpt2-pv-h">${t.num?t.num+'. ':''}${esc(t.title)}</div><div class="rpt2-pv-txt">${esc(c)}</div>`;}});
+  rpt2Tabs().forEach(t=>{const c=rpt2GetComment(t.id);if(c&&c.trim()){any=true;body+=`<div class="rpt2-pv-h">${t.num?t.num+'. ':''}${esc(t.title)}</div><div class="rpt2-pv-txt">${esc(c)}</div>`;}});
   if(!any){rpt2HostWin().alert('Aucun commentaire interne saisi.');return;}
   rpt2PrintWindow('Échanges rédacteur / relecteur',body);
 }
@@ -9174,7 +9235,7 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10.5pt;line-height:1.55;co
 body.r2-hastoolbar{padding-top:42px}
 @media print{.r2-toolbar{display:none!important}body.r2-hastoolbar{padding-top:0}}
 `;
-function rpt2ReportChapters(){return RPT2_TABS.filter(t=>['mission','enquete','invest','conclu'].includes(t.id));}
+function rpt2ReportChapters(){return rpt2Tabs().filter(t=>['mission','enquete','invest','conclu'].includes(t.id));}
 function rpt2MissionTitle(){return RPT2_MISSION_TITLES[rpt2Get('mission','type')]||['ÉTUDE GÉOTECHNIQUE','Selon la norme NF P94-500'];}
 function rpt2SubBodyHtml(s,esc){
   if(s.id==='fondations'){
@@ -9517,7 +9578,7 @@ function rpt2AutoField(subId,key,autoKey){
 function rpt2AutoAll(){
   if(!report2)report2=rpt2New();
   let n=0;
-  RPT2_TABS.forEach(t=>t.subs.forEach(s=>{rpt2SchemaFor(s).forEach(f=>{
+  rpt2Tabs().forEach(t=>t.subs.forEach(s=>{rpt2SchemaFor(s).forEach(f=>{
     if(!f.auto)return;
     const cur=rpt2Get(s.id,f.key);
     if(cur&&cur.trim())return; // ne pas écraser une saisie existante
@@ -10501,8 +10562,8 @@ function ttDelItem(gi,ii){const g=ttGetData()[gi];if(!g||!g.items[ii])return;if(
 function ttDelField(gi){const d=ttGetData();if(!d[gi])return;if(!confirm('Supprimer ce champ entier et tous ses textes ?'))return;d.splice(gi,1);ttRenderAdmin();}
 function ttAddField(chap){const champ=prompt('Nom du nouveau champ :');if(!champ)return;const sec=prompt('Section (ex : 4.2 Fondations préconisées) :','')||'';ttGetData().push({chapitre:chap,section:sec,champ:champ,items:[{case:'',text:''}]});ttRenderAdmin();}
 // Intégration rédacteur : textes types par sous-onglet
-const RPT2_SUB_CHAP={coord:'1',mission:'1',geo:'2',geol:'2',risques:'2',projet:'2',site:'3',geophy:'3',penetro:'3',tariere:'3',eau:'3',autres:'3',avis:'4',fondations:'4',sismique:'4',niveaubas:'4',execution:'4',annexes:'5',qualite:'6'};
-const RPT2_SUB_SEC={geo:'2.1',geol:'2.2',risques:'2.3',projet:'2.4',site:'3.1',geophy:'3.2',penetro:'3.3',tariere:'3.3.2',eau:'3.4',autres:'3.5',avis:'4.1',fondations:'4.2',sismique:'4.3',niveaubas:'4.4',execution:'4.5'};
+const RPT2_SUB_CHAP={coord:'1',mission:'1',geo:'2',geol:'2',risques:'2',projet:'2',site:'3',geophy:'3',penetro:'3',tariere:'3',eau:'3',autres:'3',reco:'3',avis:'4',avis_general:'4',fondations:'4',dimension:'4',sismique:'4',niveaubas:'4',execution:'4',reparation:'4',cadre:'4',annexes:'5',qualite:'6'};
+const RPT2_SUB_SEC={geo:'2.1',geol:'2.2',risques:'2.3',projet:'2.4',site:'3.1',geophy:'3.2',penetro:'3.3',tariere:'3.3.2',eau:'3.4',autres:'3.5',reco:'3.2',avis:'4.1',avis_general:'4.2',fondations:'4.2',dimension:'4.2',sismique:'4.3',niveaubas:'4.4',execution:'4.5',reparation:'4.3',cadre:'4'};
 function ttItemsForSub(subId){
   const chap=RPT2_SUB_CHAP[subId];if(!chap)return[];
   const sec=RPT2_SUB_SEC[subId];
