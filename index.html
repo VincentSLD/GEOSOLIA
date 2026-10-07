@@ -1520,6 +1520,7 @@
         <button class="primary" onclick="rpt2Valider()"><span class="rpt2-rail-ico">✔️</span>Valider</button>
         <button onclick="rpt2AutoAll()" title="Remplir tous les champs vides depuis GéoCarto et les sondages"><span class="rpt2-rail-ico">⚡</span>Auto-remplir</button>
         <button onclick="rpt2PrintFullReport()"><span class="rpt2-rail-ico">📄</span>Rapport de sol</button>
+        <button onclick="rpt2PrintSynthese()" title="Synthèse condensée 5 pages (format EXE+, accompagne l'étude structure)"><span class="rpt2-rail-ico">📑</span>Synthèse</button>
         <button onclick="rpt2PrintPreview()" title="Impression rapide de l'aperçu à l'écran"><span class="rpt2-rail-ico">👁️</span>Aperçu rapide</button>
         <button onclick="rpt2PrintFiche()"><span class="rpt2-rail-ico">🔎</span>Fiche enquête</button>
         <button onclick="rpt2PrintSondages()" title="Imprimer tous les sondages réalisés (courbes et logs graphiques)"><span class="rpt2-rail-ico">📈</span>Sondages</button>
@@ -9241,6 +9242,7 @@ body.r2-hastoolbar{padding-top:42px}
 .r2-agence div{line-height:1.4}
 .r2-agence-n{font-weight:800;color:#1a1a1a;border-bottom:2px solid #F2B705;display:inline-block;margin-bottom:4px}
 .r2-agence-t{font-weight:700;margin-top:2px}
+.r2-important{margin-top:12px;background:#FFF6D6;border:1px solid #F2B705;font-size:9pt;font-weight:700;padding:8px 12px}
 @media print{.r2-toolbar{display:none!important}body.r2-hastoolbar{padding-top:0}}
 `;
 function rpt2ReportChapters(){return rpt2Tabs().filter(t=>['mission','enquete','invest','conclu'].includes(t.id));}
@@ -9386,11 +9388,11 @@ function rpt2SondTableHtml(s,esc){
   }
   return '';
 }
-function rpt2SyntheseHtml(esc){
-  const F=report2&&report2.fondations;
-  const v=F&&F.variantes&&F.variantes[Math.min(F.active||0,F.variantes.length-1)];
+function rpt2SyntheseRows(){
   const rows=[];
   const nb=rpt2Get('niveaubas','content');if(nb)rows.push(['Traitement du niveau bas',nb]);
+  const F=report2&&report2.fondations;
+  const v=F&&F.variantes&&F.variantes[Math.min(F.active||0,F.variantes.length-1)];
   if(v){
     const r=rpt2FondCompute(v);
     if(v.type)rows.push(['Type de fondation',v.type]);
@@ -9399,15 +9401,19 @@ function rpt2SyntheseHtml(esc){
     const sol=[v.sol,v.formation].filter(Boolean).join(' — ');if(sol)rows.push(['Sol de fondation',sol]);
     const rgaL={nulle:'nulle',faible:'faible',moyenne:'moyenne',forte:'forte',tres_forte:'très forte'}[v.rga];if(rgaL)rows.push(['Susceptibilité au retrait-gonflement des argiles',rgaL]);
     if(v.encastrement)rows.push(['Encastrement',v.encastrement]);
+    if(v.horsDess)rows.push(['Mise hors dessiccation',v.horsDess+' m']);
     if(v.ancrage)rows.push(['Ancrage',v.ancrage+' m']);
     if(v.horsGel)rows.push(['Mise hors gel',v.horsGel+' m']);
-    if(v.horsDess)rows.push(['Mise hors dessiccation',v.horsDess+' m']);
   }
   const sis=rpt2Get('sismique','content');if(sis)rows.push(['Sismicité / liquéfaction',sis]);
+  return rows;
+}
+function rpt2SyntheseHtml(esc){
+  const rows=rpt2SyntheseRows();
   if(!rows.length)return '';
   let h='<section class="r2-chap"><div class="r2-chap-h"><span class="r2-chap-n">5.4</span><span class="r2-chap-t">Synthèse sol</span></div><table class="r2-tbl">';
   rows.forEach(r=>{h+='<tr><th>'+esc(r[0])+'</th><td>'+esc(r[1])+'</td></tr>';});
-  h+='</table></section>';
+  h+='</table><div class="r2-important">IMPORTANT : cette synthèse sol est indissociable du présent rapport et de ses annexes. Elle ne peut être utilisée séparément.</div></section>';
   return h;
 }
 function rpt2NivTableHtml(esc){
@@ -9471,6 +9477,64 @@ function rpt2ReportContentHtml(){
   h+=rpt2NivTableHtml(esc);
   h+=rpt2BackCoverHtml(esc);
   return h;
+}
+// ── Lot C : sortie courte « Synthèse sol » 5 pages (format EXE+ accompagnant l'étude structure) ──
+function rpt2BuildSyntheseHtml(){
+  const esc=rpt2Esc;
+  const dossier=rpt2Get('coord','dossier')||'—';
+  const proj=rpt2Get('coord','moa')||projectName||'Projet';
+  const adr=rpt2Get('coord','adresse')||[projectAddr,projectCp,projectVille].filter(Boolean).join(' ');
+  const cph=(report2&&report2.coverPhoto)||'';
+  const warn='<div class="sy-warn">Cette synthèse sol est indissociable de l\'étude structure GPH de cette affaire qui devra obligatoirement l\'accompagner. La responsabilité de GPH ne saurait être engagée en dehors du cadre des résultats fournis dans l\'étude structure GPH.</div>';
+  let h='';
+  // Page 1 — garde
+  h+='<section class="sy-cover"><div class="r2-logo"><span class="r2-logo-txt">gph</span><span class="r2-logo-dot"></span></div>';
+  if(cph)h+='<div class="sy-cover-photo"><img src="'+cph+'"></div>';
+  h+='<div class="sy-cover-title">SYNTHÈSE DES INVESTIGATIONS GÉOTECHNIQUES</div><div class="sy-cover-sub">(indissociable du carnet de l\'étude structure GPH)</div>';
+  h+='<div class="sy-cover-box"><div><b>Dossier '+esc(dossier)+'</b></div><div>'+esc(proj)+'</div>'+(adr?'<div>'+esc(adr)+'</div>':'')+'</div>';
+  h+='<div class="r2-cover-addr">108 route de la Roche-Sur-Yon - 85300 CHALLANS - T : 02 51 26 25 80 - contact@be-gph.fr - be-gph.fr</div></section>';
+  // Page 2 — résultats (fiche)
+  h+='<section class="sy-page"><div class="sy-band">RÉSULTATS</div>';
+  const rows=rpt2SyntheseRows();
+  if(rows.length){h+='<table class="r2-tbl">';rows.forEach(r=>{h+='<tr><th>'+esc(r[0])+'</th><td>'+esc(r[1])+'</td></tr>';});h+='</table>';}
+  else h+='<p class="r2-empty">Fiche à compléter : renseignez les fondations et le niveau bas dans la Rédaction.</p>';
+  const obs=rpt2Get('cadre','content');if(obs){h+='<div class="sy-sub">OBSERVATIONS COMPLÉMENTAIRES</div><p class="r2-p">'+esc(obs)+'</p>';}
+  h+=warn+'</section>';
+  // Page 3 — plan d'implantation
+  const planSrc=(typeof rpt2PlanSnap!=='undefined'&&rpt2PlanSnap)?rpt2PlanSnap:((typeof planImgSrc!=='undefined'&&planImgSrc)?planImgSrc:'');
+  h+='<section class="sy-page"><div class="sy-band">PLAN D\'IMPLANTATION DES SONDAGES</div>';
+  h+=planSrc?('<div style="text-align:center"><img src="'+planSrc+'" style="max-width:100%;max-height:200mm;border:1px solid #ddd"></div>'):'<p class="r2-empty">Aucun plan chargé.</p>';
+  h+=warn+'</section>';
+  // Page 4 — nota
+  h+='<section class="sy-page"><div class="sy-band">NOTA</div>';
+  const exe=rpt2Get('execution','content');
+  h+=exe?('<p class="r2-p">'+esc(exe)+'</p>'):'<p class="r2-empty">Renseignez « Exécution / avoisinants / eaux » dans la Rédaction.</p>';
+  h+=warn+'</section>';
+  // Page 5 — dos de couverture
+  h+=rpt2BackCoverHtml(esc);
+  const css=RPT2_REPORT_CSS+`
+  .sy-cover{page-break-after:always;display:flex;flex-direction:column;align-items:center;min-height:94vh;padding-top:12mm;text-align:center}
+  .sy-cover-photo{width:100%;max-width:640px;margin:10px 0 18px}.sy-cover-photo img{max-width:100%;max-height:90mm;object-fit:cover;border:1px solid #eee}
+  .sy-cover-title{background:#F2B705;font-size:17pt;font-weight:800;padding:12px 18px;max-width:660px}
+  .sy-cover-sub{font-size:9pt;color:#444;margin:8px 0 18px}
+  .sy-cover-box{border:1px solid #ddd;padding:14px 20px;font-size:11pt;max-width:660px;width:100%;text-align:left}
+  .sy-page{page-break-before:always;padding-top:4mm}
+  .sy-band{background:#F2B705;font-size:14pt;font-weight:800;padding:6px 14px;margin-bottom:14px}
+  .sy-sub{background:#333;color:#fff;font-weight:700;padding:4px 12px;margin:14px 0 6px;font-size:10pt}
+  .sy-warn{margin-top:20px;background:#FFF6D6;border:1px solid #F2B705;font-size:8pt;padding:8px 12px;font-style:italic}
+  `;
+  return '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Synthèse sol</title><style>'+css+'</style></head><body><div id="r2-root">'+h+'</div></body></html>';
+}
+function rpt2PrintSynthese(){
+  if(!report2){rpt2HostWin().alert('Ouvrez d\'abord la Rédaction');return;}
+  const w=rpt2HostWin().open('','_blank','width=900,height=1000');
+  if(!w){rpt2HostWin().alert('Autorisez les popups pour générer la synthèse.');return;}
+  try{w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Synthèse sol</title></head><body style="font-family:Arial;color:#777;padding:60px;text-align:center">Génération de la synthèse…</body></html>');w.document.close();}catch(e){}
+  rpt2CapturePlan(function(){
+    let html;try{html=rpt2BuildSyntheseHtml();}catch(e){console.error('rpt2BuildSyntheseHtml',e);try{w.document.body.innerHTML='Erreur : '+e.message;}catch(_){}return;}
+    try{w.document.open();w.document.write(html);w.document.close();setTimeout(function(){try{w.focus();w.print();}catch(e){}},600);}catch(e){console.warn(e);}
+  });
+  if(typeof showToast==='function')showToast('Synthèse sol générée');
 }
 function rpt2BuildReportHtml(){
   return '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Rapport de sol</title><style>'+RPT2_REPORT_CSS+'</style></head><body><div id="r2-root">'+rpt2ReportContentHtml()+'</div></body></html>';
