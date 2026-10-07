@@ -9181,7 +9181,10 @@ const RPT2_MISSION_TITLES={
   'G5':['DIAGNOSTIC GÉOTECHNIQUE','Mission G5 selon la norme NF P94-500']
 };
 const RPT2_REPORT_CSS=`
-@page{size:A4;margin:18mm 16mm 16mm 16mm}
+@page{size:A4;margin:18mm 16mm 16mm 16mm;@bottom-center{content:counter(page) " / " counter(pages);font-family:Arial,Helvetica,sans-serif;font-size:8pt;color:#777}}
+@page nonum{@bottom-center{content:""}}
+.r2-cover{page:nonum}
+.r2-backcover{page:nonum}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:Arial,Helvetica,sans-serif;font-size:10.5pt;line-height:1.55;color:#1a1a1a;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .r2-runhead{position:fixed;top:2mm;left:0;right:0;display:flex;justify-content:space-between;font-size:7.5pt;color:#999}
@@ -9553,7 +9556,7 @@ function rpt2BuildSyntheseHtml(){
   // Page 5 — dos de couverture
   h+=rpt2BackCoverHtml(esc);
   const css=RPT2_REPORT_CSS+`
-  .sy-cover{page-break-after:always;display:flex;flex-direction:column;align-items:center;min-height:94vh;padding-top:12mm;text-align:center}
+  .sy-cover{page-break-after:always;display:flex;flex-direction:column;align-items:center;min-height:94vh;padding-top:12mm;text-align:center;page:nonum}
   .sy-cover-photo{width:100%;max-width:640px;margin:10px 0 18px}.sy-cover-photo img{max-width:100%;max-height:90mm;object-fit:cover;border:1px solid #eee}
   .sy-cover-title{background:#F2B705;font-size:17pt;font-weight:800;padding:12px 18px;max-width:660px}
   .sy-cover-sub{font-size:9pt;color:#444;margin:8px 0 18px}
