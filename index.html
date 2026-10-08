@@ -8443,10 +8443,10 @@ const GEO_LAYER_DEFS=[
   {key:'plan',name:'Plan IGN',kind:'wmts',url:GEO_PLANIGN_URL,maxNativeZoom:19,on:false,attr:'© IGN'},
   {key:'relief',name:'Relief (OpenTopo)',kind:'wmts',url:'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',maxNativeZoom:17,on:false,attr:'© OpenTopoMap'},
   {key:'cadastre',name:'Cadastre',kind:'wmts',url:GEO_CADASTRE_URL,maxNativeZoom:20,on:true,opacity:0.85,attr:'© IGN'},
-  {key:'geol',name:'Géologie BRGM 1/50 000',kind:'wms',url:'https://geoservices.brgm.fr/geologie',layers:'SCAN_D_GEOL50',on:false,opacity:0.6,attr:'© BRGM'},
-  {key:'sismique',name:'Zonage sismique',kind:'wms',url:'https://mapsref.brgm.fr/wxs/georisques/risques',layers:'risq_zonage_sismique',on:false,opacity:0.5,attr:'© Géorisques'},
-  {key:'argiles',name:'Retrait-gonflement argiles',kind:'wms',url:'https://mapsref.brgm.fr/wxs/georisques/risques',layers:'ALEARG',on:false,opacity:0.55,attr:'© Géorisques'},
-  {key:'nappes',name:'Remontée de nappe',kind:'wms',url:'https://mapsref.brgm.fr/wxs/georisques/risques',layers:'REMNAPPE_FIAB',on:false,opacity:0.55,attr:'© Géorisques'},
+  {key:'geol',name:'Géologie BRGM 1/50 000',kind:'wms',url:'https://geoservices.brgm.fr/geologie',layers:'SCAN_D_GEOL50',maxNativeZoom:14,on:false,opacity:0.6,attr:'© BRGM'},
+  {key:'sismique',name:'Zonage sismique',kind:'wms',url:'https://mapsref.brgm.fr/wxs/georisques/risques',layers:'risq_zonage_sismique',maxNativeZoom:16,on:false,opacity:0.5,attr:'© Géorisques'},
+  {key:'argiles',name:'Retrait-gonflement argiles',kind:'wms',url:'https://mapsref.brgm.fr/wxs/georisques/risques',layers:'ALEARG',maxNativeZoom:16,on:false,opacity:0.55,attr:'© Géorisques'},
+  {key:'nappes',name:'Remontée de nappe',kind:'wms',url:'https://mapsref.brgm.fr/wxs/georisques/risques',layers:'REMNAPPE_FIAB',maxNativeZoom:16,on:false,opacity:0.55,attr:'© Géorisques'},
   {key:'bss',name:'Sondages BSS',kind:'points',src:'bss',color:'#8E44AD',on:false},
   {key:'cavites',name:'Cavités',kind:'points',src:'cavites',color:'#C0392B',on:false},
   {key:'mvt',name:'Mouvements de terrain',kind:'points',src:'mvt',color:'#E67E22',on:false},
@@ -8472,7 +8472,7 @@ function geoMakePointLayer(d){
 function geoMakeLayer(d){
   const op=(geoLayerOpacity[d.key]!=null)?geoLayerOpacity[d.key]:1;
   if(d.kind==='points')return geoMakePointLayer(d);
-  if(d.kind==='wms')return L.tileLayer.wms(d.url,{layers:d.layers,format:'image/png',transparent:d.transparent!==false,version:d.version||'1.1.1',opacity:op,maxZoom:23,attribution:d.attr||''});
+  if(d.kind==='wms')return L.tileLayer.wms(d.url,{layers:d.layers,format:'image/png',transparent:d.transparent!==false,version:d.version||'1.1.1',opacity:op,maxZoom:23,maxNativeZoom:d.maxNativeZoom||16,attribution:d.attr||''});
   return L.tileLayer(d.url,{maxZoom:23,maxNativeZoom:d.maxNativeZoom||19,opacity:op,attribution:d.attr||''});
 }
 function geoRenderLayerControls(){
