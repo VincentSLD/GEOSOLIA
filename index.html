@@ -1090,6 +1090,10 @@
   .geoview-ctrl button{background:none;border:1px solid rgba(255,255,255,0.3);color:#fff;padding:5px 12px;border-radius:6px;font-weight:700;cursor:pointer;font-family:inherit}
   .geoview-ctrl button:hover{background:rgba(255,255,255,0.12)}
   #geoview-map{flex:1;width:100%}
+  .geo-layers{display:flex;align-items:center;gap:8px;flex-wrap:wrap;max-width:60vw}
+  .geo-lyr{display:flex;align-items:center;gap:4px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18);border-radius:6px;padding:3px 7px;font-size:11px;cursor:pointer}
+  .geo-lyr-n{white-space:nowrap}
+  .geo-lyr input[type=range]{width:52px;vertical-align:middle}
   .geoview-sep{width:1px;align-self:stretch;background:rgba(255,255,255,0.2);margin:0 2px}
   .geoview-adjust{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
   .geoview-adjust button{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.25);color:#fff;min-width:26px;padding:4px 7px;border-radius:5px;font-weight:700;cursor:pointer;font-family:inherit;line-height:1}
@@ -1955,9 +1959,7 @@
     <div class="geoview-head">
       <span>🌍 Vue géoréférencée</span>
       <div class="geoview-ctrl">
-        <label><input type="checkbox" checked onchange="geoToggleLayer('ortho',this.checked)"> Ortho</label>
-        <label><input type="checkbox" onchange="geoToggleLayer('plan',this.checked)"> Plan IGN</label>
-        <label><input type="checkbox" checked onchange="geoToggleLayer('cadastre',this.checked)"> Cadastre</label>
+        <span id="geo-layers" class="geo-layers"></span>
         <label>Opacité plan <input type="range" min="0" max="1" step="0.05" value="0.7" oninput="geoSetPlanOpacity(this.value)"></label>
         <span class="geoview-sep"></span>
         <span class="geoview-adjust">
@@ -8435,6 +8437,33 @@ let geoDragMode=false, geoDragging=false, geoPrevLL=null;
 const GEO_ORTHO_URL='https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=ORTHOIMAGERY.ORTHOPHOTOS&STYLE=normal&FORMAT=image/jpeg&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}';
 const GEO_PLANIGN_URL='https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&STYLE=normal&FORMAT=image/png&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}';
 const GEO_CADASTRE_URL='https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=CADASTRALPARCELS.PARCELLAIRE_EXPRESS&STYLE=normal&FORMAT=image/png&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}';
+// Toutes les couches GéoCarto disponibles dans la vue géoréférencée (tuiles live WMTS IGN + WMS BRGM/Géorisques)
+const GEO_LAYER_DEFS=[
+  {key:'ortho',name:'Photo aérienne',kind:'wmts',url:GEO_ORTHO_URL,maxNativeZoom:21,on:true,attr:'© IGN'},
+  {key:'plan',name:'Plan IGN',kind:'wmts',url:GEO_PLANIGN_URL,maxNativeZoom:19,on:false,attr:'© IGN'},
+  {key:'scan25',name:'Carte IGN (SCAN 25)',kind:'wmts',url:'https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN25TOUR.CV&STYLE=normal&FORMAT=image/jpeg&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}',maxNativeZoom:16,on:false,attr:'© IGN'},
+  {key:'cadastre',name:'Cadastre',kind:'wmts',url:GEO_CADASTRE_URL,maxNativeZoom:20,on:true,opacity:0.85,attr:'© IGN'},
+  {key:'geol',name:'Géologie BRGM 1/50 000',kind:'wms',url:'https://geoservices.brgm.fr/geologie',layers:'SCAN_H_GEOL50',on:false,opacity:0.6,attr:'© BRGM'},
+  {key:'sismique',name:'Zonage sismique',kind:'wms',url:'https://mapsref.brgm.fr/wxs/georisques/risques',layers:'ZONAGE_SISMIQUE',on:false,opacity:0.5,attr:'© Géorisques'},
+  {key:'argiles',name:'Retrait-gonflement argiles',kind:'wms',url:'https://mapsref.brgm.fr/wxs/georisques/risques',layers:'ALEARG',on:false,opacity:0.55,attr:'© Géorisques'},
+  {key:'nappes',name:'Remontée de nappe',kind:'wms',url:'https://mapsref.brgm.fr/wxs/georisques/risques',layers:'REMNAPPE_FIAB',on:false,opacity:0.55,attr:'© Géorisques'}
+];
+let geoLayerOn={}, geoLayerOpacity={};
+GEO_LAYER_DEFS.forEach(d=>{geoLayerOn[d.key]=!!d.on;if(d.opacity!=null)geoLayerOpacity[d.key]=d.opacity;});
+function geoMakeLayer(d){
+  const op=(geoLayerOpacity[d.key]!=null)?geoLayerOpacity[d.key]:1;
+  if(d.kind==='wms')return L.tileLayer.wms(d.url,{layers:d.layers,format:'image/png',transparent:d.transparent!==false,version:d.version||'1.1.1',opacity:op,maxZoom:23,attribution:d.attr||''});
+  return L.tileLayer(d.url,{maxZoom:23,maxNativeZoom:d.maxNativeZoom||19,opacity:op,attribution:d.attr||''});
+}
+function geoRenderLayerControls(){
+  const host=document.getElementById('geo-layers');if(!host)return;
+  host.innerHTML=GEO_LAYER_DEFS.map(d=>{
+    const on=geoLayerOn[d.key];
+    const op=(geoLayerOpacity[d.key]!=null)?geoLayerOpacity[d.key]:1;
+    const slider=`<input type="range" min="0" max="1" step="0.05" value="${op}" title="Opacité" oninput="geoSetLayerOpacity('${d.key}',this.value)">`;
+    return `<label class="geo-lyr"><input type="checkbox" ${on?'checked':''} onchange="geoToggleLayer('${d.key}',this.checked)"><span class="geo-lyr-n">${d.name}</span>${slider}</label>`;
+  }).join('');
+}
 function geoPlanBounds(){
   const tl0=planToGps(0,0),tr0=planToGps(planW,0),bl0=planToGps(0,planH),br0=planToGps(planW,planH);
   if(!tl0)return null;
@@ -8476,15 +8505,15 @@ function initGeoView(){
   const B=geoPlanBounds();if(!B)return;
   if(geoMap){geoMap.invalidateSize();if(geoPlanOverlay)geoPlanOverlay.reposition([B.tl.lat,B.tl.lng],[B.tr.lat,B.tr.lng],[B.bl.lat,B.bl.lng]);geoFit(B);return;}
   geoMap=L.map('geoview-map',{center:[B.tl.lat,B.tl.lng],zoom:19,maxZoom:23});
-  geoLayers.ortho=L.tileLayer(GEO_ORTHO_URL,{maxZoom:23,maxNativeZoom:21,attribution:'© IGN'}).addTo(geoMap);
-  geoLayers.plan=L.tileLayer(GEO_PLANIGN_URL,{maxZoom:23,maxNativeZoom:19});
-  geoLayers.cadastre=L.tileLayer(GEO_CADASTRE_URL,{maxZoom:23,maxNativeZoom:20,opacity:0.85}).addTo(geoMap);
+  GEO_LAYER_DEFS.forEach(d=>{const layer=geoMakeLayer(d);geoLayers[d.key]=layer;if(geoLayerOn[d.key])layer.addTo(geoMap);});
   if(L.rotatedImage){geoPlanOverlay=L.rotatedImage(planImgSrc,[B.tl.lat,B.tl.lng],[B.tr.lat,B.tr.lng],[B.bl.lat,B.bl.lng],{opacity:0.7});geoPlanOverlay.addTo(geoMap);if(geoPlanOverlay._img)geoPlanOverlay._img.addEventListener('mousedown',geoDragStart);}
   if(geoMap)geoMap.dragging.enable();
+  geoRenderLayerControls();
   geoFit(B);
 }
 function geoFit(B){if(!geoMap||!B)return;geoMap.fitBounds(B.bounds,{padding:[8,8],maxZoom:23});geoMap.setZoom(Math.min(geoMap.getZoom()+2,23));}
-function geoToggleLayer(key,on){const l=geoLayers[key];if(!l||!geoMap)return;if(on)l.addTo(geoMap);else geoMap.removeLayer(l);}
+function geoToggleLayer(key,on){geoLayerOn[key]=on;const l=geoLayers[key];if(!l||!geoMap)return;if(on)l.addTo(geoMap);else geoMap.removeLayer(l);}
+function geoSetLayerOpacity(key,v){v=parseFloat(v);geoLayerOpacity[key]=v;const l=geoLayers[key];if(l&&l.setOpacity)l.setOpacity(v);}
 function geoSetPlanOpacity(v){if(geoPlanOverlay)geoPlanOverlay.setOpacity(parseFloat(v));}
 function calibMapInit(){
   if(typeof L==='undefined')return;
