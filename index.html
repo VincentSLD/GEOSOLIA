@@ -1107,6 +1107,10 @@
   .glg-h{font-weight:800;font-size:11px;margin-bottom:3px}
   .glg-row{display:flex;align-items:center;gap:6px;line-height:1.5}
   .glg-sw{width:14px;height:14px;border-radius:3px;border:1px solid rgba(0,0,0,0.3);flex-shrink:0}
+  .geoview-head .gvbtn{background:none;border:1px solid rgba(255,255,255,0.3);color:#fff;padding:5px 10px;border-radius:6px;font-weight:700;cursor:pointer;font-family:inherit;font-size:12px}
+  .geoview-head .gvbtn:hover{background:rgba(255,255,255,0.12)}
+  .geoview-head .geo-meas-btn.active{background:var(--yellow);color:#000;border-color:var(--yellow)}
+  .geo-meas-tip{background:#1A1A1A;color:var(--yellow);font-size:11px;font-weight:800;padding:2px 6px;border-radius:4px;white-space:nowrap;transform:translate(8px,-50%);box-shadow:0 1px 4px rgba(0,0,0,0.4)}
   .geoview-sep{width:1px;align-self:stretch;background:rgba(255,255,255,0.2);margin:0 2px}
   .geoview-adjust{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
   .geoview-adjust button{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.25);color:#fff;min-width:26px;padding:4px 7px;border-radius:5px;font-weight:700;cursor:pointer;font-family:inherit;line-height:1}
@@ -1974,6 +1978,13 @@
       <div class="geoview-ctrl">
         <button onclick="geoToggleLayersPanel()" title="Afficher / masquer la liste des couches" style="background:none;border:1px solid rgba(255,255,255,0.3);color:#fff;padding:5px 12px;border-radius:6px;font-weight:700;cursor:pointer;font-family:inherit">🗂 Couches</button>
         <button onclick="geoToggleLegend()" title="Afficher / masquer la légende" style="background:none;border:1px solid rgba(255,255,255,0.3);color:#fff;padding:5px 12px;border-radius:6px;font-weight:700;cursor:pointer;font-family:inherit">📘 Légende</button>
+        <span class="geoview-sep"></span>
+        <button class="gvbtn" onclick="geoRecenter()" title="Recentrer sur le site investigué">🎯 Site</button>
+        <button class="gvbtn geo-meas-btn" onclick="geoMeasSetMode('dist',this)" title="Mesurer une distance (clique les points)">📏 Distance</button>
+        <button class="gvbtn geo-meas-btn" onclick="geoMeasSetMode('alt',this)" title="Altitude d'un point (clique sur la carte)">⛰️ Altitude</button>
+        <button class="gvbtn" onclick="geoMeasProfile()" title="Profil altimétrique le long de la ligne mesurée">📈 Profil</button>
+        <button class="gvbtn" onclick="geoMeasClear()" title="Effacer les mesures">🗑</button>
+        <span id="geo-meas-status" style="font-size:11px;color:var(--yellow);min-width:90px"></span>
         <label>Opacité plan <input type="range" min="0" max="1" step="0.05" value="0.7" oninput="geoSetPlanOpacity(this.value)"></label>
         <span class="geoview-sep"></span>
         <span class="geoview-adjust">
@@ -1998,6 +2009,11 @@
     <div id="geoview-map"></div>
     <div id="geo-layers-panel" class="geo-layers-panel"></div>
     <div id="geo-legend" class="geo-legend hidden"></div>
+    <div id="geo-meas-profile" style="display:none;position:absolute;bottom:16px;left:50%;transform:translateX(-50%);width:440px;max-width:90%;background:rgba(255,255,255,0.96);border:1px solid rgba(0,0,0,0.2);border-radius:8px;padding:8px 10px;z-index:501;box-shadow:0 4px 16px rgba(0,0,0,0.3)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><b style="font-size:12px;color:#E67E22">Profil altimétrique</b><button onclick="document.getElementById('geo-meas-profile').style.display='none'" style="border:none;background:none;cursor:pointer;font-weight:700;font-size:14px">✕</button></div>
+      <canvas id="geo-meas-canvas" style="width:100%;height:120px;display:block"></canvas>
+      <div id="geo-meas-profstats" style="font-size:11px;color:#333;margin-top:4px"></div>
+    </div>
   </div>
   <div id="calib-map-modal" class="mc-modal" onclick="if(event.target===this)closeCalibMapModal()">
     <div class="mc-inner" style="width:660px;max-width:95vw">
@@ -8632,9 +8648,89 @@ function initGeoView(){
   geoFit(B);
 }
 function geoFit(B){if(!geoMap||!B)return;geoMap.fitBounds(B.bounds,{padding:[8,8],maxZoom:23});geoMap.setZoom(Math.min(geoMap.getZoom()+2,23));}
+function geoRecenter(){const B=geoPlanBounds();if(B&&geoMap)geoFit(B);}
 function geoToggleLayer(key,on){geoLayerOn[key]=on;const l=geoLayers[key];if(l&&geoMap){if(on)l.addTo(geoMap);else geoMap.removeLayer(l);}geoRenderLegend();}
 function geoSetLayerOpacity(key,v){v=parseFloat(v);geoLayerOpacity[key]=v;const l=geoLayers[key];if(l&&l.setOpacity)l.setOpacity(v);}
 function geoSetPlanOpacity(v){if(geoPlanOverlay)geoPlanOverlay.setOpacity(parseFloat(v));}
+// ── Outils de mesure (distance, altitude, profil altimétrique) ──
+let geoMeasMode=null, geoMeasPts=[], geoMeasLayer=null;
+function geoMeasEnsureLayer(){if(!geoMeasLayer&&geoMap)geoMeasLayer=L.layerGroup().addTo(geoMap);return geoMeasLayer;}
+function geoMeasStatus(t){const el=document.getElementById('geo-meas-status');if(el)el.textContent=t||'';}
+function geoFmtDist(m){return m>=1000?((m/1000).toFixed(3).replace('.',',')+' km'):(m.toFixed(1).replace('.',',')+' m');}
+function geoMeasSetMode(mode,btn){
+  if(geoMeasMode===mode){geoMeasStop();return;}
+  if(geoDragMode){geoDragMode=false;if(geoMap)geoMap.dragging.enable();const db=document.getElementById('geo-drag-btn');if(db)db.classList.remove('active');const im=geoPlanOverlay&&geoPlanOverlay._img;if(im)im.style.pointerEvents='none';}
+  geoMeasMode=mode;
+  document.querySelectorAll('.geo-meas-btn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  if(geoMap){geoMap.off('click',geoMeasClick);geoMap.on('click',geoMeasClick);geoMap.getContainer().style.cursor='crosshair';}
+  if(mode==='dist'){geoMeasPts=[];geoMeasRedraw();}
+  geoMeasStatus(mode==='dist'?'Clique les points à mesurer…':'Clique un point pour son altitude…');
+}
+function geoMeasStop(){geoMeasMode=null;document.querySelectorAll('.geo-meas-btn').forEach(b=>b.classList.remove('active'));if(geoMap){geoMap.off('click',geoMeasClick);geoMap.getContainer().style.cursor='';}geoMeasStatus('');}
+function geoMeasClear(){geoMeasStop();geoMeasPts=[];if(geoMeasLayer)geoMeasLayer.clearLayers();const p=document.getElementById('geo-meas-profile');if(p)p.style.display='none';}
+async function geoMeasClick(e){
+  if(geoMeasMode==='dist'){geoMeasPts.push(e.latlng);geoMeasRedraw();}
+  else if(geoMeasMode==='alt'){
+    const mk=L.circleMarker(e.latlng,{radius:5,color:'#1A1A1A',fillColor:'#F2B705',fillOpacity:1,weight:2}).addTo(geoMeasEnsureLayer());
+    mk.bindPopup('Altitude : …').openPopup();
+    try{const z=(await geoFetchElevation([e.latlng]))[0];mk.setPopupContent(z!=null?('Altitude : <b>'+z.toFixed(1)+' m NGF</b>'):'Altitude indisponible');}catch(err){mk.setPopupContent('Altitude indisponible');}
+  }
+}
+function geoMeasRedraw(){
+  const lyr=geoMeasEnsureLayer();if(!lyr)return;lyr.clearLayers();
+  if(!geoMeasPts.length)return;
+  L.polyline(geoMeasPts,{color:'#1A1A1A',weight:4}).addTo(lyr);
+  L.polyline(geoMeasPts,{color:'#F2B705',weight:2}).addTo(lyr);
+  let tot=0;
+  geoMeasPts.forEach((p,i)=>{L.circleMarker(p,{radius:4,color:'#1A1A1A',fillColor:'#fff',fillOpacity:1,weight:2}).addTo(lyr);if(i>0)tot+=geoMap.distance(geoMeasPts[i-1],p);});
+  const last=geoMeasPts[geoMeasPts.length-1];
+  L.marker(last,{icon:L.divIcon({className:'geo-meas-tip',html:geoFmtDist(tot),iconSize:[0,0]})}).addTo(lyr);
+  geoMeasStatus('Distance : '+geoFmtDist(tot)+' ('+geoMeasPts.length+' pts)');
+}
+async function geoFetchJson(url){
+  try{const r=await fetch(url);if(r.ok)return await r.json();}catch(e){}
+  const r2=await fetch('/api/geo?url='+encodeURIComponent(url));return await r2.json();
+}
+async function geoFetchElevation(latlngs){
+  const lons=latlngs.map(p=>Number(p.lng).toFixed(6)).join('|');
+  const lats=latlngs.map(p=>Number(p.lat).toFixed(6)).join('|');
+  const url='https://data.geopf.fr/altimetrie/1.0/calcul/alti/rest/elevation.json?lon='+lons+'&lat='+lats+'&resource=ign_rge_alti_wld&delimiter=|&indent=false&zonly=false';
+  const j=await geoFetchJson(url);
+  const arr=(j&&j.elevations)||[];
+  return arr.map(e=>{const z=(typeof e==='number')?e:(e.z!=null?e.z:(e.alti!=null?e.alti:null));return (z!=null&&z>-1000)?z:null;});
+}
+async function geoMeasProfile(){
+  if(geoMeasPts.length<2){alert('Trace d\'abord une ligne (≥ 2 points) avec 📏 Distance.');return;}
+  const segs=[];let total=0;
+  for(let i=1;i<geoMeasPts.length;i++){const d=geoMap.distance(geoMeasPts[i-1],geoMeasPts[i]);segs.push(d);total+=d;}
+  const N=60,samples=[];
+  for(let k=0;k<=N;k++){
+    const target=total*k/N;let acc=0,si=0;
+    while(si<segs.length-1&&acc+segs[si]<target){acc+=segs[si];si++;}
+    const segd=segs[si]||1,t=Math.min(1,Math.max(0,(target-acc)/segd));
+    const a=geoMeasPts[si],b=geoMeasPts[Math.min(si+1,geoMeasPts.length-1)];
+    samples.push(L.latLng(a.lat+(b.lat-a.lat)*t,a.lng+(b.lng-a.lng)*t));
+  }
+  geoMeasStatus('Profil : calcul des altitudes…');
+  let elevs;try{elevs=await geoFetchElevation(samples);}catch(e){geoMeasStatus('Altitudes indisponibles');return;}
+  geoDrawProfile(elevs,total);
+}
+function geoDrawProfile(elevs,total){
+  const panel=document.getElementById('geo-meas-profile');if(!panel)return;
+  const valid=elevs.filter(z=>z!=null);if(!valid.length){geoMeasStatus('Altitudes indisponibles');return;}
+  const mn=Math.min(...valid),mx=Math.max(...valid),rng=(mx-mn)||1;
+  panel.style.display='block';
+  const cvs=document.getElementById('geo-meas-canvas');const W=cvs.width=Math.max(300,panel.clientWidth-20),H=cvs.height=120,pad=30;
+  const ctx=cvs.getContext('2d');ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle='#ccc';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(pad,6);ctx.lineTo(pad,H-16);ctx.lineTo(W-4,H-16);ctx.stroke();
+  ctx.beginPath();ctx.strokeStyle='#E67E22';ctx.lineWidth=2;
+  elevs.forEach((z,i)=>{const x=pad+(W-pad-6)*i/(elevs.length-1);const y=(z==null)?(H-16):(H-16-(H-24)*((z-mn)/rng));if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});
+  ctx.stroke();
+  ctx.fillStyle='#333';ctx.font='10px Arial';ctx.fillText(mx.toFixed(0)+' m',2,12);ctx.fillText(mn.toFixed(0)+' m',2,H-18);
+  const st=document.getElementById('geo-meas-profstats');if(st)st.textContent='Longueur '+geoFmtDist(total)+' · mini '+mn.toFixed(1)+' m · maxi '+mx.toFixed(1)+' m · dénivelé '+(mx-mn).toFixed(1)+' m';
+  geoMeasStatus('');
+}
 function calibMapInit(){
   if(typeof L==='undefined')return;
   if(calibMap){calibMap.invalidateSize();return;}
