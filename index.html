@@ -8481,7 +8481,7 @@ const GEO_LAYER_DEFS=[
   {key:'plan',name:'Plan IGN',kind:'wmts',url:GEO_PLANIGN_URL,maxNativeZoom:19,on:false,attr:'© IGN'},
   {key:'relief',name:'Relief (OpenTopo)',kind:'wmts',url:'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',maxNativeZoom:17,on:false,attr:'© OpenTopoMap'},
   {key:'cadastre',name:'Cadastre',kind:'wmts',url:GEO_CADASTRE_URL,maxNativeZoom:20,on:true,opacity:0.85,attr:'© IGN'},
-  {key:'geol',name:'Géologie BRGM 1/50 000',kind:'wms',url:'https://geoservices.brgm.fr/geologie',layers:'SCAN_D_GEOL50',maxNativeZoom:14,on:false,opacity:0.6,attr:'© BRGM'},
+  {key:'geol',name:'Géologie BRGM 1/50 000',kind:'wmts',url:'https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=BRGM_SCAN_D_GEOL50&STYLE=normal&FORMAT=image/jpeg&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}',maxNativeZoom:15,on:false,opacity:0.6,attr:'© BRGM / IGN'},
   {key:'sismique',name:'Zonage sismique',kind:'esri',url:'https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/Risques_zonage_sismique/FeatureServer/0',palette:'sismique',on:false,opacity:0.5,attr:'© Géorisques (ArcGIS)'},
   {key:'argiles',name:'Retrait-gonflement argiles',kind:'esri',url:'https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/G%C3%A9orisques_Exposition_retrait_gonflement_des_argiles_2026/FeatureServer/2',palette:'argiles',on:false,opacity:0.5,attr:'© Géorisques (ArcGIS)'},
   {key:'nappes',name:'Remontée de nappe',kind:'esri',url:'https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/G%C3%A9orisques___Inondations_pare_remont%C3%A9e_de_nappes/FeatureServer/1',color:'#1565C0',on:false,opacity:0.45,attr:'© Géorisques (ArcGIS)'},
