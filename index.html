@@ -8489,7 +8489,7 @@ const GEO_LAYER_DEFS=[
   {key:'radon',name:'Potentiel radon',kind:'wms',url:'https://georisques.gouv.fr/services',layers:'RADON',version:'1.3.0',maxNativeZoom:17,on:false,opacity:0.5,attr:'© Géorisques'},
   {key:'ssp',name:'Sites pollués (SSP)',kind:'wms',url:'https://georisques.gouv.fr/services',layers:'SSP_ETABLISSEMENT',version:'1.3.0',maxNativeZoom:18,on:false,opacity:0.8,attr:'© Géorisques'},
   {key:'pprn',name:'Communes PPRN',kind:'wms',url:'https://georisques.gouv.fr/services',layers:'PPRN_COMMUNE_GASPAR',version:'1.3.0',maxNativeZoom:16,on:false,opacity:0.5,attr:'© Géorisques'},
-  {key:'bss',name:'Sondages BSS',kind:'points',src:'bss',color:'#8E44AD',on:false},
+  {key:'bss',name:'Sondages BSS',kind:'wms',url:'https://geoservices.brgm.fr/geologie',layers:'BSS_TOTAL_AVEC_LABEL',version:'1.1.1',maxNativeZoom:16,on:false,opacity:1,attr:'© BRGM — BSS'},
   {key:'cavites',name:'Cavités',kind:'points',src:'cavites',color:'#C0392B',on:false},
   {key:'mvt',name:'Mouvements de terrain',kind:'points',src:'mvt',color:'#E67E22',on:false},
   {key:'icpe',name:'Sites ICPE',kind:'points',src:'icpe',color:'#2980B9',on:false}
@@ -8500,7 +8500,7 @@ function geoDefaultOrder(){return GEO_LAYER_DEFS.map(d=>d.key).slice().reverse()
 // Secours réseau filtré : tuile WMS en direct d'abord, sinon relais serveur /api/geo (BRGM/Géorisques)
 if(typeof L!=='undefined'&&L.TileLayer&&L.TileLayer.WMS&&!L.TileLayer.WMS.prototype.__geoProxyPatched){
   L.TileLayer.WMS.prototype.__geoProxyPatched=true;
-  const GEO_PROXY_HOSTS=['brgm.fr','georisques.gouv.fr'];
+  const GEO_PROXY_HOSTS=['georisques.gouv.fr']; // brgm.fr exclu : WAF bloque le proxy serveur ; direct (img navigateur) OK
   let geoProxyFailed={};try{geoProxyFailed=JSON.parse(sessionStorage.getItem('geoProxyFailed')||'{}')||{};}catch(e){geoProxyFailed={};}
   const geoHostOf=function(u){try{return new URL(u,location.href).hostname;}catch(e){return '';}};
   const geoProxyable=function(h){return GEO_PROXY_HOSTS.some(x=>h===x||h.endsWith('.'+x));};
