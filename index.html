@@ -23,6 +23,7 @@
 <script src="lib/pdf.min.js"></script>
 <link rel="stylesheet" href="lib/leaflet.min.css"/>
 <script src="lib/leaflet.min.js"></script>
+<script src="https://unpkg.com/esri-leaflet@3.0.12/dist/esri-leaflet.js"></script>
 <script type="importmap">{"imports":{"three":"./lib/three/three.module.js","three/addons/":"./lib/three/examples/jsm/"}}</script>
 <style>
   :root {
@@ -8444,9 +8445,9 @@ const GEO_LAYER_DEFS=[
   {key:'relief',name:'Relief (OpenTopo)',kind:'wmts',url:'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',maxNativeZoom:17,on:false,attr:'© OpenTopoMap'},
   {key:'cadastre',name:'Cadastre',kind:'wmts',url:GEO_CADASTRE_URL,maxNativeZoom:20,on:true,opacity:0.85,attr:'© IGN'},
   {key:'geol',name:'Géologie BRGM 1/50 000',kind:'wms',url:'https://geoservices.brgm.fr/geologie',layers:'SCAN_D_GEOL50',maxNativeZoom:14,on:false,opacity:0.6,attr:'© BRGM'},
-  {key:'sismique',name:'Zonage sismique',kind:'wms',url:'https://georisques.gouv.fr/services',layers:'risq_zonage_sismique',version:'1.3.0',maxNativeZoom:17,on:false,opacity:0.5,attr:'© Géorisques'},
-  {key:'argiles',name:'Retrait-gonflement argiles',kind:'wms',url:'https://georisques.gouv.fr/services',layers:'ALEARG',version:'1.3.0',maxNativeZoom:17,on:false,opacity:0.55,attr:'© Géorisques'},
-  {key:'nappes',name:'Remontée de nappe',kind:'wms',url:'https://georisques.gouv.fr/services',layers:'REMNAPPE_FIAB',version:'1.3.0',maxNativeZoom:17,on:false,opacity:0.55,attr:'© Géorisques'},
+  {key:'sismique',name:'Zonage sismique',kind:'esri',url:'https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/Risques_zonage_sismique/FeatureServer/0',palette:'sismique',on:false,opacity:0.5,attr:'© Géorisques (ArcGIS)'},
+  {key:'argiles',name:'Retrait-gonflement argiles',kind:'esri',url:'https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/G%C3%A9orisques_Exposition_retrait_gonflement_des_argiles_2026/FeatureServer/2',palette:'argiles',on:false,opacity:0.5,attr:'© Géorisques (ArcGIS)'},
+  {key:'nappes',name:'Remontée de nappe',kind:'esri',url:'https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/G%C3%A9orisques___Inondations_pare_remont%C3%A9e_de_nappes/FeatureServer/1',color:'#1565C0',on:false,opacity:0.45,attr:'© Géorisques (ArcGIS)'},
   {key:'inond',name:'Zones inondables',kind:'wms',url:'https://georisques.gouv.fr/services',layers:'MASQ_EAIP',version:'1.3.0',maxNativeZoom:17,on:false,opacity:0.5,attr:'© Géorisques'},
   {key:'radon',name:'Potentiel radon',kind:'wms',url:'https://georisques.gouv.fr/services',layers:'RADON',version:'1.3.0',maxNativeZoom:17,on:false,opacity:0.5,attr:'© Géorisques'},
   {key:'ssp',name:'Sites pollués (SSP)',kind:'wms',url:'https://georisques.gouv.fr/services',layers:'SSP_ETABLISSEMENT',version:'1.3.0',maxNativeZoom:18,on:false,opacity:0.8,attr:'© Géorisques'},
@@ -8473,9 +8474,23 @@ function geoMakePointLayer(d){
   arr.forEach(it=>{const c=geoPointCoords(it);if(!c)return;const m=L.circleMarker(c,{radius:5,color:'#222',weight:1,fillColor:d.color||'#777',fillOpacity:0.85});const nm=it.nom||it.raisonSociale||it.indice||it.bss_id||it.type_cavite||it.type||it.libelle||'';if(nm)m.bindPopup(String(nm));grp.addLayer(m);});
   return grp;
 }
+function geoEsriStyle(d){
+  const op=(geoLayerOpacity[d.key]!=null)?geoLayerOpacity[d.key]:0.5;
+  return function(feature){
+    const p=(feature&&feature.properties)||{};
+    let fill=d.color||'#E67E22';
+    if(d.palette==='argiles'){const a=String(p.ALEA||p.alea||p.niveau||'').toLowerCase();fill=a.indexOf('fort')>=0?'#C0392B':a.indexOf('moy')>=0?'#E67E22':a.indexOf('faib')>=0?'#F1C40F':'#95A5A6';}
+    else if(d.palette==='sismique'){const z=parseInt(p.zone_sismi||p.code_zone||p.ZONE||p.zonesis||p.zone||0,10);const cs={1:'#A9DFBF',2:'#F9E79F',3:'#F5B041',4:'#E67E22',5:'#C0392B'};fill=cs[z]||'#5DADE2';}
+    return {color:'#555',weight:0.6,fillColor:fill,fillOpacity:op};
+  };
+}
 function geoMakeLayer(d){
   const op=(geoLayerOpacity[d.key]!=null)?geoLayerOpacity[d.key]:1;
   if(d.kind==='points')return geoMakePointLayer(d);
+  if(d.kind==='esri'){
+    if(!(typeof L!=='undefined'&&L.esri&&L.esri.featureLayer)){console.warn('esri-leaflet absent — couche',d.key,'ignorée');return L.layerGroup();}
+    return L.esri.featureLayer({url:d.url,style:geoEsriStyle(d),pointToLayer:function(f,latlng){return L.circleMarker(latlng,{radius:5,color:'#222',weight:1,fillColor:d.color||'#777',fillOpacity:0.85});},attribution:d.attr||''});
+  }
   if(d.kind==='wms')return L.tileLayer.wms(d.url,{layers:d.layers,format:'image/png',transparent:d.transparent!==false,version:d.version||'1.1.1',opacity:op,maxZoom:23,maxNativeZoom:d.maxNativeZoom||16,attribution:d.attr||''});
   return L.tileLayer(d.url,{maxZoom:23,maxNativeZoom:d.maxNativeZoom||19,opacity:op,attribution:d.attr||''});
 }
@@ -8484,7 +8499,7 @@ function geoRenderLayerControls(){
   host.innerHTML=GEO_LAYER_DEFS.map(d=>{
     const on=geoLayerOn[d.key];
     const op=(geoLayerOpacity[d.key]!=null)?geoLayerOpacity[d.key]:1;
-    const slider=(d.kind==='points')?'':`<input type="range" min="0" max="1" step="0.05" value="${op}" title="Opacité" oninput="geoSetLayerOpacity('${d.key}',this.value)">`;
+    const slider=(d.kind==='points'||d.kind==='esri')?'':`<input type="range" min="0" max="1" step="0.05" value="${op}" title="Opacité" oninput="geoSetLayerOpacity('${d.key}',this.value)">`;
     return `<label class="geo-lyr"><input type="checkbox" ${on?'checked':''} onchange="geoToggleLayer('${d.key}',this.checked)"><span class="geo-lyr-n">${d.name}</span>${slider}</label>`;
   }).join('');
 }
