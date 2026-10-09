@@ -8523,12 +8523,48 @@ function geoPointCoords(it){
   lat=parseFloat(lat);lng=parseFloat(lng);
   return (isFinite(lat)&&isFinite(lng))?[lat,lng]:null;
 }
-function geoMakePointLayer(d,pane){
-  const g=(typeof geocartoData!=='undefined')?geocartoData:null;
-  const arr=(g&&Array.isArray(g[d.src]))?g[d.src]:[];
-  const grp=L.layerGroup();
-  arr.forEach(it=>{const c=geoPointCoords(it);if(!c)return;const m=L.circleMarker(c,{pane:pane,radius:5,color:'#222',weight:1,fillColor:d.color||'#777',fillOpacity:0.85});const nm=it.nom||it.raisonSociale||it.indice||it.bss_id||it.type_cavite||it.type||it.libelle||'';if(nm)m.bindPopup(String(nm));grp.addLayer(m);});
-  return grp;
+function geoMakePointLayer(d,pane){const grp=L.layerGroup();grp._ptPane=pane;grp._ptLoaded=false;return grp;}
+const GEO_POINT_RADIUS=5000; // m autour du point investigué
+function geoInvestPoint(){
+  const t=(typeof gpsCalib!=='undefined'&&gpsCalib&&gpsCalib.transform)?gpsCalib.transform:null;
+  if(t&&t.gps1Lat!=null)return {lat:t.gps1Lat,lng:t.gps1Lng};
+  if(typeof projectLat!=='undefined'&&projectLat!=null&&typeof projectLng!=='undefined'&&projectLng!=null)return {lat:projectLat,lng:projectLng};
+  return null;
+}
+async function geoFetchBSS(c){
+  const dLat=GEO_POINT_RADIUS/111000, dLng=GEO_POINT_RADIUS/(111000*Math.cos(c.lat*Math.PI/180)||1);
+  const bbox=(c.lat-dLat)+','+(c.lng-dLng)+','+(c.lat+dLat)+','+(c.lng+dLng);
+  const u='https://geoservices.brgm.fr/geologie?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=ms:BSS_TOTAL_AVEC_LABEL&COUNT=1000&SRSNAME=urn:ogc:def:crs:EPSG::4326&BBOX='+bbox+',urn:ogc:def:crs:EPSG::4326&OUTPUTFORMAT=application/json';
+  let j;try{j=await geoFetchJson(u);}catch(e){return [];}
+  const feats=(j&&j.features)||[];
+  return feats.map(f=>{const g=f.geometry&&f.geometry.coordinates;const p=f.properties||{};return g?{latitude:g[1],longitude:g[0],label:p.indice_bss||p.indice||p.bss_id||p.nom||'BSS'}:null;}).filter(Boolean);
+}
+async function geoFetchPoints(d){
+  const c=geoInvestPoint();
+  if(!c){const g=(typeof geocartoData!=='undefined')?geocartoData:null;return (g&&Array.isArray(g[d.src]))?g[d.src].map(it=>({latitude:(it.latitude!=null?it.latitude:it.lat),longitude:(it.longitude!=null?it.longitude:it.lng),label:it.nom||it.raisonSociale||it.type||''})):[];}
+  if(d.src==='bss')return await geoFetchBSS(c);
+  const ep={cavites:'cavites',mvt:'mvt',icpe:'installations_classees'}[d.src];
+  if(!ep)return [];
+  const out=[];let page=1;
+  for(let guard=0;guard<12;guard++){
+    const u='https://georisques.gouv.fr/api/v1/'+ep+'?latlon='+c.lng+','+c.lat+'&rayon='+GEO_POINT_RADIUS+'&page='+page+'&page_size=500';
+    let j;try{j=await geoFetchJson(u);}catch(e){break;}
+    const data=(j&&j.data)||[];
+    data.forEach(it=>out.push({latitude:it.latitude,longitude:it.longitude,label:it.nom||it.raisonSociale||it.type||it.code_national_cavite||''}));
+    if(data.length<500)break;
+    page++;
+  }
+  return out;
+}
+function geoMaybeLoadPoints(key){
+  const l=geoLayers[key],d=GEO_LAYER_DEFS.find(x=>x.key===key);
+  if(!l||!d||d.kind!=='points'||l._ptLoaded)return;
+  l._ptLoaded=true;
+  const pane=l._ptPane||('geopane-'+key);
+  geoFetchPoints(d).then(pts=>{
+    (pts||[]).forEach(it=>{const lat=parseFloat(it.latitude),lng=parseFloat(it.longitude);if(!isFinite(lat)||!isFinite(lng))return;const m=L.circleMarker([lat,lng],{pane:pane,radius:5,color:'#222',weight:1,fillColor:d.color||'#777',fillOpacity:0.85});if(it.label)m.bindPopup(String(it.label));l.addLayer(m);});
+    if(!(pts&&pts.length))console.info('Aucun point '+d.src+' dans 5 km');
+  }).catch(e=>{l._ptLoaded=false;console.warn('geoFetchPoints '+d.src,e);});
 }
 function geoEsriStyle(d){
   const op=(geoLayerOpacity[d.key]!=null)?geoLayerOpacity[d.key]:0.5;
@@ -8655,7 +8691,7 @@ function initGeoView(){
 }
 function geoFit(B){if(!geoMap||!B)return;geoMap.fitBounds(B.bounds,{padding:[8,8],maxZoom:23});geoMap.setZoom(Math.min(geoMap.getZoom()+2,23));}
 function geoRecenter(){const B=geoPlanBounds();if(B&&geoMap)geoFit(B);}
-function geoToggleLayer(key,on){geoLayerOn[key]=on;const l=geoLayers[key];if(l&&geoMap){if(on)l.addTo(geoMap);else geoMap.removeLayer(l);}geoRenderLegend();}
+function geoToggleLayer(key,on){geoLayerOn[key]=on;const l=geoLayers[key];if(l&&geoMap){if(on){l.addTo(geoMap);geoMaybeLoadPoints(key);}else geoMap.removeLayer(l);}geoRenderLegend();}
 function geoSetLayerOpacity(key,v){v=parseFloat(v);geoLayerOpacity[key]=v;const l=geoLayers[key];if(l&&l.setOpacity)l.setOpacity(v);}
 function geoSetPlanOpacity(v){if(geoPlanOverlay)geoPlanOverlay.setOpacity(parseFloat(v));}
 // ── Outils de mesure (distance, altitude, profil altimétrique) ──
