@@ -1091,10 +1091,15 @@
   .geoview-ctrl button{background:none;border:1px solid rgba(255,255,255,0.3);color:#fff;padding:5px 12px;border-radius:6px;font-weight:700;cursor:pointer;font-family:inherit}
   .geoview-ctrl button:hover{background:rgba(255,255,255,0.12)}
   #geoview-map{flex:1;width:100%}
-  .geo-layers{display:flex;align-items:center;gap:8px;flex-wrap:wrap;max-width:60vw}
-  .geo-lyr{display:flex;align-items:center;gap:4px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18);border-radius:6px;padding:3px 7px;font-size:11px;cursor:pointer}
-  .geo-lyr-n{white-space:nowrap}
-  .geo-lyr input[type=range]{width:52px;vertical-align:middle}
+  .geo-layers-panel{position:absolute;top:62px;right:12px;width:280px;max-height:calc(100% - 84px);overflow:auto;background:rgba(26,26,26,0.93);color:#fff;border:1px solid rgba(255,255,255,0.22);border-radius:8px;padding:8px;z-index:500;font-size:12px;box-shadow:0 4px 16px rgba(0,0,0,0.4)}
+  .geo-layers-panel.hidden{display:none}
+  .glp-title{font-weight:800;color:var(--yellow);font-size:11px;margin:2px 4px 8px}
+  .glp-row{display:flex;align-items:center;gap:6px;padding:4px 3px;border-bottom:1px solid rgba(255,255,255,0.08)}
+  .glp-ord{display:flex;flex-direction:column;gap:1px}
+  .glp-ord button{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.22);color:#fff;border-radius:3px;font-size:8px;line-height:1;cursor:pointer;padding:1px 4px}
+  .glp-ord button:disabled{opacity:.3;cursor:default}
+  .glp-lbl{flex:1;display:flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .glp-op{width:56px;flex-shrink:0}
   .geoview-sep{width:1px;align-self:stretch;background:rgba(255,255,255,0.2);margin:0 2px}
   .geoview-adjust{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
   .geoview-adjust button{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.25);color:#fff;min-width:26px;padding:4px 7px;border-radius:5px;font-weight:700;cursor:pointer;font-family:inherit;line-height:1}
@@ -1960,7 +1965,7 @@
     <div class="geoview-head">
       <span>🌍 Vue géoréférencée</span>
       <div class="geoview-ctrl">
-        <span id="geo-layers" class="geo-layers"></span>
+        <button onclick="geoToggleLayersPanel()" title="Afficher / masquer la liste des couches" style="background:none;border:1px solid rgba(255,255,255,0.3);color:#fff;padding:5px 12px;border-radius:6px;font-weight:700;cursor:pointer;font-family:inherit">🗂 Couches</button>
         <label>Opacité plan <input type="range" min="0" max="1" step="0.05" value="0.7" oninput="geoSetPlanOpacity(this.value)"></label>
         <span class="geoview-sep"></span>
         <span class="geoview-adjust">
@@ -1983,6 +1988,7 @@
       </div>
     </div>
     <div id="geoview-map"></div>
+    <div id="geo-layers-panel" class="geo-layers-panel"></div>
   </div>
   <div id="calib-map-modal" class="mc-modal" onclick="if(event.target===this)closeCalibMapModal()">
     <div class="mc-inner" style="width:660px;max-width:95vw">
@@ -8457,8 +8463,9 @@ const GEO_LAYER_DEFS=[
   {key:'mvt',name:'Mouvements de terrain',kind:'points',src:'mvt',color:'#E67E22',on:false},
   {key:'icpe',name:'Sites ICPE',kind:'points',src:'icpe',color:'#2980B9',on:false}
 ];
-let geoLayerOn={}, geoLayerOpacity={};
+let geoLayerOn={}, geoLayerOpacity={}, geoLayerOrder=null;
 GEO_LAYER_DEFS.forEach(d=>{geoLayerOn[d.key]=!!d.on;if(d.opacity!=null)geoLayerOpacity[d.key]=d.opacity;});
+function geoDefaultOrder(){return GEO_LAYER_DEFS.map(d=>d.key).slice().reverse();} // haut de liste = au-dessus ; bases en bas
 function geoPointCoords(it){
   if(!it)return null;
   let lat=(it.latitude!=null?it.latitude:(it.lat!=null?it.lat:(it.y!=null?it.y:null)));
@@ -8467,11 +8474,11 @@ function geoPointCoords(it){
   lat=parseFloat(lat);lng=parseFloat(lng);
   return (isFinite(lat)&&isFinite(lng))?[lat,lng]:null;
 }
-function geoMakePointLayer(d){
+function geoMakePointLayer(d,pane){
   const g=(typeof geocartoData!=='undefined')?geocartoData:null;
   const arr=(g&&Array.isArray(g[d.src]))?g[d.src]:[];
   const grp=L.layerGroup();
-  arr.forEach(it=>{const c=geoPointCoords(it);if(!c)return;const m=L.circleMarker(c,{radius:5,color:'#222',weight:1,fillColor:d.color||'#777',fillOpacity:0.85});const nm=it.nom||it.raisonSociale||it.indice||it.bss_id||it.type_cavite||it.type||it.libelle||'';if(nm)m.bindPopup(String(nm));grp.addLayer(m);});
+  arr.forEach(it=>{const c=geoPointCoords(it);if(!c)return;const m=L.circleMarker(c,{pane:pane,radius:5,color:'#222',weight:1,fillColor:d.color||'#777',fillOpacity:0.85});const nm=it.nom||it.raisonSociale||it.indice||it.bss_id||it.type_cavite||it.type||it.libelle||'';if(nm)m.bindPopup(String(nm));grp.addLayer(m);});
   return grp;
 }
 function geoEsriStyle(d){
@@ -8484,24 +8491,41 @@ function geoEsriStyle(d){
     return {color:'#555',weight:0.6,fillColor:fill,fillOpacity:op};
   };
 }
-function geoMakeLayer(d){
+function geoMakeLayer(d,pane){
   const op=(geoLayerOpacity[d.key]!=null)?geoLayerOpacity[d.key]:1;
-  if(d.kind==='points')return geoMakePointLayer(d);
+  if(d.kind==='points')return geoMakePointLayer(d,pane);
   if(d.kind==='esri'){
     if(!(typeof L!=='undefined'&&L.esri&&L.esri.featureLayer)){console.warn('esri-leaflet absent — couche',d.key,'ignorée');return L.layerGroup();}
-    return L.esri.featureLayer({url:d.url,style:geoEsriStyle(d),pointToLayer:function(f,latlng){return L.circleMarker(latlng,{radius:5,color:'#222',weight:1,fillColor:d.color||'#777',fillOpacity:0.85});},attribution:d.attr||''});
+    return L.esri.featureLayer({url:d.url,pane:pane,style:geoEsriStyle(d),pointToLayer:function(f,latlng){return L.circleMarker(latlng,{pane:pane,radius:5,color:'#222',weight:1,fillColor:d.color||'#777',fillOpacity:0.85});},attribution:d.attr||''});
   }
-  if(d.kind==='wms')return L.tileLayer.wms(d.url,{layers:d.layers,format:'image/png',transparent:d.transparent!==false,version:d.version||'1.1.1',opacity:op,maxZoom:23,maxNativeZoom:d.maxNativeZoom||16,attribution:d.attr||''});
-  return L.tileLayer(d.url,{maxZoom:23,maxNativeZoom:d.maxNativeZoom||19,opacity:op,attribution:d.attr||''});
+  if(d.kind==='wms')return L.tileLayer.wms(d.url,{pane:pane,layers:d.layers,format:'image/png',transparent:d.transparent!==false,version:d.version||'1.1.1',opacity:op,maxZoom:23,maxNativeZoom:d.maxNativeZoom||16,attribution:d.attr||''});
+  return L.tileLayer(d.url,{pane:pane,maxZoom:23,maxNativeZoom:d.maxNativeZoom||19,opacity:op,attribution:d.attr||''});
 }
+function geoApplyOrder(){
+  if(!geoMap||!geoLayerOrder)return;
+  const n=geoLayerOrder.length;
+  geoLayerOrder.forEach((key,i)=>{const pane=geoMap.getPane('geopane-'+key);if(pane)pane.style.zIndex=250+(n-1-i);});
+}
+function geoMoveLayer(key,dir){
+  if(!geoLayerOrder)return;
+  const i=geoLayerOrder.indexOf(key);if(i<0)return;
+  const j=i+dir;if(j<0||j>=geoLayerOrder.length)return;
+  const t=geoLayerOrder[i];geoLayerOrder[i]=geoLayerOrder[j];geoLayerOrder[j]=t;
+  geoApplyOrder();geoRenderLayerControls();geoMarkDirty();
+}
+function geoToggleLayersPanel(){const p=document.getElementById('geo-layers-panel');if(p)p.classList.toggle('hidden');}
 function geoRenderLayerControls(){
-  const host=document.getElementById('geo-layers');if(!host)return;
-  host.innerHTML=GEO_LAYER_DEFS.map(d=>{
+  const host=document.getElementById('geo-layers-panel');if(!host)return;
+  const order=(geoLayerOrder&&geoLayerOrder.length)?geoLayerOrder:geoDefaultOrder();
+  let html='<div class="glp-title">🗂 Couches — haut = au-dessus</div>';
+  order.forEach((key,i)=>{
+    const d=GEO_LAYER_DEFS.find(x=>x.key===key);if(!d)return;
     const on=geoLayerOn[d.key];
     const op=(geoLayerOpacity[d.key]!=null)?geoLayerOpacity[d.key]:1;
-    const slider=(d.kind==='points'||d.kind==='esri')?'':`<input type="range" min="0" max="1" step="0.05" value="${op}" title="Opacité" oninput="geoSetLayerOpacity('${d.key}',this.value)">`;
-    return `<label class="geo-lyr"><input type="checkbox" ${on?'checked':''} onchange="geoToggleLayer('${d.key}',this.checked)"><span class="geo-lyr-n">${d.name}</span>${slider}</label>`;
-  }).join('');
+    const slider=(d.kind==='points'||d.kind==='esri')?'':`<input type="range" class="glp-op" min="0" max="1" step="0.05" value="${op}" title="Opacité" oninput="geoSetLayerOpacity('${d.key}',this.value)">`;
+    html+=`<div class="glp-row"><span class="glp-ord"><button onclick="geoMoveLayer('${d.key}',-1)" ${i===0?'disabled':''} title="Monter">▲</button><button onclick="geoMoveLayer('${d.key}',1)" ${i===order.length-1?'disabled':''} title="Descendre">▼</button></span><label class="glp-lbl"><input type="checkbox" ${on?'checked':''} onchange="geoToggleLayer('${d.key}',this.checked)"> ${d.name}</label>${slider}</div>`;
+  });
+  host.innerHTML=html;
 }
 function geoPlanBounds(){
   const tl0=planToGps(0,0),tr0=planToGps(planW,0),bl0=planToGps(0,planH),br0=planToGps(planW,planH);
@@ -8544,7 +8568,9 @@ function initGeoView(){
   const B=geoPlanBounds();if(!B)return;
   if(geoMap){geoMap.invalidateSize();if(geoPlanOverlay)geoPlanOverlay.reposition([B.tl.lat,B.tl.lng],[B.tr.lat,B.tr.lng],[B.bl.lat,B.bl.lng]);geoFit(B);return;}
   geoMap=L.map('geoview-map',{center:[B.tl.lat,B.tl.lng],zoom:19,maxZoom:23});
-  GEO_LAYER_DEFS.forEach(d=>{const layer=geoMakeLayer(d);geoLayers[d.key]=layer;if(geoLayerOn[d.key])layer.addTo(geoMap);});
+  if(!geoLayerOrder||!geoLayerOrder.length)geoLayerOrder=geoDefaultOrder();
+  GEO_LAYER_DEFS.forEach(d=>{const paneName='geopane-'+d.key;if(!geoMap.getPane(paneName))geoMap.createPane(paneName);const layer=geoMakeLayer(d,paneName);geoLayers[d.key]=layer;if(geoLayerOn[d.key])layer.addTo(geoMap);});
+  geoApplyOrder();
   if(L.rotatedImage){geoPlanOverlay=L.rotatedImage(planImgSrc,[B.tl.lat,B.tl.lng],[B.tr.lat,B.tr.lng],[B.bl.lat,B.bl.lng],{opacity:0.7});geoPlanOverlay.addTo(geoMap);if(geoPlanOverlay._img)geoPlanOverlay._img.addEventListener('mousedown',geoDragStart);}
   if(geoMap)geoMap.dragging.enable();
   geoRenderLayerControls();
