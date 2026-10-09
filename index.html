@@ -1111,6 +1111,11 @@
   .geoview-head .gvbtn:hover{background:rgba(255,255,255,0.12)}
   .geoview-head .geo-meas-btn.active{background:var(--yellow);color:#000;border-color:var(--yellow)}
   .geo-meas-tip{background:#1A1A1A;color:var(--yellow);font-size:11px;font-weight:800;padding:2px 6px;border-radius:4px;white-space:nowrap;transform:translate(8px,-50%);box-shadow:0 1px 4px rgba(0,0,0,0.4)}
+  .geo-meas-tot{background:#1A1A1A;color:var(--yellow);font-size:13px;font-weight:800;padding:3px 9px;border-radius:5px;white-space:nowrap;transform:translate(10px,-50%);box-shadow:0 2px 7px rgba(0,0,0,0.5)}
+  .geo-meas-seg{background:rgba(255,255,255,0.95);color:#1A1A1A;font-size:11px;font-weight:700;padding:1px 6px;border-radius:4px;white-space:nowrap;transform:translate(-50%,-140%);border:1px solid rgba(0,0,0,0.3)}
+  .geo-meas-ab{background:#C0392B;color:#fff;font-size:12px;font-weight:800;width:20px;height:20px;line-height:20px;text-align:center;border-radius:50%;transform:translate(-50%,-50%);border:2px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,0.6)}
+  .leaflet-tooltip.geo-alt-tip{background:#1A1A1A;color:var(--yellow);border:none;font-weight:800;font-size:12px;box-shadow:0 1px 4px rgba(0,0,0,0.5)}
+  .leaflet-tooltip.geo-alt-tip:before{border-top-color:#1A1A1A}
   .geoview-sep{width:1px;align-self:stretch;background:rgba(255,255,255,0.2);margin:0 2px}
   .geoview-adjust{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
   .geoview-adjust button{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.25);color:#fff;min-width:26px;padding:4px 7px;border-radius:5px;font-weight:700;cursor:pointer;font-family:inherit;line-height:1}
@@ -1981,8 +1986,9 @@
         <span class="geoview-sep"></span>
         <button class="gvbtn" onclick="geoRecenter()" title="Recentrer sur le site investigué">🎯 Site</button>
         <button class="gvbtn geo-meas-btn" onclick="geoMeasSetMode('dist',this)" title="Mesurer une distance (clique les points)">📏 Distance</button>
+        <button class="gvbtn geo-meas-btn" onclick="geoMeasSetMode('prof',this)" title="Profil altimétrique : clique les points de la ligne">📈 Profil</button>
+        <button class="gvbtn geo-meas-btn" onclick="geoMeasSetMode('area',this)" title="Mesurer une surface (clique ≥ 3 points)">▱ Surface</button>
         <button class="gvbtn geo-meas-btn" onclick="geoMeasSetMode('alt',this)" title="Altitude d'un point (clique sur la carte)">⛰️ Altitude</button>
-        <button class="gvbtn" onclick="geoMeasProfile()" title="Profil altimétrique le long de la ligne mesurée">📈 Profil</button>
         <button class="gvbtn" onclick="geoMeasClear()" title="Effacer les mesures">🗑</button>
         <span id="geo-meas-status" style="font-size:11px;color:var(--yellow);min-width:90px"></span>
         <label>Opacité plan <input type="range" min="0" max="1" step="0.05" value="0.7" oninput="geoSetPlanOpacity(this.value)"></label>
@@ -8664,29 +8670,47 @@ function geoMeasSetMode(mode,btn){
   document.querySelectorAll('.geo-meas-btn').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
   if(geoMap){geoMap.off('click',geoMeasClick);geoMap.on('click',geoMeasClick);geoMap.getContainer().style.cursor='crosshair';}
-  if(mode==='dist'){geoMeasPts=[];geoMeasRedraw();}
-  geoMeasStatus(mode==='dist'?'Clique les points à mesurer…':'Clique un point pour son altitude…');
+  const pp=document.getElementById('geo-meas-profile');if(pp&&mode!=='prof')pp.style.display='none';
+  if(mode!=='alt'){geoMeasPts=[];geoMeasRedraw();}
+  geoMeasStatus(mode==='alt'?'Clique un point pour son altitude…':(mode==='area'?'Clique ≥ 3 points pour une surface…':(mode==='prof'?'Clique les points de la ligne de profil…':'Clique les points à mesurer…')));
 }
 function geoMeasStop(){geoMeasMode=null;document.querySelectorAll('.geo-meas-btn').forEach(b=>b.classList.remove('active'));if(geoMap){geoMap.off('click',geoMeasClick);geoMap.getContainer().style.cursor='';}geoMeasStatus('');}
 function geoMeasClear(){geoMeasStop();geoMeasPts=[];if(geoMeasLayer)geoMeasLayer.clearLayers();const p=document.getElementById('geo-meas-profile');if(p)p.style.display='none';}
 async function geoMeasClick(e){
-  if(geoMeasMode==='dist'){geoMeasPts.push(e.latlng);geoMeasRedraw();}
-  else if(geoMeasMode==='alt'){
+  if(geoMeasMode==='alt'){
     const mk=L.circleMarker(e.latlng,{radius:5,color:'#1A1A1A',fillColor:'#F2B705',fillOpacity:1,weight:2}).addTo(geoMeasEnsureLayer());
-    mk.bindPopup('Altitude : …').openPopup();
-    try{const z=(await geoFetchElevation([e.latlng]))[0];mk.setPopupContent(z!=null?('Altitude : <b>'+z.toFixed(1)+' m NGF</b>'):'Altitude indisponible');}catch(err){mk.setPopupContent('Altitude indisponible');}
+    mk.bindTooltip('…',{permanent:true,direction:'top',className:'geo-alt-tip',offset:[0,-4]}).openTooltip();
+    try{const z=(await geoFetchElevation([e.latlng]))[0];mk.setTooltipContent(z!=null?(z.toFixed(1)+' m'):'n/d');}catch(err){mk.setTooltipContent('n/d');}
+    return;
   }
+  geoMeasPts.push(e.latlng);geoMeasRedraw();
+  if(geoMeasMode==='prof'&&geoMeasPts.length>=2)geoMeasProfile();
 }
 function geoMeasRedraw(){
   const lyr=geoMeasEnsureLayer();if(!lyr)return;lyr.clearLayers();
-  if(!geoMeasPts.length)return;
-  L.polyline(geoMeasPts,{color:'#1A1A1A',weight:4}).addTo(lyr);
-  L.polyline(geoMeasPts,{color:'#F2B705',weight:2}).addTo(lyr);
-  let tot=0;
-  geoMeasPts.forEach((p,i)=>{L.circleMarker(p,{radius:4,color:'#1A1A1A',fillColor:'#fff',fillOpacity:1,weight:2}).addTo(lyr);if(i>0)tot+=geoMap.distance(geoMeasPts[i-1],p);});
-  const last=geoMeasPts[geoMeasPts.length-1];
-  L.marker(last,{icon:L.divIcon({className:'geo-meas-tip',html:geoFmtDist(tot),iconSize:[0,0]})}).addTo(lyr);
-  geoMeasStatus('Distance : '+geoFmtDist(tot)+' ('+geoMeasPts.length+' pts)');
+  if(!geoMeasPts.length){geoMeasStatus('');return;}
+  const isArea=geoMeasMode==='area', isProf=geoMeasMode==='prof';
+  if(isArea){
+    L.polygon(geoMeasPts,{color:'#2E7D32',weight:2,fillColor:'#2E7D32',fillOpacity:0.15}).addTo(lyr);
+  }else{
+    const accent=isProf?'#5DADE2':'#F2B705';
+    L.polyline(geoMeasPts,{color:'#1A1A1A',weight:5}).addTo(lyr);
+    L.polyline(geoMeasPts,{color:accent,weight:2.5}).addTo(lyr);
+    for(let i=1;i<geoMeasPts.length;i++){const d=geoMap.distance(geoMeasPts[i-1],geoMeasPts[i]);const mid=L.latLng((geoMeasPts[i-1].lat+geoMeasPts[i].lat)/2,(geoMeasPts[i-1].lng+geoMeasPts[i].lng)/2);L.marker(mid,{icon:L.divIcon({className:'geo-meas-seg',html:geoFmtDist(d),iconSize:[0,0]}),interactive:false}).addTo(lyr);}
+  }
+  geoMeasPts.forEach(p=>L.circleMarker(p,{radius:4,color:'#1A1A1A',fillColor:'#fff',fillOpacity:1,weight:2}).addTo(lyr));
+  if(isProf){
+    L.marker(geoMeasPts[0],{icon:L.divIcon({className:'geo-meas-ab',html:'A',iconSize:[0,0]}),interactive:false}).addTo(lyr);
+    if(geoMeasPts.length>=2)L.marker(geoMeasPts[geoMeasPts.length-1],{icon:L.divIcon({className:'geo-meas-ab',html:'B',iconSize:[0,0]}),interactive:false}).addTo(lyr);
+  }
+  if(isArea){
+    if(geoMeasPts.length>=3){const a=geoPolygonArea(geoMeasPts);L.marker(geoPolyCentroid(geoMeasPts),{icon:L.divIcon({className:'geo-meas-tot',html:'▱ '+geoFmtArea(a),iconSize:[0,0]}),interactive:false}).addTo(lyr);geoMeasStatus('Surface : '+geoFmtArea(a));}
+    else geoMeasStatus('Clique ≥ 3 points… ('+geoMeasPts.length+')');
+  }else{
+    let tot=0;for(let i=1;i<geoMeasPts.length;i++)tot+=geoMap.distance(geoMeasPts[i-1],geoMeasPts[i]);
+    if(!isProf)L.marker(geoMeasPts[geoMeasPts.length-1],{icon:L.divIcon({className:'geo-meas-tot',html:'Σ '+geoFmtDist(tot),iconSize:[0,0]}),interactive:false}).addTo(lyr);
+    geoMeasStatus((isProf?'Profil A→B':'Distance')+' : '+geoFmtDist(tot));
+  }
 }
 async function geoFetchJson(url){
   try{const r=await fetch(url);if(r.ok)return await r.json();}catch(e){}
@@ -8700,8 +8724,13 @@ async function geoFetchElevation(latlngs){
   const arr=(j&&j.elevations)||[];
   return arr.map(e=>{const z=(typeof e==='number')?e:(e.z!=null?e.z:(e.alti!=null?e.alti:null));return (z!=null&&z>-1000)?z:null;});
 }
+let geoProfSeq=0;
+function geoFmtArea(m2){if(m2>=10000)return (m2/10000).toFixed(3).replace('.',',')+' ha ('+Math.round(m2).toLocaleString('fr-FR')+' m²)';return Math.round(m2).toLocaleString('fr-FR')+' m²';}
+function geoPolygonArea(ll){const R=6378137,n=ll.length;if(n<3)return 0;let a=0;for(let i=0;i<n;i++){const p1=ll[i],p2=ll[(i+1)%n];a+=(p2.lng-p1.lng)*Math.PI/180*(2+Math.sin(p1.lat*Math.PI/180)+Math.sin(p2.lat*Math.PI/180));}return Math.abs(a*R*R/2);}
+function geoPolyCentroid(ll){let x=0,y=0;ll.forEach(p=>{x+=p.lat;y+=p.lng;});return L.latLng(x/ll.length,y/ll.length);}
 async function geoMeasProfile(){
-  if(geoMeasPts.length<2){alert('Trace d\'abord une ligne (≥ 2 points) avec 📏 Distance.');return;}
+  if(geoMeasPts.length<2)return;
+  const seq=++geoProfSeq;
   const segs=[];let total=0;
   for(let i=1;i<geoMeasPts.length;i++){const d=geoMap.distance(geoMeasPts[i-1],geoMeasPts[i]);segs.push(d);total+=d;}
   const N=60,samples=[];
@@ -8712,8 +8741,9 @@ async function geoMeasProfile(){
     const a=geoMeasPts[si],b=geoMeasPts[Math.min(si+1,geoMeasPts.length-1)];
     samples.push(L.latLng(a.lat+(b.lat-a.lat)*t,a.lng+(b.lng-a.lng)*t));
   }
-  geoMeasStatus('Profil : calcul des altitudes…');
+  geoMeasStatus('Profil A→B : calcul des altitudes…');
   let elevs;try{elevs=await geoFetchElevation(samples);}catch(e){geoMeasStatus('Altitudes indisponibles');return;}
+  if(seq!==geoProfSeq)return;
   geoDrawProfile(elevs,total);
 }
 function geoDrawProfile(elevs,total){
@@ -8727,7 +8757,8 @@ function geoDrawProfile(elevs,total){
   ctx.beginPath();ctx.strokeStyle='#E67E22';ctx.lineWidth=2;
   elevs.forEach((z,i)=>{const x=pad+(W-pad-6)*i/(elevs.length-1);const y=(z==null)?(H-16):(H-16-(H-24)*((z-mn)/rng));if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});
   ctx.stroke();
-  ctx.fillStyle='#333';ctx.font='10px Arial';ctx.fillText(mx.toFixed(0)+' m',2,12);ctx.fillText(mn.toFixed(0)+' m',2,H-18);
+  ctx.fillStyle='#333';ctx.font='10px Arial';ctx.textAlign='left';ctx.fillText(mx.toFixed(0)+' m',2,12);ctx.fillText(mn.toFixed(0)+' m',2,H-18);
+  ctx.fillStyle='#C0392B';ctx.font='bold 12px Arial';ctx.fillText('A',pad-3,H-3);ctx.textAlign='right';ctx.fillText('B',W-4,H-3);ctx.textAlign='left';
   const st=document.getElementById('geo-meas-profstats');if(st)st.textContent='Longueur '+geoFmtDist(total)+' · mini '+mn.toFixed(1)+' m · maxi '+mx.toFixed(1)+' m · dénivelé '+(mx-mn).toFixed(1)+' m';
   geoMeasStatus('');
 }
