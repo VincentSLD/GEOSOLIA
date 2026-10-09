@@ -8479,14 +8479,17 @@ function geoDefaultOrder(){return GEO_LAYER_DEFS.map(d=>d.key).slice().reverse()
 if(typeof L!=='undefined'&&L.TileLayer&&L.TileLayer.WMS&&!L.TileLayer.WMS.prototype.__geoProxyPatched){
   L.TileLayer.WMS.prototype.__geoProxyPatched=true;
   const GEO_PROXY_HOSTS=['brgm.fr','georisques.gouv.fr'];
-  const geoProxyable=function(u){try{const hh=new URL(u,location.href).hostname;return GEO_PROXY_HOSTS.some(x=>hh===x||hh.endsWith('.'+x));}catch(e){return false;}};
+  let geoProxyFailed={};try{geoProxyFailed=JSON.parse(sessionStorage.getItem('geoProxyFailed')||'{}')||{};}catch(e){geoProxyFailed={};}
+  const geoHostOf=function(u){try{return new URL(u,location.href).hostname;}catch(e){return '';}};
+  const geoProxyable=function(h){return GEO_PROXY_HOSTS.some(x=>h===x||h.endsWith('.'+x));};
   L.TileLayer.WMS.prototype.createTile=function(coords,done){
     const tile=document.createElement('img');tile.setAttribute('role','presentation');tile.alt='';
-    const directUrl=this.getTileUrl(coords);let triedProxy=false;
+    const directUrl=this.getTileUrl(coords);const host=geoHostOf(directUrl);const canProxy=geoProxyable(host);
+    const startProxy=canProxy&&!!geoProxyFailed[host];let triedProxy=startProxy;
     tile.onload=function(){done(null,tile);};
-    tile.onerror=function(){if(!triedProxy&&geoProxyable(directUrl)){triedProxy=true;tile.src='/api/geo?url='+encodeURIComponent(directUrl);}else{done(new Error('tile error'),tile);}};
+    tile.onerror=function(){if(!triedProxy&&canProxy){triedProxy=true;geoProxyFailed[host]=1;try{sessionStorage.setItem('geoProxyFailed',JSON.stringify(geoProxyFailed));}catch(e){}tile.src='/api/geo?url='+encodeURIComponent(directUrl);}else{done(new Error('tile error'),tile);}};
     if(this.options.crossOrigin||this.options.crossOrigin==='')tile.crossOrigin=this.options.crossOrigin;
-    tile.src=directUrl;
+    tile.src=startProxy?('/api/geo?url='+encodeURIComponent(directUrl)):directUrl;
     return tile;
   };
 }
@@ -8520,7 +8523,7 @@ function geoMakeLayer(d,pane){
   if(d.kind==='points')return geoMakePointLayer(d,pane);
   if(d.kind==='esri'){
     if(!(typeof L!=='undefined'&&L.esri&&L.esri.featureLayer)){console.warn('esri-leaflet absent — couche',d.key,'ignorée');return L.layerGroup();}
-    return L.esri.featureLayer({url:d.url,pane:pane,style:geoEsriStyle(d),pointToLayer:function(f,latlng){return L.circleMarker(latlng,{pane:pane,radius:5,color:'#222',weight:1,fillColor:d.color||'#777',fillOpacity:0.85});},attribution:d.attr||''});
+    return L.esri.featureLayer({url:d.url,pane:pane,simplifyFactor:0.5,precision:5,style:geoEsriStyle(d),pointToLayer:function(f,latlng){return L.circleMarker(latlng,{pane:pane,radius:5,color:'#222',weight:1,fillColor:d.color||'#777',fillOpacity:0.85});},attribution:d.attr||''});
   }
   if(d.kind==='wms')return L.tileLayer.wms(d.url,{pane:pane,layers:d.layers,format:'image/png',transparent:d.transparent!==false,version:d.version||'1.1.1',opacity:op,maxZoom:23,maxNativeZoom:d.maxNativeZoom||16,attribution:d.attr||''});
   return L.tileLayer(d.url,{pane:pane,maxZoom:23,maxNativeZoom:d.maxNativeZoom||19,opacity:op,attribution:d.attr||''});
